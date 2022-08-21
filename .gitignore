@@ -1,0 +1,13 @@
+# Maven
+/target/
+
+# Eclipse
+/.settings/
+.project
+.classpath
+
+# Input
+Puten.csv
+Zonen.csv
+AntennenDaten.csv
+PutenAuswertung.csv
