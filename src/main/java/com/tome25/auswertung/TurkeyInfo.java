@@ -22,6 +22,11 @@ public class TurkeyInfo {
 	private static final int DAY_END = 24 * 60 * 60 * 1000;
 
 	/**
+	 * The minimum time a turkey has to spend in a zone for it to be counted at all.
+	 */
+	private static final int MIN_ZONE_TIME = 5 * 60 * 1000;
+
+	/**
 	 * Whether beginnings and ends of days where the adjacent day is not known
 	 * should be assumed to be like the first/last record on that day.
 	 */
@@ -58,6 +63,13 @@ public class TurkeyInfo {
 	 * The string name of the zone the turkey is currently in.
 	 */
 	private String currentZone;
+
+	/**
+	 * The name of the zone this turkey was in before it entered the one it is
+	 * currently in.<br/>
+	 * Might match {@code currentZone} because of debouncing.
+	 */
+	private String lastZone;
 
 	/**
 	 * The time for which the other values are currently calculated.
@@ -105,7 +117,7 @@ public class TurkeyInfo {
 			boolean fillDay) {
 		this.id = id;
 		this.transponders = transponders;
-		this.currentZone = currentZone;
+		this.currentZone = this.lastZone = currentZone;
 		this.currentDate = date;
 		this.currentTime = this.lastZoneChange = time;
 		this.fillDay = fillDay;
@@ -113,6 +125,7 @@ public class TurkeyInfo {
 		dayZoneTimes.put(date, new HashMap<String, Integer>());
 		if (fillDay) {
 			dayZoneTimes.get(date).put(currentZone, time);
+			totalZoneTimes.put(currentZone, (long) time);
 		}
 	}
 
@@ -129,36 +142,89 @@ public class TurkeyInfo {
 	 * @param date    The date of the antenna record.
 	 */
 	public void changeZone(String newZone, int time, String date) {
+		Objects.requireNonNull(newZone, "The zone the turkey moved into cannot be null.");
+		Objects.requireNonNull(date, "The date at which the change occurred cannot be null.");
+
 		// FIXME handle fillDay being false
 		if (date != currentDate) {
 			endDay(date);
 		}
 
 		int timeSpent = time - currentTime;
-		if (dayZoneTimes.get(date).containsKey(currentZone)) {
-			dayZoneTimes.get(date).put(currentZone, dayZoneTimes.get(date).get(currentZone) + timeSpent);
-		} else {
-			dayZoneTimes.get(date).put(currentZone, timeSpent);
-		}
-		
-		if (totalZoneTimes.containsKey(currentZone)) {
-			totalZoneTimes.put(currentZone, totalZoneTimes.get(currentZone) + timeSpent);
-		} else {
-			totalZoneTimes.put(currentZone, (long) timeSpent);
-		}
-		
+		addDayTime(date, currentZone, timeSpent);
+		addTotalTime(currentZone, timeSpent);
+
 		currentTime = time;
 
 		if (newZone != currentZone) {
-			currentZone = newZone;
+			int zoneTime = time - lastZoneChange;
+			if (zoneTime < MIN_ZONE_TIME) {// TODO disable with argument
+				// FIXME handle day borders
+				addDayTime(date, currentZone, -zoneTime);
+				addTotalTime(currentZone, -zoneTime);
+				addDayTime(date, lastZone, zoneTime);
+				addTotalTime(lastZone, zoneTime);
+
+				if (lastZone.equals(newZone)) {
+					todayZoneChanges--;
+					totalZoneChanges--;
+				} else if (lastZone.equals(currentZone)) {
+					todayZoneChanges++;
+					totalZoneChanges++;
+				}
+			} else {
+				todayZoneChanges++;
+				totalZoneChanges++;
+				lastZone = currentZone;
+			}
+
 			lastZoneChange = time;
-			todayZoneChanges++;
-			totalZoneChanges++;
+			currentZone = newZone;
 		}
 	}
 
 	/**
-	 * Sets the current time for this object to the end of the current day, or the beginning of the given day.<br/>
+	 * Adds the given amount of time to the dayZoneTime for the given zone and
+	 * day.<br/>
+	 * Does not check whether the time to be added is positive, but does not allow
+	 * for a negative resulting day zone time.
+	 * 
+	 * @param day  The day for which to add the time to the given zone.
+	 * @param zone The zone in which the time was spent.
+	 * @param time The amount of time that was spent in the given zone.
+	 */
+	private void addDayTime(String day, String zone, int time) {
+		Objects.requireNonNull(day, "The day to add zone time to cannot be null.");
+		Objects.requireNonNull(zone, "The zone to add time to cannot be null.");
+
+		if (dayZoneTimes.get(day).containsKey(zone)) {
+			dayZoneTimes.get(day).put(zone, Math.max(0, dayZoneTimes.get(day).get(zone) + time));
+		} else {
+			dayZoneTimes.get(day).put(zone, Math.max(0, time));
+		}
+	}
+
+	/**
+	 * Adds the given amount of time to the totalZoneTime for the given zone.<br/>
+	 * Does not check whether the time to be added is positive, but does not allow
+	 * for a negative total.
+	 * 
+	 * @param zone The zone in which the time was spent.
+	 * @param time The amount of time that was spent in the given zone.
+	 */
+	private void addTotalTime(String zone, int time) {
+		Objects.requireNonNull(zone, "The zone to add time to cannot be null.");
+
+		if (totalZoneTimes.containsKey(zone)) {
+			totalZoneTimes.put(zone, Math.max(0, totalZoneTimes.get(zone) + time));
+		} else {
+			totalZoneTimes.put(zone, (long) Math.max(0, time));
+		}
+	}
+
+	/**
+	 * Sets the current time for this object to the end of the current day, or the
+	 * beginning of the given day.<br/>
 	 * 
 	 * If date is the current day it sets the time to the end of that day.<br/>
 	 * Otherwise sets it to the start of the given day.<br/>
@@ -170,7 +236,7 @@ public class TurkeyInfo {
 	 */
 	public void endDay(String date) {
 		Objects.requireNonNull(date, "Date can't be null.");
-		
+
 		if (fillDay) {
 			changeZone(currentZone, DAY_END, currentDate);
 			if (!currentDate.equals(date)) {
@@ -181,6 +247,7 @@ public class TurkeyInfo {
 				todayZoneChanges = 0;
 				currentTime = 0;
 				currentDate = date;
+				lastZoneChange = 0;
 			}
 		} else {
 			// TODO implement this
@@ -207,9 +274,10 @@ public class TurkeyInfo {
 	public List<String> getTransponders() {
 		return new ArrayList<>(transponders);
 	}
-	
+
 	/**
-	 * Returns the date for which the values of this object are currently calculated.
+	 * Returns the date for which the values of this object are currently
+	 * calculated.
 	 * 
 	 * @return the current date.
 	 */

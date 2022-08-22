@@ -43,12 +43,14 @@ public class DataHandler {
 
 		while (!antennaStream.done()) {
 			AntennaRecord record = CSVHandler.readAntennaRecord(antennaStream);
-			if (!turkeys.getValue().containsKey(record.transponder)) {
-				LogHandler.err_println(
-						String.format("Received antenna record for unknown transponder id \"%s\". Skipping line.",
-								record.transponder));
+			String turkeyId = record.transponder;
+			if (turkeys.getValue().containsKey(record.transponder)) {
+				turkeyId = turkeys.getValue().get(record.transponder);
+			} else {
+				LogHandler.err_println(String.format(
+						"Received antenna record for unknown transponder id \"%s\" on day %s. Considering it a separate turkey.",
+						record.date, record.transponder));
 				LogHandler.print_debug_info("Antenna Record: %s, fillDays: %s", record, fillDays ? "true" : "false");
-				continue;
 			}
 
 			if (!zones.getValue().containsKey(record.antenna)) {
@@ -64,12 +66,11 @@ public class DataHandler {
 				lastDate = record.date;
 			}
 
-			String tk = turkeys.getValue().get(record.transponder);
-			if (!turkeyInfos.containsKey(tk)) {
-				turkeyInfos.put(tk, new TurkeyInfo(tk, turkeys.getKey().get(tk), zones.getValue().get(record.antenna),
-						record.date, record.tod, fillDays));
+			if (!turkeyInfos.containsKey(turkeyId)) {
+				turkeyInfos.put(turkeyId, new TurkeyInfo(turkeyId, turkeys.getKey().get(turkeyId),
+						zones.getValue().get(record.antenna), record.date, record.tod, fillDays));
 			} else {
-				turkeyInfos.get(tk).changeZone(zones.getValue().get(record.antenna), record.tod, record.date);
+				turkeyInfos.get(turkeyId).changeZone(zones.getValue().get(record.antenna), record.tod, record.date);
 			}
 		}
 
