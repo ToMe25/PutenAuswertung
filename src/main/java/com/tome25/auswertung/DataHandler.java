@@ -39,7 +39,7 @@ public class DataHandler {
 
 		Map<String, TurkeyInfo> turkeyInfos = new TreeMap<>(new IntOrStringComparator());
 		String lastDate = null;
-		LogHandler.out_println(CSVHandler.turkeyCsvHeader(zones.getKey().keySet()));
+		outputStream.println(CSVHandler.turkeyCsvHeader(zones.getKey().keySet()));
 
 		while (!antennaStream.done()) {
 			AntennaRecord record = CSVHandler.readAntennaRecord(antennaStream);

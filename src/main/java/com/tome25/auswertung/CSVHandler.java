@@ -181,7 +181,7 @@ public class CSVHandler {
 	 * @return The csv headers as a single string.
 	 */
 	public static String turkeyCsvHeader(Collection<String> zones) {
-		String result = StringUtils.join(DEFAULT_SEPARATOR, "Tier", "Datum", "Zonenwechsel");
+		String result = StringUtils.join(DEFAULT_SEPARATOR, "Tier", "Datum", "Bereichswechsel");
 		for (String zone : zones) {
 			result += DEFAULT_SEPARATOR + "Aufenthalt in zone " + zone;
 		}

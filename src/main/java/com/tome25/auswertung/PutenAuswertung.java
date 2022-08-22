@@ -39,7 +39,7 @@ public class PutenAuswertung {
 	 * Unlike specified inputs defaults are checked as they are and entirely
 	 * lowercase.
 	 */
-	private static final String DEFAULT_ZONEN_FILE = "Zonen.csv";
+	private static final String DEFAULT_BEREICHE_FILE = "Bereiche.csv";
 
 	/**
 	 * The default output file for the generated analysis data.
@@ -85,13 +85,13 @@ public class PutenAuswertung {
 		LogHandler
 				.out_println(String.format("Reading turkey mappings input file \"%s\".", turkeyFile.getAbsolutePath()));
 
-		File zoneFile = new File(DEFAULT_ZONEN_FILE);
+		File zoneFile = new File(DEFAULT_BEREICHE_FILE);
 		if (!zoneFile.exists() || !zoneFile.isFile()) {
-			zoneFile = new File(DEFAULT_ZONEN_FILE.toLowerCase());
+			zoneFile = new File(DEFAULT_BEREICHE_FILE.toLowerCase());
 			if (!zoneFile.exists() || !zoneFile.isFile()) {
 				LogHandler.err_println(String.format(
 						"No zone mappings file found. This program expects a file called \"%s\" in the directory you are executing this command in.",
-						DEFAULT_ZONEN_FILE));
+						DEFAULT_BEREICHE_FILE));
 				return;
 			}
 		}
