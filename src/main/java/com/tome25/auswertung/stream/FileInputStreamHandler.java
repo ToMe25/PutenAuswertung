@@ -37,12 +37,13 @@ public class FileInputStreamHandler implements IInputStreamHandler {
 	 * Creates a new FileStreamHandler reading the content of the given file.
 	 * 
 	 * @param input The file to read.
-	 * @throws FileNotFoundException If the given input file does not exist.
+	 * @throws FileNotFoundException if the given input file does not exist.
 	 * @throws SecurityException     if a security manager exists and its
 	 *                               {@code checkRead} method denies read access to
 	 *                               the file.
+	 * @throws NullPointerException  if the given input file is {@code null}.
 	 */
-	public FileInputStreamHandler(File input) throws FileNotFoundException, SecurityException {
+	public FileInputStreamHandler(File input) throws FileNotFoundException, SecurityException, NullPointerException {
 		Objects.requireNonNull(input, "The file to be read, input, can't be null.");
 
 		input_file = input;

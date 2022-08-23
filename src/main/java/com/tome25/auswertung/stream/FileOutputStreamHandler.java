@@ -50,8 +50,9 @@ public class FileOutputStreamHandler implements IOutputStreamHandler {
 	 * @throws SecurityException     if a security manager exists and its
 	 *                               {@code checkWrite} method denies write access
 	 *                               to the file.
+	 * @throws NullPointerException  if the given output file is {@code null}.
 	 */
-	public FileOutputStreamHandler(File output) throws FileNotFoundException, SecurityException {
+	public FileOutputStreamHandler(File output) throws FileNotFoundException, SecurityException, NullPointerException {
 		Objects.requireNonNull(output, "The file to write to can't be null.");
 
 		output_file = output;

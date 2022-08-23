@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import com.tome25.auswertung.stream.IInputStreamHandler;
 import com.tome25.auswertung.utils.Pair;
@@ -35,14 +36,18 @@ public class CSVHandler {
 	 * Reads the data from the stream handler as a CSV file and converts it to a two
 	 * maps.<br/>
 	 * The format of the first map is
-	 * <code>column 1 -> list(column 2, column 3...)</code>.<br/>
-	 * The second map format is <code>column X -> column 1</code> for each column
-	 * except the first one.
+	 * {@code column 1 -> list(column 2, column 3...)}.<br/>
+	 * The second map format is {@code column X -> column 1} for each column except
+	 * the first one.
 	 * 
 	 * @param input The stream handler containing the data to be read.
 	 * @return A pair containing the two maps described above.
+	 * @throws NullPointerException if input is null.
 	 */
-	public static Pair<Map<String, List<String>>, Map<String, String>> readMappingCSV(IInputStreamHandler input) {
+	public static Pair<Map<String, List<String>>, Map<String, String>> readMappingCSV(IInputStreamHandler input)
+			throws NullPointerException {
+		Objects.requireNonNull(input, "input cannot be null.");
+
 		Map<String, List<String>> first = new LinkedHashMap<>();
 		Map<String, String> second = new HashMap<>();
 		boolean last_failed = false;
@@ -58,8 +63,9 @@ public class CSVHandler {
 				if (tokens.length < 2) {
 					LogHandler.err_println(String
 							.format("Input String \"%s\" did not contain at least two tokens. Skipping line.", line));
-					LogHandler.print_debug_info("Input Stream Handler: %s, Separator Chars: %s, tokens: [%s]",
-							input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", (Object[]) tokens));
+					LogHandler.print_debug_info(
+							"Input Stream Handler: %s, Separator Chars: %s, tokens: [%s], line: \"%s\"",
+							input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", (Object[]) tokens), line);
 					continue;
 				}
 
@@ -80,7 +86,7 @@ public class CSVHandler {
 				for (int i = 1; i < tokens.length; i++) {
 					if (second.containsKey(tokens[i])) {
 						LogHandler.err_println(String.format(
-								"Found duplicate id \"%s\". Ignoring every occurrence, except the first one.",
+								"Found duplicate id \"%s\". Ignoring this occurrence.",
 								tokens[i]));
 						LogHandler.print_debug_info("Input Stream Handler: %s, Separator Chars: %s, tokens: [%s]",
 								input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", (Object[]) tokens));
@@ -134,8 +140,9 @@ public class CSVHandler {
 				if (tokens.length != 4) {
 					LogHandler.err_println(String
 							.format("Input String \"%s\" did not contain exactly four tokens. Skipping line.", line));
-					LogHandler.print_debug_info("Input Stream Handler: %s, Separator Chars: %s, tokens: [%s]",
-							input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", (Object[]) tokens));
+					LogHandler.print_debug_info(
+							"Input Stream Handler: %s, Separator Chars: %s, tokens: [%s], line: \"%s\"",
+							input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", (Object[]) tokens), line);
 					continue;
 				}
 
@@ -223,9 +230,9 @@ public class CSVHandler {
 			if (zoneTimes.containsKey(zone)) {
 				Object time = zoneTimes.get(zone);
 				if (time instanceof Long) {
-					result += DEFAULT_SEPARATOR + TimeUtils.encodeTime((long) zoneTimes.get(zone));
+					result += DEFAULT_SEPARATOR + TimeUtils.encodeTime((long) (Long) zoneTimes.get(zone));
 				} else if (time instanceof Integer) {
-					result += DEFAULT_SEPARATOR + TimeUtils.encodeTime((int) zoneTimes.get(zone));
+					result += DEFAULT_SEPARATOR + TimeUtils.encodeTime((int) (Integer) zoneTimes.get(zone));
 				}
 			} else {
 				result += DEFAULT_SEPARATOR + TimeUtils.encodeTime(0);

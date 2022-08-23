@@ -140,8 +140,10 @@ public class TurkeyInfo {
 	 * @param newZone The zone by which this turkey was detected.
 	 * @param time    The time at which the antenna record was created.
 	 * @param date    The date of the antenna record.
+	 * @throws NullPointerException if {@code newZone} or {@code date} is
+	 *                              {@code null}.
 	 */
-	public void changeZone(String newZone, int time, String date) {
+	public void changeZone(String newZone, int time, String date) throws NullPointerException {
 		Objects.requireNonNull(newZone, "The zone the turkey moved into cannot be null.");
 		Objects.requireNonNull(date, "The date at which the change occurred cannot be null.");
 
@@ -192,8 +194,9 @@ public class TurkeyInfo {
 	 * @param day  The day for which to add the time to the given zone.
 	 * @param zone The zone in which the time was spent.
 	 * @param time The amount of time that was spent in the given zone.
+	 * @throws NullPointerException if {@code day} or {@code zone} is {@code null}.
 	 */
-	private void addDayTime(String day, String zone, int time) {
+	private void addDayTime(String day, String zone, int time) throws NullPointerException {
 		Objects.requireNonNull(day, "The day to add zone time to cannot be null.");
 		Objects.requireNonNull(zone, "The zone to add time to cannot be null.");
 
@@ -211,8 +214,9 @@ public class TurkeyInfo {
 	 * 
 	 * @param zone The zone in which the time was spent.
 	 * @param time The amount of time that was spent in the given zone.
+	 * @throws NullPointerException if {@code zone} is {@code null}.
 	 */
-	private void addTotalTime(String zone, int time) {
+	private void addTotalTime(String zone, int time) throws NullPointerException {
 		Objects.requireNonNull(zone, "The zone to add time to cannot be null.");
 
 		if (totalZoneTimes.containsKey(zone)) {
@@ -233,8 +237,9 @@ public class TurkeyInfo {
 	 * fillDay is {@code true}.
 	 * 
 	 * @param date The date to which this object should be set.
+	 * @throws NullPointerException if {@code date} is {@code null}.
 	 */
-	public void endDay(String date) {
+	public void endDay(String date) throws NullPointerException {
 		Objects.requireNonNull(date, "Date can't be null.");
 
 		if (fillDay) {
@@ -287,7 +292,7 @@ public class TurkeyInfo {
 
 	/**
 	 * Returns the time the turkey spent in each zone on the given day.<br/>
-	 * Returns null if there are no records for the given date.<br/>
+	 * Returns {@code null} if there are no records for the given date.<br/>
 	 * Might not return the full day in one of these two cases:<br/>
 	 * 1. fillDay is set to true but this object is not yet set to the next
 	 * day.<br/>

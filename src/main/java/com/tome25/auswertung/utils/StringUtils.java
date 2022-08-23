@@ -73,9 +73,13 @@ public class StringUtils {
 	 *                  collection.
 	 * @param c         The collection to convert to a string.
 	 * @return The string representation of the given collection.
+	 * @throws NullPointerException if {@code separator} or {@code c} is
+	 *                              {@code null}.
 	 */
-	public static String collectionToString(CharSequence separator, boolean brackets, Collection<?> c) {
+	public static String collectionToString(CharSequence separator, boolean brackets, Collection<?> c)
+			throws NullPointerException {
 		Objects.requireNonNull(c, "Collection to convert cannot be null.");
+		Objects.requireNonNull(separator, "The object separator cannot be null.");
 
 		if (c.size() == 0) {
 			return brackets ? "[]" : "";
@@ -114,20 +118,27 @@ public class StringUtils {
 	/**
 	 * Creates a string from all the given tokens separated by separator.
 	 * 
-	 * @param separator The separator to put between tokens.
+	 * @param separator The separator to put between tokens. If {@code null} the
+	 *                  tokens are joined without a separator.
 	 * @param tokens    The tokens to convert to a single String.
 	 * @return The string created by joining the tokens together.
 	 */
 	public static String join(CharSequence separator, Object... tokens) {
-		Objects.requireNonNull(separator, "The separatur between tokens can not be null.");
+		if (tokens == null || tokens.length == 0) {
+			return "";
+		}
 
 		StringBuilder result = new StringBuilder();
 		for (Object token : tokens) {
 			result.append(token);
-			result.append(separator);
+			if (separator != null) {
+				result.append(separator);
+			}
 		}
 
-		result.delete(result.length() - separator.length(), result.length());
+		if (separator != null) {
+			result.delete(result.length() - separator.length(), result.length());
+		}
 
 		return result.toString();
 	}
