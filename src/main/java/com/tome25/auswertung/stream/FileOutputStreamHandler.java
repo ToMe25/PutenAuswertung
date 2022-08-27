@@ -36,7 +36,7 @@ public class FileOutputStreamHandler implements IOutputStreamHandler {
 	 * Whether this output stream handler is still open.<br/>
 	 * {@code false} if it has been closed.
 	 */
-	private boolean open = true;
+	private volatile boolean open = true;
 
 	/**
 	 * Creates a new file output stream handler, writing to the given file.<br/>

@@ -21,7 +21,7 @@ public class SysOutStreamHandler implements IOutputStreamHandler {
 	/**
 	 * Whether this stream handler has been explicitly closed.
 	 */
-	private boolean open = true;
+	private volatile boolean open = true;
 
 	/**
 	 * Whether this stream handler handles temporary output.

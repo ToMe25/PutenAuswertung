@@ -31,7 +31,7 @@ public class FileInputStreamHandler implements IInputStreamHandler {
 	/**
 	 * Whether this Stream Handler is yet to be closed.
 	 */
-	private boolean open = true;
+	private volatile boolean open = true;
 
 	/**
 	 * Creates a new FileStreamHandler reading the content of the given file.

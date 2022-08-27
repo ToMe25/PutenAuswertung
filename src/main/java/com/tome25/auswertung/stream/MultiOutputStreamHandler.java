@@ -19,7 +19,7 @@ public class MultiOutputStreamHandler implements IOutputStreamHandler {
 	/**
 	 * Whether this stream handler has already been closed using the close method.
 	 */
-	private boolean closed = false;
+	private volatile boolean closed = false;
 
 	/**
 	 * An array containing all the IOutputStreamHandlers this handler writes to.
