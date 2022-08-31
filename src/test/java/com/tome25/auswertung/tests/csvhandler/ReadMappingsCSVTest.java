@@ -16,12 +16,11 @@ import java.util.Map;
 
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 import com.tome25.auswertung.CSVHandler;
 import com.tome25.auswertung.stream.FileInputStreamHandler;
 import com.tome25.auswertung.tests.rules.ErrorLogRule;
-import com.tome25.auswertung.tests.rules.TempFileInputStreamHandler;
+import com.tome25.auswertung.tests.rules.TempFileStreamHandler;
 import com.tome25.auswertung.utils.Pair;
 
 /**
@@ -32,10 +31,7 @@ import com.tome25.auswertung.utils.Pair;
 public class ReadMappingsCSVTest {
 
 	@Rule
-	public TempFileInputStreamHandler tempFolder = new TempFileInputStreamHandler();
-
-	@Rule
-	public ExpectedException thrown = ExpectedException.none();
+	public TempFileStreamHandler tempFolder = new TempFileStreamHandler();
 
 	@Rule
 	public ErrorLogRule errorLog = new ErrorLogRule();
@@ -56,7 +52,7 @@ public class ReadMappingsCSVTest {
 	 */
 	@Test
 	public void readBasic() throws IOException {
-		Pair<FileInputStreamHandler, PrintStream> tempFile = tempFolder.newTempFileHandler("basic_mappings.csv");
+		Pair<FileInputStreamHandler, PrintStream> tempFile = tempFolder.newTempInputFile("basic_mappings.csv");
 		PrintStream out = tempFile.getValue();
 		FileInputStreamHandler fiin = tempFile.getKey();
 
@@ -108,7 +104,7 @@ public class ReadMappingsCSVTest {
 	 */
 	@Test
 	public void readLongBasic() throws IOException {
-		Pair<FileInputStreamHandler, PrintStream> tempFile = tempFolder.newTempFileHandler("longer_basic_mappings.csv");
+		Pair<FileInputStreamHandler, PrintStream> tempFile = tempFolder.newTempInputFile("longer_basic_mappings.csv");
 		PrintStream out = tempFile.getValue();
 		FileInputStreamHandler fiin = tempFile.getKey();
 
@@ -136,9 +132,8 @@ public class ReadMappingsCSVTest {
 	 * 
 	 * @throws NullPointerException expected
 	 */
-	@Test
+	@Test(expected = NullPointerException.class)
 	public void testNullInput() throws NullPointerException {
-		thrown.expect(NullPointerException.class);
 		CSVHandler.readMappingCSV(null);
 	}
 
@@ -151,7 +146,7 @@ public class ReadMappingsCSVTest {
 	@Test
 	public void readMixedSeparator() throws IOException {
 		Pair<FileInputStreamHandler, PrintStream> tempFile = tempFolder
-				.newTempFileHandler("mixed_separator_mappings.csv");
+				.newTempInputFile("mixed_separator_mappings.csv");
 		PrintStream out = tempFile.getValue();
 		FileInputStreamHandler fiin = tempFile.getKey();
 
@@ -184,7 +179,7 @@ public class ReadMappingsCSVTest {
 	 */
 	@Test
 	public void readMixedLength() throws IOException {
-		Pair<FileInputStreamHandler, PrintStream> tempFile = tempFolder.newTempFileHandler("mixed_length_mappings.csv");
+		Pair<FileInputStreamHandler, PrintStream> tempFile = tempFolder.newTempInputFile("mixed_length_mappings.csv");
 		PrintStream out = tempFile.getValue();
 		FileInputStreamHandler fiin = tempFile.getKey();
 
@@ -218,7 +213,7 @@ public class ReadMappingsCSVTest {
 	@Test
 	public void readDuplicateKey() throws IOException {
 		Pair<FileInputStreamHandler, PrintStream> tempFile = tempFolder
-				.newTempFileHandler("duplicate_key_mappings.csv");
+				.newTempInputFile("duplicate_key_mappings.csv");
 		PrintStream out = tempFile.getValue();
 		FileInputStreamHandler fiin = tempFile.getKey();
 
@@ -238,7 +233,6 @@ public class ReadMappingsCSVTest {
 		assertEquals("The size of the second map of the duplicate key mappings did not match.", 2,
 				pair.getValue().size());
 		assertEquals("The result of parsing the duplicate key mappings csv did not match.", refPair, pair);
-		errorLog.checkNotEmpty();
 		errorLog.checkLine("Found duplicate entity id \"Key\". Skipping line.", 0);
 	}
 
@@ -251,7 +245,7 @@ public class ReadMappingsCSVTest {
 	@Test
 	public void readDuplicateValue() throws IOException {
 		Pair<FileInputStreamHandler, PrintStream> tempFile = tempFolder
-				.newTempFileHandler("duplicate_value_mappings.csv");
+				.newTempInputFile("duplicate_value_mappings.csv");
 		PrintStream out = tempFile.getValue();
 		FileInputStreamHandler fiin = tempFile.getKey();
 
@@ -279,7 +273,6 @@ public class ReadMappingsCSVTest {
 		assertEquals("The size of the second map of the duplicate value mappings did not match.", 5,
 				pair.getValue().size());
 		assertEquals("The result of parsing the duplicate value mappings csv did not match.", refPair, pair);
-		errorLog.checkNotEmpty();
 		errorLog.checkLine("Found duplicate id \"Value 2\". Ignoring this occurrence.", 0);
 	}
 
@@ -293,7 +286,7 @@ public class ReadMappingsCSVTest {
 	@Test
 	public void readHeader() throws IOException {
 		// Check Tier header
-		Pair<FileInputStreamHandler, PrintStream> tempFile = tempFolder.newTempFileHandler("tier_header_mappings.csv");
+		Pair<FileInputStreamHandler, PrintStream> tempFile = tempFolder.newTempInputFile("tier_header_mappings.csv");
 		PrintStream out = tempFile.getValue();
 		FileInputStreamHandler fiin = tempFile.getKey();
 
@@ -316,7 +309,7 @@ public class ReadMappingsCSVTest {
 		assertEquals("The mappings parsed from a file with header line did not match.", refPair, pair);
 
 		// Check Bereich header
-		tempFile = tempFolder.newTempFileHandler("bereich_header_mappings.csv");
+		tempFile = tempFolder.newTempInputFile("bereich_header_mappings.csv");
 		out = tempFile.getValue();
 		fiin = tempFile.getKey();
 

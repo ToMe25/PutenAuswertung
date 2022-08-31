@@ -19,7 +19,7 @@ public class TurkeyInfo {
 	 * 24 hours per day times 60 minutes per hour times 60 seconds per minute times
 	 * 1000 milliseconds per second.
 	 */
-	private static final int DAY_END = 24 * 60 * 60 * 1000;
+	public static final int DAY_END = 24 * 60 * 60 * 1000;
 
 	/**
 	 * The minimum time a turkey has to spend in a zone for it to be counted at all.
@@ -288,6 +288,16 @@ public class TurkeyInfo {
 	 */
 	public String getCurrentDate() {
 		return currentDate;
+	}
+
+	/**
+	 * Returns the time for which the values of this object are currently
+	 * calculated.
+	 * 
+	 * @return the current time.
+	 */
+	public int getCurrentTime() {
+		return currentTime;
 	}
 
 	/**

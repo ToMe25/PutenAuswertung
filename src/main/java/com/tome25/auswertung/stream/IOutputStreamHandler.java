@@ -46,7 +46,8 @@ public interface IOutputStreamHandler extends Closeable {
 	/**
 	 * Writes the info about the last day of the given turkey info to the output
 	 * stream handled by this object.<br/>
-	 * Data is handled as temporary if the current date of the turkey info is date.
+	 * Data is handled as temporary if the current date of the turkey info is date,
+	 * and its current time isn't the last ms of the day.
 	 * 
 	 * @param info  The turkey info for which to write data.
 	 * @param date  The date to write the data for. Set to {@code null} to write

@@ -87,6 +87,8 @@ public class ErrorLogRule implements TestRule {
 	public void checkLine(String line, int nr) throws NullPointerException {
 		Objects.requireNonNull(line, "The line to check for can't be null.");
 
+		checkNotEmpty();
+
 		lines.addAll(Arrays.asList(bout.toString().split(System.lineSeparator())));
 		bout.reset();
 

@@ -16,12 +16,13 @@ import com.tome25.auswertung.TurkeyInfo;
  * 
  * @author theodor
  */
+// TODO unify base methods, or all methods, with File Out impl
 public class SysOutStreamHandler implements IOutputStreamHandler {
 
 	/**
 	 * Whether this stream handler has been explicitly closed.
 	 */
-	private volatile boolean open = true;
+	private volatile boolean closed = false;
 
 	/**
 	 * Whether this stream handler handles temporary output.
@@ -58,9 +59,10 @@ public class SysOutStreamHandler implements IOutputStreamHandler {
 
 	@Override
 	public boolean println(String line) {
-		if (!open) {
+		if (closed) {
 			LogHandler.err_println(
-					String.format("Tried to write line \"%s\" to an already closed SysOutStreamHandler."), true);
+					String.format("Tried to write line \"%s\" to an already closed SysOutStreamHandler.", line), true);
+			LogHandler.print_debug_info("stream handler: %s, line: \"%s\"", toString(), line);
 			return false;
 		}
 
@@ -92,6 +94,8 @@ public class SysOutStreamHandler implements IOutputStreamHandler {
 		if (temporary && !printsTemporary()) {
 			LogHandler.err_println(String.format(
 					"Trying to write line \"%s\" to system output that does not handle temporary data.", line), true);
+			LogHandler.print_debug_info("stream handler: %s, line: \"%s\", temporary: %s", toString(), line,
+					temporary ? "true" : "false");
 			return false;
 		}
 		return println(line);
@@ -100,7 +104,18 @@ public class SysOutStreamHandler implements IOutputStreamHandler {
 	@Override
 	public boolean printDay(TurkeyInfo info, String date, Collection<String> zones) {
 		String line = CSVHandler.turkeyToCsvLine(info, date, zones);
-		return println(line, info.getCurrentDate().equals(date));
+		return println(line, info.getCurrentDate().equals(date) && info.getCurrentTime() != TurkeyInfo.DAY_END);
+	}
+
+	/**
+	 * A utility wrapper for calling {@link java.io.PrintStream#checkError() System.out.checkError}.
+	 * 
+	 * @return {@code true} if and only if this stream has encountered an
+	 *         {@code IOException} other than {@code InterruptedIOException}, or the
+	 *         {@code setError} method has been invoked.
+	 */
+	public boolean checkError() {
+		return System.out.checkError();
 	}
 
 	@Override
@@ -115,18 +130,18 @@ public class SysOutStreamHandler implements IOutputStreamHandler {
 
 	@Override
 	public void close() {
-		if (open) {
-			open = false;
+		if (!closed) {
+			closed = true;
 		} else {
 			LogHandler.err_println("Trying to close an already closed SysOutStreamHandler.", true);
-			LogHandler.err_println("Output Stream Handler: " + toString(), true);
+			LogHandler.print_debug_info("stream handler: %s", toString());
 		}
 	}
 
 	@Override
 	public String toString() {
-		return String.format(getClass().getSimpleName() + "[prints temporary=%s, open=%s]", temp ? "true" : "false",
-				open ? "true" : "false");
+		return String.format(getClass().getSimpleName() + "[prints temporary=%s, closed=%s]", temp ? "true" : "false",
+				closed ? "true" : "false");
 	}
 
 }
