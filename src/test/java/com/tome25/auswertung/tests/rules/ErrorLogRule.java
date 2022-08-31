@@ -28,13 +28,13 @@ public class ErrorLogRule implements TestRule {
 	/**
 	 * The {@link ByteArrayOutputStream} to write the error log to.
 	 */
-	private static final ByteArrayOutputStream bout = new ByteArrayOutputStream();
+	private final ByteArrayOutputStream bout = new ByteArrayOutputStream();
 
 	/**
 	 * The {@link PrintStream} to give to {@link LogHandler} to write to
 	 * {@code bout}.
 	 */
-	private static final PrintStream pout = new PrintStream(new MultiOutputStream(System.err, bout));
+	private final PrintStream pout = new PrintStream(new MultiOutputStream(System.err, bout));
 
 	/**
 	 * The list containing all the so far found lines of error logging.
@@ -95,7 +95,7 @@ public class ErrorLogRule implements TestRule {
 		String ln = lines.get(nr);
 		lines.set(nr, null);
 
-		assertEquals("The error log line number " + nr + " didn't match.", ln, line);
+		assertEquals("The error log line number " + nr + " didn't match.", line, ln);
 	}
 
 	/**
