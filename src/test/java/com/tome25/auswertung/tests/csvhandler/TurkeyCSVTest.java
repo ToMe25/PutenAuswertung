@@ -77,7 +77,7 @@ public class TurkeyCSVTest {
 		String date = "01.01.2022";
 		TurkeyInfo info = getBasicInfo(date);
 		assertEquals("Getting single day info from a basic TurkeyInfo returned an invalid string.",
-				"0;01.01.2022;5;11:39:55.28;10:51:31.53;01:28:33.19", CSVHandler.turkeyToCsvLine(info, date, null));
+				"0;01.01.2022;5;11:39:55.28;01:28:33.19;10:51:31.53", CSVHandler.turkeyToCsvLine(info, date, null));
 	}
 
 	/**

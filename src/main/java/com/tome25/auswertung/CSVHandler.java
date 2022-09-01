@@ -208,8 +208,10 @@ public class CSVHandler {
 	 *               write.<br/>
 	 *               Used for ordering, selective printing, or printing zones this
 	 *               turkey did not enter.<br/>
-	 *               If this is {@code null} or empty the potentially incomplete or
-	 *               unordered zone list from the turkey is used instead.
+	 *               If this is {@code null} or empty the potentially incomplete
+	 *               zone list from the {@link TurkeyInfo} is used instead.<br/>
+	 *               If the {@link TurkeyInfo} zones are used they are ordered
+	 *               alphabetically.
 	 * @return The newly generated output line.
 	 * @throws NullPointerException If turkey is {@code null}.
 	 */
@@ -220,7 +222,8 @@ public class CSVHandler {
 		Map<String, ?> zoneTimes = date == null ? turkey.getTotalZoneTimes() : turkey.getDayZoneTimes(date);
 
 		if (zones == null || zones.isEmpty()) {
-			zones = zoneTimes.keySet();
+			zones = new ArrayList<String>(zoneTimes.keySet());
+			((ArrayList<String>) zones).sort(IntOrStringComparator.INSTANCE);
 		}
 
 		String result = null;

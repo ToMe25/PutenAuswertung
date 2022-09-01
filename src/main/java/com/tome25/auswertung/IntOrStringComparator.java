@@ -12,6 +12,12 @@ import com.tome25.auswertung.utils.StringUtils;
  */
 public class IntOrStringComparator implements Comparator<String> {
 
+	/**
+	 * The default instance of this type of {@link Comparator}.<br/>
+	 * There should be no need to ever create another instance.
+	 */
+	public static final IntOrStringComparator INSTANCE = new IntOrStringComparator();
+
 	@Override
 	public int compare(String o1, String o2) {
 		if (StringUtils.isInteger(o1) && !StringUtils.isInteger(o2)) {

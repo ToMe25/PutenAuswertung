@@ -37,7 +37,7 @@ public class DataHandler {
 		Pair<Map<String, List<String>>, Map<String, String>> zones = CSVHandler.readMappingCSV(zonesStream);
 		Pair<Map<String, List<String>>, Map<String, String>> turkeys = CSVHandler.readMappingCSV(turkeyStream);
 
-		Map<String, TurkeyInfo> turkeyInfos = new TreeMap<>(new IntOrStringComparator());
+		Map<String, TurkeyInfo> turkeyInfos = new TreeMap<>(IntOrStringComparator.INSTANCE);
 		String lastDate = null;
 		outputStream.println(CSVHandler.turkeyCsvHeader(zones.getKey().keySet()));
 
