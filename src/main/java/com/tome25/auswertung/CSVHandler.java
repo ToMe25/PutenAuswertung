@@ -85,9 +85,8 @@ public class CSVHandler {
 				List<String> list = new ArrayList<>();
 				for (int i = 1; i < tokens.length; i++) {
 					if (second.containsKey(tokens[i])) {
-						LogHandler.err_println(String.format(
-								"Found duplicate id \"%s\". Ignoring this occurrence.",
-								tokens[i]));
+						LogHandler.err_println(
+								String.format("Found duplicate id \"%s\". Ignoring this occurrence.", tokens[i]));
 						LogHandler.print_debug_info("Input Stream Handler: %s, Separator Chars: %s, tokens: [%s]",
 								input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", (Object[]) tokens));
 					} else {
@@ -186,8 +185,11 @@ public class CSVHandler {
 	 * 
 	 * @param zones The zones that can be found in the input data.
 	 * @return The csv headers as a single string.
+	 * @throws NullPointerException If {@code zones} is {@code null}.
 	 */
-	public static String turkeyCsvHeader(Collection<String> zones) {
+	public static String turkeyCsvHeader(Collection<String> zones) throws NullPointerException {
+		Objects.requireNonNull(zones, "The list of zones for the header line cannot be null.");
+
 		String result = StringUtils.join(DEFAULT_SEPARATOR, "Tier", "Datum", "Bereichswechsel");
 		for (String zone : zones) {
 			result += DEFAULT_SEPARATOR + "Aufenthalt in zone " + zone;
@@ -209,8 +211,12 @@ public class CSVHandler {
 	 *               If this is {@code null} or empty the potentially incomplete or
 	 *               unordered zone list from the turkey is used instead.
 	 * @return The newly generated output line.
+	 * @throws NullPointerException If turkey is {@code null}.
 	 */
-	public static String turkeyToCsvLine(TurkeyInfo turkey, String date, Collection<String> zones) {
+	public static String turkeyToCsvLine(TurkeyInfo turkey, String date, Collection<String> zones)
+			throws NullPointerException {
+		Objects.requireNonNull(turkey, "The turkey object to convert cannot be null.");
+
 		Map<String, ?> zoneTimes = date == null ? turkey.getTotalZoneTimes() : turkey.getDayZoneTimes(date);
 
 		if (zones == null || zones.isEmpty()) {

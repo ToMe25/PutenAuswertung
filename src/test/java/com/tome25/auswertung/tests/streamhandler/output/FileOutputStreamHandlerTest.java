@@ -15,6 +15,7 @@ import org.junit.Test;
 
 import com.tome25.auswertung.TurkeyInfo;
 import com.tome25.auswertung.stream.FileOutputStreamHandler;
+import com.tome25.auswertung.tests.csvhandler.TurkeyCSVTest;
 import com.tome25.auswertung.tests.rules.ErrorLogRule;
 import com.tome25.auswertung.tests.rules.TempFileStreamHandler;
 import com.tome25.auswertung.utils.Pair;
@@ -159,19 +160,11 @@ public class FileOutputStreamHandlerTest {
 		Pair<FileOutputStreamHandler, BufferedReader> tempFile = tempFolder.newTempOutputFile("print_day_test.csv");
 		FileOutputStreamHandler fiout = tempFile.getKey();
 		BufferedReader bin = tempFile.getValue();
+		TurkeyInfo ti = TurkeyCSVTest.getBasicInfo("01.01.2022");
 
-		TurkeyInfo ti = new TurkeyInfo("0", Arrays.asList(new String[] { "T1", "T2", "T3" }), "Zone 1", "01:01:2022",
-				10512, true);
-		ti.changeZone("Zone 2", 20415, "01:01:2022");
-		ti.changeZone("Zone 2", 100064, "01:01:2022");
-		ti.changeZone("Zone 1", 599612, "01:01:2022");
-		ti.changeZone("Zone 2", 43000000, "01:01:2022");
-		ti.changeZone("Zone 1", 81512333, "01:01:2022");
-		ti.endDay("01:01:2022");
-
-		fiout.printDay(ti, "01:01:2022", Arrays.asList(new String[] { "Zone 1", "Zone 2", "Zone 3" }));
+		fiout.printDay(ti, "01.01.2022", Arrays.asList(new String[] { "Z1", "Zone 2", "#3", "Zone 4" }));
 		assertEquals("The printed csv line for the given TurkeyInfo didn't match.",
-				"0;01:01:2022;4;13:08:28.47;10:51:31.53;00:00:00.00", bin.readLine());
+				"0;01.01.2022;5;01:28:33.19;10:51:31.53;11:39:55.28;00:00:00.00", bin.readLine());
 		assertNull("Printing a single day of a single TurkeyInfo produced multiple lines.", bin.readLine());
 	}
 
