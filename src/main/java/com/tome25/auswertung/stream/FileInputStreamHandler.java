@@ -31,7 +31,7 @@ public class FileInputStreamHandler implements IInputStreamHandler {
 	/**
 	 * Whether this Stream Handler is yet to be closed.
 	 */
-	private volatile boolean open = true;
+	private volatile boolean closed = false;
 
 	/**
 	 * Creates a new FileStreamHandler reading the content of the given file.
@@ -53,7 +53,12 @@ public class FileInputStreamHandler implements IInputStreamHandler {
 
 	@Override
 	public String readline() throws IOException {
+		if (closed) {
+			throw new IOException("stream handler closed");
+		}
+
 		ByteArrayOutputStream barr = new ByteArrayOutputStream();
+
 		while (available()) {
 			int read = (byte) stream.read();
 			if (read == '\n') {
@@ -68,6 +73,10 @@ public class FileInputStreamHandler implements IInputStreamHandler {
 
 	@Override
 	public boolean available() {
+		if (closed) {
+			return false;
+		}
+
 		try {
 			return stream.available() > 0;
 		} catch (IOException e) {
@@ -80,6 +89,10 @@ public class FileInputStreamHandler implements IInputStreamHandler {
 
 	@Override
 	public boolean done() {
+		if (closed) {
+			return true;
+		}
+
 		try {
 			return stream.available() == 0;
 		} catch (IOException e) {
@@ -92,8 +105,8 @@ public class FileInputStreamHandler implements IInputStreamHandler {
 
 	@Override
 	public void close() throws IOException {
-		if (open) {
-			open = false;
+		if (!closed) {
+			closed = true;
 			stream.close();
 		} else {
 			LogHandler.err_println("Trying to close an already closed FileInputStreamHandler.", true);
@@ -104,19 +117,19 @@ public class FileInputStreamHandler implements IInputStreamHandler {
 	@Override
 	public String toString() {
 		int bav = -1;
-		if (!open) {
+		if (closed) {
 			bav = 0;
 		} else {
 			try {
 				bav = stream.available();
 			} catch (IOException e) {
 				LogHandler.print_exception(e, "input handler to stream stream.available",
-						"input file: \"%s\", open: %s", input_file.toString(), open ? "true" : "false");
+						"input file: \"%s\", closed: %s", input_file.toString(), closed ? "true" : "false");
 			}
 		}
 
-		return String.format(getClass().getSimpleName() + "[input_file=\"%s\", open=%s, done=%s, bytes_available=%s]",
-				input_file.toString(), open ? "true" : "false", done() ? "true" : "false",
+		return String.format(getClass().getSimpleName() + "[input_file=\"%s\", closed=%s, done=%s, bytes_available=%s]",
+				input_file.toString(), closed ? "true" : "false", done() ? "true" : "false",
 				bav == -1 ? "error" : Integer.toString(bav));
 	}
 

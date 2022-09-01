@@ -108,7 +108,7 @@ public class SysOutStreamHandler implements IOutputStreamHandler {
 	}
 
 	/**
-	 * A utility wrapper for calling {@link java.io.PrintStream#checkError() System.out.checkError}.
+	 * A utility wrapper for calling {@link System#out}{@link java.io.PrintStream#checkError() .checkError()}.
 	 * 
 	 * @return {@code true} if and only if this stream has encountered an
 	 *         {@code IOException} other than {@code InterruptedIOException}, or the

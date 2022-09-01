@@ -175,4 +175,17 @@ public class FileOutputStreamHandlerTest {
 		assertNull("Printing a single day of a single TurkeyInfo produced multiple lines.", bin.readLine());
 	}
 
+	/**
+	 * Make sure that creating a {@link FileOutputStreamHandler} with a {@code null}
+	 * output file.
+	 * 
+	 * @throws IOException          If stuff goes wrong. Probably never.
+	 * @throws NullPointerException Always.
+	 */
+	@Test(expected = NullPointerException.class)
+	public void writeNull() throws IOException, NullPointerException {
+		FileOutputStreamHandler fiout = new FileOutputStreamHandler(null);
+		fiout.close();// Shouldn't be called ever.
+	}
+
 }
