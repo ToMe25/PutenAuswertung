@@ -47,13 +47,13 @@ public class AntennaRecord {
 		this.date = date;
 		this.time = time;
 		this.antenna = antenna;
-		tod = TimeUtils.parseTime(time);
+		tod = (int) TimeUtils.parseTime(time);
 	}
 
 	@Override
 	public String toString() {
-		return String.format("AntennaRecord[transponder=%s, date=%s, time=%s, antenna=%s, time of day=%d]",
-				transponder, date, time, antenna, tod);
+		return String.format("AntennaRecord[transponder=%s, date=%s, time=%s, antenna=%s, time of day=%d]", transponder,
+				date, time, antenna, tod);
 	}
 
 }
