@@ -40,7 +40,7 @@ public class TimeUtils {
 
 		String seconds_split[] = split[2].split("\\.");
 
-		if (seconds_split.length > 2) {
+		if (seconds_split.length == 0 || seconds_split.length > 2) {
 			throw new IllegalArgumentException("Time string \"" + time + "\" does not match format.");
 		}
 

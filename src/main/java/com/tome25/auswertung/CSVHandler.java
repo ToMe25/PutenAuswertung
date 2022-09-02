@@ -135,8 +135,11 @@ public class CSVHandler {
 			String tokens[] = null;
 			try {
 				line = input.readline();
-				if (line == null || line.isEmpty()) {
-					LogHandler.err_println("Read an empty line from Input Stream Handler: " + input.toString(), true);
+				if (line == null || line.trim().isEmpty()) {
+					LogHandler.err_println("Skipped an empty line from input file.", true);
+					LogHandler.print_debug_info(
+							"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
+							input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", (Object[]) tokens), line);
 					continue;
 				}
 

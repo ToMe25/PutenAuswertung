@@ -70,8 +70,8 @@ public class TimeUtilsTest {
 	public void singleDigitsStringToMs() {
 		assertEquals("Parsing a time with single digit components without padding didn't match.", 3723400,
 				TimeUtils.parseTime("1:2:3.4"));// 3.4 seconds are 3 seconds and 400 ms
-		assertEquals("Parsing a time with single digit components with padding didn't match.", 3723040,
-				TimeUtils.parseTime("01:02:03.04"));
+		assertEquals("Parsing a time with single digit components with padding didn't match.", 3723400,
+				TimeUtils.parseTime("01:02:03.40"));
 	}
 
 	/**
