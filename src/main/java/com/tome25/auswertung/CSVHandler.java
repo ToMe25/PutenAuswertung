@@ -122,14 +122,19 @@ public class CSVHandler {
 	 * 
 	 * @param input The stream handler to read from.
 	 * @return The newly created {@link AntennaRecord}. Or null if there was none.
+	 * @throws NullPointerException If the input stream handler to read from is
+	 *                              {@code null}.
 	 */
-	public static AntennaRecord readAntennaRecord(IInputStreamHandler input) {
+	public static AntennaRecord readAntennaRecord(IInputStreamHandler input) throws NullPointerException {
+		Objects.requireNonNull(input, "The input stream handler to read can't be null.");
+
 		AntennaRecord result = null;
 		boolean last_failed = false;
-		while (!input.done()) {
+		main_loop: while (!input.done()) {
+			String line = null;
 			String tokens[] = null;
 			try {
-				String line = input.readline();
+				line = input.readline();
 				if (line == null || line.isEmpty()) {
 					LogHandler.err_println("Read an empty line from Input Stream Handler: " + input.toString(), true);
 					continue;
@@ -138,9 +143,9 @@ public class CSVHandler {
 				tokens = line.trim().split(SEPARATOR_REGEX);
 				if (tokens.length != 4) {
 					LogHandler.err_println(String
-							.format("Input String \"%s\" did not contain exactly four tokens. Skipping line.", line));
+							.format("Input line \"%s\" did not contain exactly four tokens. Skipping line.", line));
 					LogHandler.print_debug_info(
-							"Input Stream Handler: %s, Separator Chars: %s, tokens: [%s], line: \"%s\"",
+							"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
 							input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", (Object[]) tokens), line);
 					continue;
 				}
@@ -148,6 +153,17 @@ public class CSVHandler {
 				if (tokens[0].equalsIgnoreCase("transponder")) {
 					LogHandler.out_println("Read header line: " + line, true);
 					continue;
+				}
+
+				for (String token : tokens) {
+					if (token.trim().isEmpty()) {
+						LogHandler.err_println(
+								String.format("Input line \"%s\" contained an empty token. Skipping line.", line));
+						LogHandler.print_debug_info(
+								"Input Stream Handler: %s, Spearator Chars: %s, Tokens: [%s], Line: \"%s\"",
+								input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", (Object[]) tokens), line);
+						continue main_loop;
+					}
 				}
 
 				result = new AntennaRecord(tokens[0], tokens[1], tokens[2], tokens[3]);
@@ -166,8 +182,9 @@ public class CSVHandler {
 				} else {
 					last_failed = true;
 				}
-			} catch (NumberFormatException e) {
-				LogHandler.err_println("Parsing time of day of antenna record failed. Skipping line.");
+			} catch (IllegalArgumentException e) {
+				LogHandler
+						.err_println(String.format("Parsing time of day of line \"%s\" failed. Skipping line.", line));
 				LogHandler.print_exception(e, "parse record time of day",
 						"Input Stream Handler: %s, Time String: \"%s\"", input.toString(), tokens[2]);
 			}

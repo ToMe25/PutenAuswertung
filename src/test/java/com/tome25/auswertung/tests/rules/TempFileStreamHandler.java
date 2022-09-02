@@ -60,10 +60,16 @@ public class TempFileStreamHandler extends TemporaryFolder {
 	 * @param name The name of the new file to create. {@code null} for random.
 	 * @return A {@link Pair} containing the {@link FileInputStreamHandler} and
 	 *         {@link PrintStream}.
-	 * @throws IOException If creating the file fails, for example because it
-	 *                     already exists.
+	 * @throws IOException       If creating the file fails, for example because it
+	 *                           already exists.<br/>
+	 *                           Or if the file cannot be opened for reading or
+	 *                           writing.
+	 * @throws SecurityException If a {@link java.lang.SecurityManager
+	 *                           SecurityManager} exists and denies
+	 *                           reading/writing/creating the file.
 	 */
-	public Pair<FileInputStreamHandler, PrintStream> newTempInputFile(String name) throws IOException {
+	public Pair<FileInputStreamHandler, PrintStream> newTempInputFile(String name)
+			throws IOException, SecurityException {
 		File tempFile = name == null ? newFile() : newFile(name);
 
 		PrintStream pout = new PrintStream(tempFile);

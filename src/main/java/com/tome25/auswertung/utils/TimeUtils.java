@@ -19,14 +19,13 @@ public class TimeUtils {
 	 * 
 	 * @param time The time to convert.
 	 * @return The parsed time.
-	 * @throws NumberFormatException    if part of the time string is not contain a
-	 *                                  parsable integer.
 	 * @throws NullPointerException     If {@code time} is {@code null}.
 	 * @throws IllegalArgumentException If {@code time} does not match the required
-	 *                                  input format("HH:MM:SS.2").
+	 *                                  input format("HH:MM:SS.2").<br/>
+	 *                                  Or if part of the time string is not contain
+	 *                                  a parsable integer.
 	 */
-	public static long parseTime(String time)
-			throws NumberFormatException, NullPointerException, IllegalArgumentException {
+	public static long parseTime(String time) throws NullPointerException, IllegalArgumentException {
 		Objects.requireNonNull(time, "The time to parse cannot be null.");
 
 		long result = 0;

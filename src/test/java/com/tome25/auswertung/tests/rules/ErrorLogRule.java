@@ -62,7 +62,7 @@ public class ErrorLogRule implements TestRule {
 
 		boolean found = false;
 		for (int i = 0; i < lines.size(); i++) {
-			if (lines.get(i).equals(line)) {
+			if (line.equals(lines.get(i))) {
 				found = true;
 				lines.set(i, null);
 				break;

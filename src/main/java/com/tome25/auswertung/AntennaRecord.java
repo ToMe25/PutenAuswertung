@@ -1,5 +1,7 @@
 package com.tome25.auswertung;
 
+import java.util.Objects;
+
 import com.tome25.auswertung.utils.TimeUtils;
 
 public class AntennaRecord {
@@ -40,9 +42,16 @@ public class AntennaRecord {
 	 * @param time        The time of day at which this record was created. Format
 	 *                    "HH:MM:SS.2".
 	 * @param antenna     The antenna that recorded this data set.
-	 * @throws NumberFormatException if parsing the time of day failed.
+	 * @throws NullPointerException     If one of the arguments if {@code null}.
+	 * @throws IllegalArgumentException If parsing the time of day fails.
 	 */
-	public AntennaRecord(String transponder, String date, String time, String antenna) throws NumberFormatException {
+	public AntennaRecord(String transponder, String date, String time, String antenna)
+			throws NullPointerException, IllegalArgumentException {
+		Objects.requireNonNull(transponder, "The transponder that was recorded can not be null.");
+		Objects.requireNonNull(date, "The date the record was taken on can't be null.");
+		Objects.requireNonNull(time, "The time at which the record was created cannot be null.");
+		Objects.requireNonNull(antenna, "The antenna that recorded the record can't be null.");
+
 		this.transponder = transponder;
 		this.date = date;
 		this.time = time;
@@ -54,6 +63,45 @@ public class AntennaRecord {
 	public String toString() {
 		return String.format("AntennaRecord[transponder=%s, date=%s, time=%s, antenna=%s, time of day=%d]", transponder,
 				date, time, antenna, tod);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(antenna, date, time, tod, transponder);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+
+		if (obj == null) {
+			return false;
+		}
+
+		if (getClass() != obj.getClass()) {
+			return false;
+		}
+
+		AntennaRecord other = (AntennaRecord) obj;
+		if (!Objects.equals(antenna, other.antenna)) {
+			return false;
+		}
+
+		if (!Objects.equals(date, other.date)) {
+			return false;
+		}
+
+		if (!Objects.equals(time, other.time) || tod != other.tod) {
+			return false;
+		}
+
+		if (!Objects.equals(transponder, other.transponder)) {
+			return false;
+		}
+
+		return true;
 	}
 
 }
