@@ -1,5 +1,6 @@
 package com.tome25.auswertung.utils;
 
+import java.util.Calendar;
 import java.util.Objects;
 
 /**
@@ -66,13 +67,80 @@ public class TimeUtils {
 	 * 
 	 * @param time The time in miliseconds to convert.
 	 * @return The string representation of the given time.
+	 * @throws IllegalArgumentException If {@code time} is less than 0.
 	 */
-	public static String encodeTime(long time) {
+	public static String encodeTime(long time) throws IllegalArgumentException {
+		if (time < 0) {
+			throw new IllegalArgumentException("Time to encode can't be negative.");
+		}
+
 		int hours = (int) (time / 3600000); // 60 minutes * 60 seconds * 1000 ms
 		int minutes = (int) (time % 3600000 / 60000);
 		int seconds = (int) (time % 60000 / 1000);
 		int hundredths = (int) (time % 1000 / 10);
 
 		return String.format("%02d:%02d:%02d.%02d", hours, minutes, seconds, hundredths);
+	}
+
+	/**
+	 * Parses the given date string and converts it to a {@link Calendar}
+	 * representing the encoded time.
+	 * 
+	 * @param date The date to parse.
+	 * @return The parsed date.
+	 * @throws NullPointerException     If {@code date} is {@code null}.
+	 * @throws IllegalArgumentException If {@code date} does not match the format
+	 *                                  "DD.MM.YYYY".
+	 */
+	public static Calendar parseDate(String date) throws NullPointerException, IllegalArgumentException {
+		Objects.requireNonNull(date, "The date to parse can't be null.");
+
+		String dateSplit[] = date.split("\\.");
+		if (dateSplit.length != 3) {
+			throw new IllegalArgumentException("Date string \"" + date + "\" does not match required format.");
+		}
+
+		Calendar c = Calendar.getInstance();
+		c.setTimeInMillis(0);
+		c.set(Integer.parseInt(dateSplit[2]), Integer.parseInt(dateSplit[1]) - 1, Integer.parseInt(dateSplit[0]));
+
+		return c;
+	}
+
+	/**
+	 * Converts the given {@link Calendar} object to a date string of the format
+	 * "DD.MM.YYYY".
+	 * 
+	 * @param date The date to convert.
+	 * @return The date string representing the given date.
+	 * @throws NullPointerException If {@code date} is {@code null}.
+	 */
+	public static String encodeDate(Calendar date) throws NullPointerException {
+		Objects.requireNonNull(date, "The date to encode can't be null.");
+
+		return String.format("%02d.%02d.%04d", date.get(Calendar.DATE), date.get(Calendar.MONTH) + 1,
+				date.get(Calendar.YEAR));
+	}
+
+	/**
+	 * Checks whether {@code second} is exactly one day after {@code first}.
+	 * 
+	 * @param first  The first of the days to compare.
+	 * @param second The second of the days to compare.
+	 * @return {@code true} if {@code second} is the day after {@code first}.
+	 * @throws NullPointerException     If {@code first} or {@code second} is
+	 *                                  {@code null}.
+	 * @throws IllegalArgumentException If one of the dates doesn't match the format
+	 *                                  "DD.MM.YYYY".
+	 */
+	public static boolean isNextDay(String first, String second) throws NullPointerException, IllegalArgumentException {
+		Objects.requireNonNull(first, "The first day to check can't be null.");
+		Objects.requireNonNull(second, "The second day to check can't be null.");
+
+		Calendar c1 = parseDate(first);
+		Calendar c2 = parseDate(second);
+		c1.add(Calendar.DATE, 1);
+
+		return c1.equals(c2);
 	}
 }
