@@ -120,6 +120,41 @@ public class TempFileStreamHandler extends TemporaryFolder {
 		return new Pair<FileOutputStreamHandler, BufferedReader>(fout, bin);
 	}
 
+	/**
+	 * Creates a temporary file with a {@link FileInputStreamHandler} and a
+	 * {@link FileOutputStreamHandler} pointing to it.<br/>
+	 * The {@link FileOutputStreamHandler} does not handle temporary data, but does
+	 * auto flush.
+	 * 
+	 * @return A {@link Pair} containing the two objects.
+	 * @throws IOException If creating the file fails, for example because it
+	 *                     already exists.
+	 */
+	public Pair<FileInputStreamHandler, FileOutputStreamHandler> newTempIOFile() throws IOException {
+		return newTempIOFile(null);
+	}
+
+	/**
+	 * Creates a temporary file with a {@link FileInputStreamHandler} and a
+	 * {@link FileOutputStreamHandler} pointing to it.<br/>
+	 * The {@link FileOutputStreamHandler} does not handle temporary data, but does
+	 * auto flush.
+	 * 
+	 * @param name The name of the new file to create. {@code null} for random.
+	 * @return A {@link Pair} containing the two objects.
+	 * @throws IOException If creating the file fails, for example because it
+	 *                     already exists.
+	 */
+	public Pair<FileInputStreamHandler, FileOutputStreamHandler> newTempIOFile(String name) throws IOException {
+		File tempFile = name == null ? newFile() : newFile(name);
+
+		FileInputStreamHandler fin = new FileInputStreamHandler(tempFile);
+		tempHandlers.add(fin);
+		FileOutputStreamHandler fout = new FileOutputStreamHandler(tempFile, false, true);
+
+		return new Pair<FileInputStreamHandler, FileOutputStreamHandler>(fin, fout);
+	}
+
 	@Override
 	protected void after() {
 		for (Closeable c : tempHandlers) {

@@ -9,6 +9,7 @@ import java.util.TreeMap;
 import com.tome25.auswertung.stream.IInputStreamHandler;
 import com.tome25.auswertung.stream.IOutputStreamHandler;
 import com.tome25.auswertung.utils.Pair;
+import com.tome25.auswertung.utils.TimeUtils;
 
 /**
  * The class handling the main data analysis/conversion.
@@ -70,7 +71,16 @@ public class DataHandler {
 				turkeyInfos.put(turkeyId, new TurkeyInfo(turkeyId, turkeys.getKey().get(turkeyId),
 						zones.getValue().get(record.antenna), record.date, record.tod, fillDays));
 			} else {
-				turkeyInfos.get(turkeyId).changeZone(zones.getValue().get(record.antenna), record.tod, record.date);
+				try {
+					turkeyInfos.get(turkeyId).changeZone(zones.getValue().get(record.antenna), record.tod, record.date);
+				} catch (IllegalArgumentException e) {
+					LogHandler.err_println(
+							"New antenna record is before the last one for the same turkey. Skipping line.");
+					LogHandler.print_exception(e, "update turkey zone",
+							"Antenna Record: %s, fillDays: %s, new time: %s, current time: %s", record,
+							fillDays ? "true" : "false", record.time,
+							TimeUtils.encodeTime(turkeyInfos.get(turkeyId).getCurrentTime()));
+				}
 			}
 		}
 

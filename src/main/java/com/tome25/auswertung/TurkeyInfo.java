@@ -24,7 +24,7 @@ public class TurkeyInfo {
 	/**
 	 * The minimum time a turkey has to spend in a zone for it to be counted at all.
 	 */
-	private static final int MIN_ZONE_TIME = 5 * 60 * 1000;
+	public static final int MIN_ZONE_TIME = 5 * 60 * 1000;
 
 	/**
 	 * Whether beginnings and ends of days where the adjacent day is not known
@@ -100,12 +100,18 @@ public class TurkeyInfo {
 	private Map<String, Integer> dayZoneChanges = new HashMap<>();
 
 	/**
-	 * Creates a new TurkeyInfo object representing the state of a turkey.
+	 * Creates a new TurkeyInfo object representing the state of a turkey.<br/>
+	 * Set {@code date} to {@code null} to mark this turkey as not yet
+	 * recorded.<br/>
+	 * {@code currentZone} is handled as the start zone in this case, and can be
+	 * {@code null} to represent the zone being unknown.
 	 * 
 	 * @param id           The string id used to represent this turkey.
 	 * @param transponders A list containing the string ids of the transponders
 	 *                     tracking this turkey.
-	 * @param currentZone  The zone this turkey is currently in.
+	 * @param currentZone  The zone this turkey is currently in.<br/>
+	 *                     Can only be {@code null} if {@code date} is also
+	 *                     {@code null}.
 	 * @param date         The day of the first record of this turkey. Used for
 	 *                     current day time counting.
 	 * @param time         The time of the first record of this turkey.
@@ -115,6 +121,14 @@ public class TurkeyInfo {
 	 */
 	public TurkeyInfo(String id, List<String> transponders, String currentZone, String date, int time,
 			boolean fillDay) {
+		if (date != null && (currentZone == null || currentZone.trim().isEmpty())) {
+			throw new NullPointerException("The current zone cannot be null when the date isn't null.");
+		}
+
+		if (currentZone != null) {
+			currentZone = currentZone.trim();
+		}
+
 		this.id = id;
 		this.transponders = transponders;
 		this.currentZone = this.lastZone = currentZone;
@@ -123,7 +137,7 @@ public class TurkeyInfo {
 		this.fillDay = fillDay;
 
 		dayZoneTimes.put(date, new HashMap<String, Integer>());
-		if (fillDay) {
+		if (fillDay && currentZone != null) {
 			dayZoneTimes.get(date).put(currentZone, time);
 			totalZoneTimes.put(currentZone, (long) time);
 		}
@@ -140,25 +154,42 @@ public class TurkeyInfo {
 	 * @param newZone The zone by which this turkey was detected.
 	 * @param time    The time at which the antenna record was created.
 	 * @param date    The date of the antenna record.
-	 * @throws NullPointerException if {@code newZone} or {@code date} is
-	 *                              {@code null}.
+	 * @throws NullPointerException     If {@code newZone} or {@code date} is
+	 *                                  {@code null}.
+	 * @throws IllegalArgumentException If the new time is before the current time.
 	 */
-	public void changeZone(String newZone, int time, String date) throws NullPointerException {
+	public void changeZone(String newZone, int time, String date)
+			throws NullPointerException, IllegalArgumentException {
 		Objects.requireNonNull(newZone, "The zone the turkey moved into cannot be null.");
 		Objects.requireNonNull(date, "The date at which the change occurred cannot be null.");
 
 		// FIXME handle fillDay being false
-		if (date != currentDate) {
-			endDay(date);
+		if (!date.equals(currentDate)) {
+			if (currentDate == null) {
+				currentDate = date;
+			} else {
+				endDay(date);
+			}
 		}
 
-		int timeSpent = time - currentTime;
-		addDayTime(date, currentZone, timeSpent);
-		addTotalTime(currentZone, timeSpent);
+		if (time < currentTime) {
+			throw new IllegalArgumentException("New time was before old time.");
+		}
+
+		if (currentZone != null) {
+			int timeSpent = time - currentTime;
+			addDayTime(date, currentZone, timeSpent);
+			addTotalTime(currentZone, timeSpent);
+		} else if (fillDay) {
+			addDayTime(date, newZone, time);
+			addTotalTime(newZone, time);
+			currentZone = lastZone = newZone;
+			lastZoneChange = time;
+		}
 
 		currentTime = time;
 
-		if (newZone != currentZone) {
+		if (!newZone.equals(currentZone) && currentZone != null) {
 			int zoneTime = time - lastZoneChange;
 			if (zoneTime < MIN_ZONE_TIME) {// TODO disable with argument
 				// FIXME handle day borders
@@ -181,8 +212,8 @@ public class TurkeyInfo {
 			}
 
 			lastZoneChange = time;
-			currentZone = newZone;
 		}
+		currentZone = newZone;
 	}
 
 	/**

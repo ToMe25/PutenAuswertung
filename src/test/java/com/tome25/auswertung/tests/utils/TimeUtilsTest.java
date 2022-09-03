@@ -149,6 +149,18 @@ public class TimeUtilsTest {
 	}
 
 	/**
+	 * Makes sure that a date with single digit components is handled correctly.
+	 */
+	@Test
+	public void singleDigitStringToCal() {
+		Calendar cal = TimeUtils.parseDate("5.3.9");
+		Calendar refCal = Calendar.getInstance();
+		refCal.setTimeInMillis(0);
+		refCal.set(9, Calendar.MARCH, 5);
+		assertEquals("Parsing a single digit date didn't match.", refCal, cal);
+	}
+
+	/**
 	 * Tests encoding time from a {@link Calendar} object as a string.
 	 */
 	@Test
