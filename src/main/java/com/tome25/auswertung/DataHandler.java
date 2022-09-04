@@ -84,6 +84,7 @@ public class DataHandler {
 			}
 		}
 
+		printDayOutput(outputStream, turkeyInfos.values(), lastDate, zones.getKey().keySet());
 		printDayOutput(outputStream, turkeyInfos.values(), null, zones.getKey().keySet());
 
 		try {

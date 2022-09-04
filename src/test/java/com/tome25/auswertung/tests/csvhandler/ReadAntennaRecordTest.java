@@ -249,7 +249,8 @@ public class ReadAntennaRecordTest {
 		AntennaRecord rec = CSVHandler.readAntennaRecord(fiin);
 		AntennaRecord refRec = new AntennaRecord("Trans2", "02.05.2022", "01:41:02.23", "Ant3");
 		assertEquals("Reading a line with invalid time didn't correctly read the next line.", refRec, rec);
-		errorLog.checkLine("Parsing time of day of line \"Trans1;01.01.2022;15:24.12;Ant1\" failed. Skipping line.", 0);
+		errorLog.checkLine(
+				"Parsing time of day or date of line \"Trans1;01.01.2022;15:24.12;Ant1\" failed. Skipping line.", 0);
 
 		pout.println("Trans1;01.01.2020;312:12:Sec.12;Ant1");
 		pout.println("Transponder2;02.05.2022;01:41:02.23;Antenna2");
@@ -258,7 +259,7 @@ public class ReadAntennaRecordTest {
 		refRec = new AntennaRecord("Transponder2", "02.05.2022", "01:41:02.23", "Antenna2");
 		assertEquals("The line after one with an invalid time didn't match.", refRec, rec);
 		errorLog.checkLine(
-				"Parsing time of day of line \"Trans1;01.01.2020;312:12:Sec.12;Ant1\" failed. Skipping line.");
+				"Parsing time of day or date of line \"Trans1;01.01.2020;312:12:Sec.12;Ant1\" failed. Skipping line.");
 	}
 
 	/**

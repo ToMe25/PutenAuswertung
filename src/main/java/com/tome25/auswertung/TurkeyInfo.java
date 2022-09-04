@@ -20,9 +20,10 @@ public class TurkeyInfo {
 	/**
 	 * The last possible timestamp of a day.<br/>
 	 * 24 hours per day times 60 minutes per hour times 60 seconds per minute times
-	 * 1000 milliseconds per second.
+	 * 1000 milliseconds per second.<br/>
+	 * Minus one, since 24:00:00.00 isn't a valid time.
 	 */
-	public static final int DAY_END = 24 * 60 * 60 * 1000;
+	public static final int DAY_END = 24 * 60 * 60 * 1000 - 1;
 
 	/**
 	 * The minimum time a turkey has to spend in a zone for it to be counted at all.
@@ -344,7 +345,6 @@ public class TurkeyInfo {
 					dayZoneTimes.put(date, new HashMap<String, Integer>());
 				}
 				todayZoneChanges = 0;
-				lastZoneChange = 0;
 			}
 		}
 	}

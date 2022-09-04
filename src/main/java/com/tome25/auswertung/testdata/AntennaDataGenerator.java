@@ -4,6 +4,7 @@ import static com.tome25.auswertung.CSVHandler.DEFAULT_SEPARATOR;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -61,13 +62,17 @@ public class AntennaDataGenerator {
 		// turkey -> date -> zone changes
 		Map<String, Map<String, Integer>> changes = new HashMap<String, Map<String, Integer>>();
 
+		Map<String, Long> lastZoneChange = new HashMap<String, Long>();
+		Map<String, String> currentZone = new HashMap<String, String>();
+		Map<String, String> lastZone = new HashMap<String, String>();
+
 		// FIXME fillDays == false
 		Calendar cal = Calendar.getInstance();
 		cal.set(2022, Calendar.FEBRUARY, 5);
 		for (int day = 0; day < days; day++) {
 			String date = TimeUtils.encodeDate(cal);
 			Pair<Map<String, Map<String, Integer>>, Map<String, Integer>> dayData = generateDayAntennaData(turkeys,
-					zones, date, output, fillDays);
+					zones, date, output, lastZoneChange, currentZone, lastZone, fillDays);
 			Map<String, Map<String, Integer>> dayTimes = dayData.getKey();
 			Map<String, Integer> dayChanges = dayData.getValue();
 
@@ -113,7 +118,11 @@ public class AntennaDataGenerator {
 			}
 
 			if (!continous && RANDOM.nextInt(5) == 0) {
-				cal.add(Calendar.DATE, RANDOM.nextInt(5));
+				cal.add(Calendar.DATE, 2 + RANDOM.nextInt(5));
+
+				lastZoneChange = new HashMap<String, Long>();
+				currentZone = new HashMap<String, String>();
+				lastZone = new HashMap<String, String>();
 			} else {
 				cal.add(Calendar.DATE, 1);
 			}
@@ -131,22 +140,46 @@ public class AntennaDataGenerator {
 	 * The second resulting map format is {@code turkey -> zoneChanges}.<br/>
 	 * Writes valid data, not suitable for error handling tests.
 	 * 
-	 * @param turkeys A list of turkeys to record in the antenna records file.
-	 * @param zones   The zones of the area the turkeys can move in.
-	 * @param date    The date for which to generate records.
-	 * @param output  The {@link IOutputStreamHandler} to write the data to.
-	 * @param fillDay Whether the time before the first and after the last record
-	 *                should be filled.
+	 * @param turkeys        A list of turkeys to record in the antenna records
+	 *                       file.
+	 * @param zones          The zones of the area the turkeys can move in.
+	 * @param date           The date for which to generate records.
+	 * @param output         The {@link IOutputStreamHandler} to write the data to.
+	 * @param lastZoneChange The last zone change of each turkey.<br/>
+	 *                       Will be mutated to be used as day to day storage.<br/>
+	 *                       A new {@link HashMap} will be used if {@code null}.
+	 * @param currentZone    The current zone each turkey is in.<br/>
+	 *                       Will be mutated to be used as day to day storage.<br/>
+	 *                       A new {@link HashMap} will be used if {@code null}.
+	 * @param lastZone       The last zone each turkey was in for more than 5
+	 *                       minutes.<br/>
+	 *                       Will be mutated to be used as day to day storage.<br/>
+	 *                       A new {@link HashMap} will be used if {@code null}.
+	 * @param fillDay        Whether the time before the first and after the last
+	 *                       record should be filled.
 	 * @return The times each turkey spent in each zone.
 	 * @throws NullPointerException If one of the parameters is {@code null}.
 	 */
 	public static Pair<Map<String, Map<String, Integer>>, Map<String, Integer>> generateDayAntennaData(
 			List<TurkeyInfo> turkeys, Map<String, List<String>> zones, String date, IOutputStreamHandler output,
+			Map<String, Long> lastZoneChange, Map<String, String> currentZone, Map<String, String> lastZone,
 			boolean fillDay) throws NullPointerException {
 		Objects.requireNonNull(turkeys, "The turkeys to generate input data for can't be null.");
 		Objects.requireNonNull(zones, "The zones to use for the generated input can't be null.");
 		Objects.requireNonNull(date, "The date to generate data for can't be null.");
 		Objects.requireNonNull(output, "The output to write the file to can't be null.");
+
+		if (lastZoneChange == null) {
+			lastZoneChange = new HashMap<String, Long>();
+		}
+
+		if (currentZone == null) {
+			currentZone = new HashMap<String, String>();
+		}
+
+		if (lastZone == null) {
+			lastZone = new HashMap<String, String>();
+		}
 
 		// Generate 10-20 zone changes per transponder on average
 		int perTrans = 10 + RANDOM.nextInt(11);
@@ -161,15 +194,12 @@ public class AntennaDataGenerator {
 		// distribution.
 		int timePerChange = (23 * 3600000) / numChanges;
 
-		int lastTime = 0;
+		long lastTime = TimeUtils.parseDate(date).getTimeInMillis();
 		List<String> zoneNames = new ArrayList<String>(zones.keySet());
 
 		// Turkey -> Zone -> Time
 		Map<String, Map<String, Integer>> zoneTimes = new HashMap<String, Map<String, Integer>>();
 		Map<String, Integer> zoneChanges = new HashMap<String, Integer>(); // Turkey -> Zone Changes
-		Map<String, Integer> lastZoneChange = new HashMap<String, Integer>();// Turkey -> Timestamp
-		Map<String, String> currentZone = new HashMap<String, String>();// Turkey -> Zone
-		Map<String, String> lastZone = new HashMap<String, String>();// Turkey -> Zone
 
 		for (int i = 0; i < numChanges; i++) {
 			TurkeyInfo turkey = turkeys.get(RANDOM.nextInt(turkeys.size()));
@@ -178,15 +208,18 @@ public class AntennaDataGenerator {
 			String zone = zoneNames.get(RANDOM.nextInt(zoneNames.size()));
 			String antenna = zones.get(zone).get(RANDOM.nextInt(zones.get(zone).size()));
 
-			int changeTime = lastTime + timePerChange + RANDOM.nextInt(timePerChange / 10) - timePerChange / 20;
+			long changeTime = lastTime + timePerChange + RANDOM.nextInt(timePerChange / 10) - timePerChange / 20;
 			changeTime = ((changeTime + 5) / 10) * 10;// round to 10.
+
+			Calendar changeCal = new GregorianCalendar();
+			changeCal.setTimeInMillis(changeTime);
 
 			StringBuilder line = new StringBuilder();
 			line.append(transponder);
 			line.append(DEFAULT_SEPARATOR);
 			line.append(date);
 			line.append(DEFAULT_SEPARATOR);
-			line.append(TimeUtils.encodeTime(changeTime));
+			line.append(TimeUtils.encodeTime(TimeUtils.getMsOfDay(changeCal)));
 			line.append(DEFAULT_SEPARATOR);
 			line.append(antenna);
 			output.println(line.toString());
@@ -194,11 +227,11 @@ public class AntennaDataGenerator {
 			int zoneTime = -1;
 			// If this is the first record of this turkey
 			if (!currentZone.containsKey(turkeyName)) {
-				lastZoneChange.put(turkeyName, 0);
+				lastZoneChange.put(turkeyName, changeCal.getTimeInMillis());
 
 				if (fillDay) {
 					zoneTimes.put(turkeyName, new HashMap<String, Integer>());
-					zoneTimes.get(turkeyName).put(zone, changeTime);
+					zoneTimes.get(turkeyName).put(zone, TimeUtils.getMsOfDay(changeCal));
 				}
 
 				currentZone.put(turkeyName, zone);
@@ -206,10 +239,18 @@ public class AntennaDataGenerator {
 				zoneChanges.put(turkeyName, 0);
 			} else {
 				if (!currentZone.get(turkeyName).equals(zone)) {
-					zoneTime = changeTime - lastZoneChange.get(turkeyName);
+					zoneTime = (int) (changeTime - lastZoneChange.get(turkeyName));
 
-					if (zoneTime > TurkeyInfo.MIN_ZONE_TIME) {
+					if (zoneTime >= TurkeyInfo.MIN_ZONE_TIME) {
 						String cZone = currentZone.get(turkeyName);
+
+						if (!zoneTimes.containsKey(turkeyName)) {
+							zoneTimes.put(turkeyName, new HashMap<String, Integer>());
+							if (fillDay) {
+								zoneTimes.get(turkeyName).put(cZone, TimeUtils.getMsOfDay(changeCal) - zoneTime);
+							}
+							zoneChanges.put(turkeyName, 0);
+						}
 
 						if (zoneTimes.get(turkeyName).containsKey(cZone)) {
 							zoneTimes.get(turkeyName).put(cZone, zoneTimes.get(turkeyName).get(cZone) + zoneTime);
@@ -245,7 +286,8 @@ public class AntennaDataGenerator {
 
 		if (fillDay) {
 			for (String turkey : zoneTimes.keySet()) {
-				int zoneTime = (24 * 3600000) - lastZoneChange.get(turkey);
+				int zoneTime = (int) (TimeUtils.parseDate(date).getTimeInMillis() + (24 * 3600000)
+						- lastZoneChange.get(turkey));
 				String zone = currentZone.get(turkey);
 
 				if (zoneTimes.get(turkey).containsKey(zone)) {

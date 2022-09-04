@@ -136,6 +136,10 @@ public class TimeUtils {
 			throw new IllegalArgumentException("Time to encode can't be negative.");
 		}
 
+		if (time % 10 != 0) {
+			time = ((time + 5) / 10) * 10; // round to next ten
+		}
+
 		int hours = (int) (time / 3600000); // 60 minutes * 60 seconds * 1000 ms
 		int minutes = (int) (time % 3600000 / 60000);
 		int seconds = (int) (time % 60000 / 1000);

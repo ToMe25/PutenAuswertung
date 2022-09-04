@@ -33,7 +33,7 @@ public class OutputDataTest {
 	public TempFileStreamHandler tempFolder = new TempFileStreamHandler();
 
 	@Test
-	public void basic() throws IOException {
+	public void fillDays() throws IOException {
 		Pair<FileInputStreamHandler, FileOutputStreamHandler> turkeysPair = tempFolder.newTempIOFile("turkeys.csv");
 		FileOutputStreamHandler turkeysOut = turkeysPair.getValue();
 		FileInputStreamHandler turkeysIn = turkeysPair.getKey();
@@ -54,7 +54,7 @@ public class OutputDataTest {
 		FileOutputStreamHandler antennaOut = antennaPair.getValue();
 		FileInputStreamHandler antennaIn = antennaPair.getKey();
 		Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>> antennaData = AntennaDataGenerator
-				.generateAntennaData(turkeys, zones, antennaOut, 10, true, true);
+				.generateAntennaData(turkeys, zones, antennaOut, 15, true, true);
 		Map<String, Map<String, Map<String, Long>>> antennaTimes = antennaData.getKey();
 		Map<String, Map<String, Integer>> antennaChanges = antennaData.getValue();
 		antennaOut.close();
@@ -69,6 +69,10 @@ public class OutputDataTest {
 		Map<String, Map<String, Map<String, Long>>> outputTimes = outputData.getKey();
 		Map<String, Map<String, Integer>> outputChanges = outputData.getValue();
 
+		for (String turkey : antennaTimes.keySet()) {
+			assertTrue("The output data is missing turkey \"" + turkey + "\".", outputTimes.containsKey(turkey));
+		}
+
 		for (String turkey : outputTimes.keySet()) {
 			assertTrue("There was no zone changes count output for the turkey \"" + turkey + "\".",
 					outputChanges.containsKey(turkey));
@@ -76,6 +80,9 @@ public class OutputDataTest {
 					outputChanges.containsKey(turkey));
 			assertTrue("There are no generated zone changes count for the turkey \"" + turkey + "\".",
 					outputChanges.containsKey(turkey));
+
+			assertEquals("The output dates for turkey \"" + turkey + "\" didn't match.",
+					antennaTimes.get(turkey).keySet(), outputTimes.get(turkey).keySet());
 
 			for (String date : outputTimes.get(turkey).keySet()) {
 				assertTrue("Day " + date + " not found in output changes for turkey \"" + turkey + "\".",
@@ -87,6 +94,24 @@ public class OutputDataTest {
 
 				assertEquals("Zone changes for turkey \"" + turkey + "\" on day " + date + " didn't match.",
 						antennaChanges.get(turkey).get(date), outputChanges.get(turkey).get(date));
+
+				Map<String, Long> antennaZoneTimes = antennaTimes.get(turkey).get(date);
+				Map<String, Long> outputZoneTimes = outputTimes.get(turkey).get(date);
+
+				for (String zone : outputZoneTimes.keySet()) {
+					long antennaTime = 0;
+					if (antennaZoneTimes.containsKey(zone)) {
+						antennaTime = antennaZoneTimes.get(zone);
+					}
+
+					assertEquals("Turkey \"" + turkey + "\" zone \"" + zone + "\" time for day \"" + date
+							+ "\" didn't match the prediction.", antennaTime, (long) outputZoneTimes.get(zone));
+				}
+
+				for (String zone : antennaZoneTimes.keySet()) {
+					assertTrue("The output is missing a zone for turkey \"" + turkey + "\".",
+							outputZoneTimes.containsKey(zone));
+				}
 			}
 		}
 	}
