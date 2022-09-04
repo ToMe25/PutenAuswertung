@@ -9,6 +9,7 @@ import org.junit.Test;
 
 import com.tome25.auswertung.CSVHandler;
 import com.tome25.auswertung.TurkeyInfo;
+import com.tome25.auswertung.utils.TimeUtils;
 
 /**
  * The class containing unit tests related to the creation of output csv lines.
@@ -121,14 +122,14 @@ public class TurkeyCSVTest {
 	public static TurkeyInfo getBasicInfo(String day) throws NullPointerException {
 		Objects.requireNonNull(day, "The day to generate for can't be null.");
 
-		TurkeyInfo info = new TurkeyInfo("0", Arrays.asList(new String[] { "T1", "Trans 2", "T3" }), "Z1", day, 10510,
-				true);
-		info.changeZone("Zone 2", 20410, day);
-		info.changeZone("Zone 2", 100060, day);
-		info.changeZone("Z1", 599610, day);
-		info.changeZone("#3", 1004720, day);
-		info.changeZone("Zone 2", 43000000, day);
-		info.changeZone("Z1", 81512330, day);
+		TurkeyInfo info = new TurkeyInfo("0", Arrays.asList(new String[] { "T1", "Trans 2", "T3" }), "Z1",
+				TimeUtils.parseTime(day, 10510), true);
+		info.changeZone("Zone 2", TimeUtils.parseTime(day, 20410));
+		info.changeZone("Zone 2", TimeUtils.parseTime(day, 100060));
+		info.changeZone("Z1", TimeUtils.parseTime(day, 599610));
+		info.changeZone("#3", TimeUtils.parseTime(day, 1004720));
+		info.changeZone("Zone 2", TimeUtils.parseTime(day, 43000000));
+		info.changeZone("Z1", TimeUtils.parseTime(day, 81512330));
 		info.endDay(day);
 
 		return info;

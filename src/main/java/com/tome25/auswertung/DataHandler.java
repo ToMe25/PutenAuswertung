@@ -69,10 +69,10 @@ public class DataHandler {
 
 			if (!turkeyInfos.containsKey(turkeyId)) {
 				turkeyInfos.put(turkeyId, new TurkeyInfo(turkeyId, turkeys.getKey().get(turkeyId),
-						zones.getValue().get(record.antenna), record.date, record.tod, fillDays));
+						zones.getValue().get(record.antenna), record.cal, fillDays));
 			} else {
 				try {
-					turkeyInfos.get(turkeyId).changeZone(zones.getValue().get(record.antenna), record.tod, record.date);
+					turkeyInfos.get(turkeyId).changeZone(zones.getValue().get(record.antenna), record.cal);
 				} catch (IllegalArgumentException e) {
 					LogHandler.err_println(
 							"New antenna record is before the last one for the same turkey. Skipping line.");

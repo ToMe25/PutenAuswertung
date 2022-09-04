@@ -1,5 +1,6 @@
 package com.tome25.auswertung;
 
+import java.util.Calendar;
 import java.util.Objects;
 
 import com.tome25.auswertung.utils.TimeUtils;
@@ -34,6 +35,11 @@ public class AntennaRecord {
 	public final int tod;
 
 	/**
+	 * A {@link Calendar} encoding the date and time of day.
+	 */
+	public final Calendar cal;
+
+	/**
 	 * Creates a new AntennaRecord containing all the given data.
 	 * 
 	 * @param transponder The string id of the transponder that was recorded.
@@ -43,7 +49,7 @@ public class AntennaRecord {
 	 *                    "HH:MM:SS.2".
 	 * @param antenna     The antenna that recorded this data set.
 	 * @throws NullPointerException     If one of the arguments if {@code null}.
-	 * @throws IllegalArgumentException If parsing the time of day fails.
+	 * @throws IllegalArgumentException If parsing the time of day or date fails.
 	 */
 	public AntennaRecord(String transponder, String date, String time, String antenna)
 			throws NullPointerException, IllegalArgumentException {
@@ -57,17 +63,18 @@ public class AntennaRecord {
 		this.time = time;
 		this.antenna = antenna;
 		tod = (int) TimeUtils.parseTime(time);
+		cal = TimeUtils.parseTime(date, tod);
 	}
 
 	@Override
 	public String toString() {
-		return String.format("AntennaRecord[transponder=%s, date=%s, time=%s, antenna=%s, time of day=%d]", transponder,
-				date, time, antenna, tod);
+		return String.format("AntennaRecord[transponder=%s, date=%s, time=%s, antenna=%s, time of day=%d, calendar=%s]",
+				transponder, date, time, antenna, tod, cal);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(antenna, date, time, tod, transponder);
+		return Objects.hash(antenna, date, time, tod, transponder, cal);
 	}
 
 	@Override
@@ -89,6 +96,10 @@ public class AntennaRecord {
 			return false;
 		}
 
+		if (!Objects.equals(transponder, other.transponder)) {
+			return false;
+		}
+
 		if (!Objects.equals(date, other.date)) {
 			return false;
 		}
@@ -97,7 +108,7 @@ public class AntennaRecord {
 			return false;
 		}
 
-		if (!Objects.equals(transponder, other.transponder)) {
+		if (!Objects.equals(cal, other.cal)) {
 			return false;
 		}
 

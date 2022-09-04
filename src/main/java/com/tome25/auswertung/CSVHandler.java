@@ -283,10 +283,10 @@ public class CSVHandler {
 					last_failed = true;
 				}
 			} catch (IllegalArgumentException e) {
-				LogHandler
-						.err_println(String.format("Parsing time of day of line \"%s\" failed. Skipping line.", line));
-				LogHandler.print_exception(e, "parse record time of day",
-						"Input Stream Handler: %s, Time String: \"%s\"", input.toString(), tokens[2]);
+				LogHandler.err_println(
+						String.format("Parsing time of day or date of line \"%s\" failed. Skipping line.", line));
+				LogHandler.print_exception(e, "parse record time", "Input Stream Handler: %s, Tokens: [%s]",
+						input.toString(), StringUtils.join(", ", (Object[]) tokens));
 			}
 		}
 

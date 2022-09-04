@@ -168,7 +168,6 @@ public class AntennaDataGenerator {
 		Map<String, Map<String, Integer>> zoneTimes = new HashMap<String, Map<String, Integer>>();
 		Map<String, Integer> zoneChanges = new HashMap<String, Integer>(); // Turkey -> Zone Changes
 		Map<String, Integer> lastZoneChange = new HashMap<String, Integer>();// Turkey -> Timestamp
-		Map<String, Integer> lastValidZoneChange = new HashMap<String, Integer>();// Turkey -> Timestamp
 		Map<String, String> currentZone = new HashMap<String, String>();// Turkey -> Zone
 		Map<String, String> lastZone = new HashMap<String, String>();// Turkey -> Zone
 
@@ -180,6 +179,7 @@ public class AntennaDataGenerator {
 			String antenna = zones.get(zone).get(RANDOM.nextInt(zones.get(zone).size()));
 
 			int changeTime = lastTime + timePerChange + RANDOM.nextInt(timePerChange / 10) - timePerChange / 20;
+			changeTime = ((changeTime + 5) / 10) * 10;// round to 10.
 
 			StringBuilder line = new StringBuilder();
 			line.append(transponder);
@@ -191,10 +191,10 @@ public class AntennaDataGenerator {
 			line.append(antenna);
 			output.println(line.toString());
 
+			int zoneTime = -1;
 			// If this is the first record of this turkey
 			if (!currentZone.containsKey(turkeyName)) {
-				lastZoneChange.put(turkeyName, changeTime);
-				lastValidZoneChange.put(turkeyName, changeTime);
+				lastZoneChange.put(turkeyName, 0);
 
 				if (fillDay) {
 					zoneTimes.put(turkeyName, new HashMap<String, Integer>());
@@ -206,27 +206,37 @@ public class AntennaDataGenerator {
 				zoneChanges.put(turkeyName, 0);
 			} else {
 				if (!currentZone.get(turkeyName).equals(zone)) {
-					int zoneTime = changeTime - lastZoneChange.get(turkeyName);
+					zoneTime = changeTime - lastZoneChange.get(turkeyName);
 
-					lastZoneChange.put(turkeyName, changeTime);
-					currentZone.put(turkeyName, zone);
 					if (zoneTime > TurkeyInfo.MIN_ZONE_TIME) {
-						int timeSinceValidChange = changeTime - lastValidZoneChange.get(turkeyName);
-						String lastValidZone = lastZone.get(turkeyName);
+						String cZone = currentZone.get(turkeyName);
 
-						if (zoneTimes.get(turkeyName).containsKey(lastValidZone)) {
-							zoneTimes.get(turkeyName).put(lastValidZone,
-									zoneTimes.get(turkeyName).get(lastValidZone) + timeSinceValidChange);
-						} else if (fillDay) {
-							zoneTimes.get(turkeyName).put(lastValidZone, changeTime);
+						if (zoneTimes.get(turkeyName).containsKey(cZone)) {
+							zoneTimes.get(turkeyName).put(cZone, zoneTimes.get(turkeyName).get(cZone) + zoneTime);
 						} else {
-							zoneTimes.get(turkeyName).put(lastValidZone, timeSinceValidChange);
+							zoneTimes.get(turkeyName).put(cZone, zoneTime);
 						}
 
 						zoneChanges.put(turkeyName, zoneChanges.get(turkeyName) + 1);
-						lastZone.put(turkeyName, zone);
-						lastValidZoneChange.put(turkeyName, changeTime);
+						lastZone.put(turkeyName, currentZone.get(turkeyName));
+					} else {
+						String lZone = lastZone.get(turkeyName);
+
+						if (zoneTimes.get(turkeyName).containsKey(lZone)) {
+							zoneTimes.get(turkeyName).put(lZone, zoneTimes.get(turkeyName).get(lZone) + zoneTime);
+						} else {
+							zoneTimes.get(turkeyName).put(lZone, zoneTime);
+						}
+
+						if (zone.equals(lastZone.get(turkeyName))) {
+							zoneChanges.put(turkeyName, zoneChanges.get(turkeyName) - 1);
+						} else if (currentZone.get(turkeyName).equals(lastZone.get(turkeyName))) {
+							zoneChanges.put(turkeyName, zoneChanges.get(turkeyName) + 1);
+						}
 					}
+
+					currentZone.put(turkeyName, zone);
+					lastZoneChange.put(turkeyName, changeTime);
 				}
 			}
 
@@ -235,9 +245,9 @@ public class AntennaDataGenerator {
 
 		if (fillDay) {
 			for (String turkey : zoneTimes.keySet()) {
-				int zoneTime = (24 * 3600000) - lastValidZoneChange.get(turkey);
+				int zoneTime = (24 * 3600000) - lastZoneChange.get(turkey);
 				String zone = currentZone.get(turkey);
-				
+
 				if (zoneTimes.get(turkey).containsKey(zone)) {
 					zoneTimes.get(turkey).put(zone, zoneTimes.get(turkey).get(zone) + zoneTime);
 				} else {

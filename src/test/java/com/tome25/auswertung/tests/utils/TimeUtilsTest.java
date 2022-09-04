@@ -5,6 +5,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Calendar;
+import java.util.GregorianCalendar;
 
 import org.junit.Test;
 
@@ -142,9 +143,8 @@ public class TimeUtilsTest {
 	@Test
 	public void dateStringToCal() {
 		Calendar cal = TimeUtils.parseDate("12.06.2022");
-		Calendar refCal = Calendar.getInstance();
-		refCal.setTimeInMillis(0);
-		refCal.set(2022, Calendar.JUNE, 12);
+		Calendar refCal = new GregorianCalendar(2022, Calendar.JUNE, 12, 0, 0, 0);
+		refCal.set(Calendar.MILLISECOND, 0);
 		assertEquals("The parsed date did not match.", refCal, cal);
 	}
 
@@ -154,9 +154,8 @@ public class TimeUtilsTest {
 	@Test
 	public void singleDigitStringToCal() {
 		Calendar cal = TimeUtils.parseDate("5.3.9");
-		Calendar refCal = Calendar.getInstance();
-		refCal.setTimeInMillis(0);
-		refCal.set(9, Calendar.MARCH, 5);
+		Calendar refCal = new GregorianCalendar(9, Calendar.MARCH, 5, 0, 0, 0);
+		refCal.set(Calendar.MILLISECOND, 0);
 		assertEquals("Parsing a single digit date didn't match.", refCal, cal);
 	}
 
@@ -216,6 +215,76 @@ public class TimeUtilsTest {
 				TimeUtils.isNextDay("10.02.2022", "20.02.2022"));
 		assertFalse("The 15th nov was detected as the next day after the 14th jul.",
 				TimeUtils.isNextDay("14.07.2022", "15.11.2022"));
+	}
+
+	/**
+	 * Makes sure that {@link TimeUtils#isNextDay(Calendar, Calendar)} works on
+	 * {@link Calendar} objects that aren't exactly 24 hours apart.
+	 */
+	@Test
+	public void calNextDay() {
+		Calendar c1 = Calendar.getInstance();
+		c1.add(Calendar.DATE, 1);
+		Calendar c2 = Calendar.getInstance();
+		c2.add(Calendar.HOUR, 1);
+		assertTrue("TimeUtils isNextDay failed.", TimeUtils.isNextDay(c2, c1));
+	}
+
+	/**
+	 * Test {@link TimeUtils#isNextDay(Calendar, Calendar)} with two new
+	 * {@link Calendar} instances representing the current time.
+	 */
+	@Test
+	public void calNotNextDay() {
+		assertFalse("isNextDay returned true on two current calendars.",
+				TimeUtils.isNextDay(Calendar.getInstance(), Calendar.getInstance()));
+	}
+
+	/**
+	 * Confirm functionality of {@link TimeUtils#isSameDay(Calendar, Calendar)} for
+	 * {@link Calendar Calendars} on the same day.
+	 */
+	@Test
+	public void calSameDay() {
+		Calendar c1 = Calendar.getInstance();
+		c1.roll(Calendar.HOUR, 5);
+		assertTrue("isSameDay returned false on two same day calendars.",
+				TimeUtils.isSameDay(c1, Calendar.getInstance()));
+	}
+
+	/**
+	 * Test {@link TimeUtils#isSameDay(Calendar, Calendar)} with two new
+	 * {@link Calendar} instances representing different days.
+	 */
+	@Test
+	public void calNotSameDay() {
+		Calendar c1 = Calendar.getInstance();
+		c1.add(Calendar.DATE, 1);
+		Calendar c2 = Calendar.getInstance();
+		c2.add(Calendar.HOUR, 1);
+		assertFalse("TimeUtils isNextDay failed.", TimeUtils.isSameDay(c2, c1));
+	}
+
+	/**
+	 * Tests parsing a time of day and date to a single {@link Calendar} object.
+	 */
+	@Test
+	public void parseTimeAndDate() {
+		Calendar cal = TimeUtils.parseTime("03.10.2020", "12:54:03.68");
+		Calendar refCal = new GregorianCalendar(2020, Calendar.OCTOBER, 3, 12, 54, 3);
+		refCal.set(Calendar.MILLISECOND, 680);
+		assertEquals("Parsed time with date didn't match.", refCal, cal);
+	}
+
+	/**
+	 * Tests getting the ms of day of a {@link Calendar}.
+	 */
+	@Test
+	public void calToMs() {
+		Calendar cal = new GregorianCalendar();
+		cal.set(2022, 5, 21, 13, 49, 23);
+		cal.set(Calendar.MILLISECOND, 120);
+		assertEquals("The time of day from the calendar didn't match.", 49763120, TimeUtils.getMsOfDay(cal));
 	}
 
 }

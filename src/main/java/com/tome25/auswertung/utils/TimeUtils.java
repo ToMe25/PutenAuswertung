@@ -1,6 +1,7 @@
 package com.tome25.auswertung.utils;
 
 import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.Objects;
 
 /**
@@ -62,6 +63,67 @@ public class TimeUtils {
 	}
 
 	/**
+	 * Parses the given date string and converts it to a {@link Calendar}
+	 * representing the encoded time.
+	 * 
+	 * @param date The date to parse.
+	 * @return The parsed date.
+	 * @throws NullPointerException     If {@code date} is {@code null}.
+	 * @throws IllegalArgumentException If {@code date} does not match the format
+	 *                                  "DD.MM.YYYY".
+	 */
+	public static Calendar parseDate(String date) throws NullPointerException, IllegalArgumentException {
+		return parseTime(date, 0);
+	}
+
+	/**
+	 * Parses a {@link Calendar} object from the given date string and time of day
+	 * in milliseconds.
+	 * 
+	 * @param date The date for the {@link Calendar} object.
+	 * @param time The time of day in milliseconds.
+	 * @return A {@link Calendar} object representing the given time.
+	 * @throws NullPointerException     If {@code date} is {@code null}.
+	 * @throws IllegalArgumentException If {@code date} does not match the format
+	 *                                  "DD.MM.YYYY".<br/>
+	 *                                  Or if {@code time} is negative.
+	 */
+	public static Calendar parseTime(String date, int time) throws NullPointerException, IllegalArgumentException {
+		Objects.requireNonNull(date, "The date to parse can't be null.");
+
+		if (time < 0) {
+			throw new IllegalArgumentException("Time of day can't be negative.");
+		}
+
+		String dateSplit[] = date.split("\\.");
+		if (dateSplit.length != 3) {
+			throw new IllegalArgumentException("Date string \"" + date + "\" does not match required format.");
+		}
+
+		Calendar c = new GregorianCalendar();
+		c.set(Integer.parseInt(dateSplit[2]), Integer.parseInt(dateSplit[1]) - 1, Integer.parseInt(dateSplit[0]), 0, 0,
+				0);
+		c.set(Calendar.MILLISECOND, 0);
+		c.add(Calendar.MILLISECOND, time);
+
+		return c;
+	}
+
+	/**
+	 * Parses a {@link Calendar} object from the given date string and time of day.
+	 * 
+	 * @param date The date for the {@link Calendar} object.
+	 * @param time The time of day for the {@link Calendar}.
+	 * @return A {@link Calendar} object representing the given time.
+	 * @throws NullPointerException     If {@code date} is {@code null}.
+	 * @throws IllegalArgumentException If one of the strings doesn't match the
+	 *                                  required format.
+	 */
+	public static Calendar parseTime(String date, String time) throws NullPointerException, IllegalArgumentException {
+		return parseTime(date, (int) parseTime(time));
+	}
+
+	/**
 	 * Returns the string representation of the given time in milliseconds.<br/>
 	 * The format is "HH:MM:SS.2".
 	 * 
@@ -83,31 +145,6 @@ public class TimeUtils {
 	}
 
 	/**
-	 * Parses the given date string and converts it to a {@link Calendar}
-	 * representing the encoded time.
-	 * 
-	 * @param date The date to parse.
-	 * @return The parsed date.
-	 * @throws NullPointerException     If {@code date} is {@code null}.
-	 * @throws IllegalArgumentException If {@code date} does not match the format
-	 *                                  "DD.MM.YYYY".
-	 */
-	public static Calendar parseDate(String date) throws NullPointerException, IllegalArgumentException {
-		Objects.requireNonNull(date, "The date to parse can't be null.");
-
-		String dateSplit[] = date.split("\\.");
-		if (dateSplit.length != 3) {
-			throw new IllegalArgumentException("Date string \"" + date + "\" does not match required format.");
-		}
-
-		Calendar c = Calendar.getInstance();
-		c.setTimeInMillis(0);
-		c.set(Integer.parseInt(dateSplit[2]), Integer.parseInt(dateSplit[1]) - 1, Integer.parseInt(dateSplit[0]));
-
-		return c;
-	}
-
-	/**
 	 * Converts the given {@link Calendar} object to a date string of the format
 	 * "DD.MM.YYYY".
 	 * 
@@ -123,6 +160,25 @@ public class TimeUtils {
 	}
 
 	/**
+	 * Gets the number of milliseconds that already passed on the current day of the
+	 * {@link Calendar}.
+	 * 
+	 * @param cal The calendar object to get the time from.
+	 * @return The time of day in milliseconds.
+	 * @throws NullPointerException If {@code cal} is {@code null}.
+	 */
+	public static int getMsOfDay(Calendar cal) throws NullPointerException {
+		Objects.requireNonNull(cal, "The calendar to get time from can't be null.");
+
+		int time = cal.get(Calendar.HOUR_OF_DAY) * 3600000;
+		time += cal.get(Calendar.MINUTE) * 60000;
+		time += cal.get(Calendar.SECOND) * 1000;
+		time += cal.get(Calendar.MILLISECOND);
+
+		return time;
+	}
+
+	/**
 	 * Checks whether {@code second} is exactly one day after {@code first}.
 	 * 
 	 * @param first  The first of the days to compare.
@@ -134,13 +190,49 @@ public class TimeUtils {
 	 *                                  "DD.MM.YYYY".
 	 */
 	public static boolean isNextDay(String first, String second) throws NullPointerException, IllegalArgumentException {
+		return isNextDay(parseDate(first), parseDate(second));
+	}
+
+	/**
+	 * Checks whether the time represented by the second {@link Calendar} is on the
+	 * day after the time represented by {@code first}.
+	 * 
+	 * @param first  A {@link Calendar} representing the first time to compare.
+	 * @param second A {@link Calendar} with the second time to compare.
+	 * @return {@code true} if the day of {@code second} is the next day after
+	 *         {@code first}.
+	 * @throws NullPointerException If one of the arguments is {@code null}.
+	 */
+	public static boolean isNextDay(Calendar first, Calendar second) throws NullPointerException {
 		Objects.requireNonNull(first, "The first day to check can't be null.");
 		Objects.requireNonNull(second, "The second day to check can't be null.");
 
-		Calendar c1 = parseDate(first);
-		Calendar c2 = parseDate(second);
+		Calendar c1 = new GregorianCalendar(first.get(Calendar.YEAR), first.get(Calendar.MONTH),
+				first.get(Calendar.DATE));
 		c1.add(Calendar.DATE, 1);
 
-		return c1.equals(c2);
+		return c1.get(Calendar.YEAR) == second.get(Calendar.YEAR)
+				&& c1.get(Calendar.MONTH) == second.get(Calendar.MONTH)
+				&& c1.get(Calendar.DATE) == second.get(Calendar.DATE);
+	}
+
+	/**
+	 * Checks whether the two {@link Calendar} objects represent times on the same
+	 * day.
+	 * 
+	 * @param first  A {@link Calendar} to compare to {@code second}.
+	 * @param second A {@link Calendar} to compare to {@code first}.
+	 * @return {@code true} if the two {@link Calendar Calendars} are on the same
+	 *         day.
+	 * @throws NullPointerException If one of the {@link Calendar Calendars} is
+	 *                              {@code null}.
+	 */
+	public static boolean isSameDay(Calendar first, Calendar second) throws NullPointerException {
+		Objects.requireNonNull(first, "The first day to check can't be null.");
+		Objects.requireNonNull(second, "The second day to check can't be null.");
+
+		return first.get(Calendar.YEAR) == second.get(Calendar.YEAR)
+				&& first.get(Calendar.MONTH) == second.get(Calendar.MONTH)
+				&& first.get(Calendar.DATE) == second.get(Calendar.DATE);
 	}
 }

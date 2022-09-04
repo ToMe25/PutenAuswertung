@@ -38,7 +38,7 @@ public class OutputDataTest {
 		FileOutputStreamHandler turkeysOut = turkeysPair.getValue();
 		FileInputStreamHandler turkeysIn = turkeysPair.getKey();
 
-		List<TurkeyInfo> turkeys = TurkeyGenerator.generateTurkeys(100, 5);
+		List<TurkeyInfo> turkeys = TurkeyGenerator.generateTurkeys(200, 5);
 		CSVHandler.writeTurkeyCSV(turkeys, turkeysOut);
 		turkeysOut.close();
 
