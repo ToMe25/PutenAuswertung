@@ -226,7 +226,7 @@ public class TimeUtilsTest {
 		Calendar c1 = Calendar.getInstance();
 		c1.add(Calendar.DATE, 1);
 		Calendar c2 = Calendar.getInstance();
-		c2.add(Calendar.HOUR, 1);
+		c2.roll(Calendar.HOUR, 1);
 		assertTrue("TimeUtils isNextDay failed.", TimeUtils.isNextDay(c2, c1));
 	}
 
@@ -261,7 +261,7 @@ public class TimeUtilsTest {
 		Calendar c1 = Calendar.getInstance();
 		c1.add(Calendar.DATE, 1);
 		Calendar c2 = Calendar.getInstance();
-		c2.add(Calendar.HOUR, 1);
+		c2.roll(Calendar.HOUR, 1);
 		assertFalse("TimeUtils isNextDay failed.", TimeUtils.isSameDay(c2, c1));
 	}
 

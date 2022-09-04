@@ -32,6 +32,11 @@ public class OutputDataTest {
 	@Rule
 	public TempFileStreamHandler tempFolder = new TempFileStreamHandler();
 
+	/**
+	 * A very simple test case, with no missing days, and no filling day ends.
+	 * 
+	 * @throws IOException If reading/writing/creating a temp file fails.
+	 */
 	@Test
 	public void basic() throws IOException {
 		Pair<FileInputStreamHandler, FileOutputStreamHandler> turkeysPair = tempFolder.newTempIOFile("turkeys.csv");
@@ -115,7 +120,7 @@ public class OutputDataTest {
 			}
 		}
 	}
-	
+
 	/**
 	 * A basic test without missing days and with filled day starts and ends.
 	 * 
@@ -184,6 +189,8 @@ public class OutputDataTest {
 				assertEquals("Zone changes for turkey \"" + turkey + "\" on day " + date + " didn't match.",
 						antennaChanges.get(turkey).get(date), outputChanges.get(turkey).get(date));
 
+				int dayTotal = 0;
+
 				Map<String, Long> antennaZoneTimes = antennaTimes.get(turkey).get(date);
 				Map<String, Long> outputZoneTimes = outputTimes.get(turkey).get(date);
 
@@ -195,11 +202,18 @@ public class OutputDataTest {
 
 					assertEquals("Turkey \"" + turkey + "\" zone \"" + zone + "\" time for day \"" + date
 							+ "\" didn't match the prediction.", antennaTime, (long) outputZoneTimes.get(zone));
+
+					dayTotal += antennaTime;
 				}
 
 				for (String zone : antennaZoneTimes.keySet()) {
 					assertTrue("The output is missing a zone for turkey \"" + turkey + "\".",
 							outputZoneTimes.containsKey(zone));
+				}
+
+				if (!date.equals("total")) {
+					assertEquals("The sum of all zone totals of turkey \"" + turkey + "\" for day \"" + date
+							+ "\" wasn't 24h.", 24 * 3600000, dayTotal);
 				}
 			}
 		}

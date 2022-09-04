@@ -67,7 +67,6 @@ public class AntennaDataGenerator {
 		Map<String, String> currentZone = new HashMap<String, String>();
 		Map<String, String> lastZone = new HashMap<String, String>();
 
-		// FIXME fillDays == false
 		Calendar cal = Calendar.getInstance();
 		cal.set(2022, Calendar.FEBRUARY, 5);
 		for (int day = 0; day < days; day++) {
@@ -99,6 +98,30 @@ public class AntennaDataGenerator {
 					} else {
 						totalTimes.put(zone, (long) (int) dayTimes.get(turkey).get(zone));
 					}
+				}
+
+				// TODO !continous
+				if (!fillDays) {
+					String zone = currentZone.get(turkey);
+
+					int zoneTime = 0;
+					if (day == days - 1) {
+						long lastChange = 0;
+						for (Long change : lastZoneChange.values()) {
+							if (change > lastChange) {
+								lastChange = change;
+							}
+						}
+
+						zoneTime = (int) (lastChange - lastZoneChange.get(turkey));
+					} else {
+						Calendar changeCal = new GregorianCalendar();
+						changeCal.setTimeInMillis(lastZoneChange.get(turkey));
+						zoneTime = 24 * 3600000 - TimeUtils.getMsOfDay(changeCal);
+					}
+
+					totalTimes.put(zone, totalTimes.get(zone) + zoneTime);
+					zoneDayTimes.put(zone, zoneDayTimes.get(zone) + zoneTime);
 				}
 
 				if (!changes.containsKey(turkey)) {
@@ -195,6 +218,8 @@ public class AntennaDataGenerator {
 		// distribution.
 		int timePerChange = (23 * 3600000) / numChanges;
 
+		long startTime = -1;
+
 		long lastTime = TimeUtils.parseDate(date).getTimeInMillis();
 		List<String> zoneNames = new ArrayList<String>(zones.keySet());
 
@@ -211,6 +236,10 @@ public class AntennaDataGenerator {
 
 			long changeTime = lastTime + timePerChange + RANDOM.nextInt(timePerChange / 10) - timePerChange / 20;
 			changeTime = ((changeTime + 5) / 10) * 10;// round to 10.
+
+			if (startTime == -1) {
+				startTime = changeTime;
+			}
 
 			Calendar changeCal = new GregorianCalendar();
 			changeCal.setTimeInMillis(changeTime);
@@ -233,6 +262,9 @@ public class AntennaDataGenerator {
 				if (fillDay) {
 					zoneTimes.put(turkeyName, new HashMap<String, Integer>());
 					zoneTimes.get(turkeyName).put(zone, TimeUtils.getMsOfDay(changeCal));
+				} else {
+					zoneTimes.put(turkeyName, new HashMap<String, Integer>());
+					zoneTimes.get(turkeyName).put(zone, (int) (changeTime - startTime));
 				}
 
 				currentZone.put(turkeyName, zone);
@@ -247,9 +279,7 @@ public class AntennaDataGenerator {
 
 						if (!zoneTimes.containsKey(turkeyName)) {
 							zoneTimes.put(turkeyName, new HashMap<String, Integer>());
-							if (fillDay) {
-								zoneTimes.get(turkeyName).put(cZone, TimeUtils.getMsOfDay(changeCal) - zoneTime);
-							}
+							zoneTimes.get(turkeyName).put(cZone, TimeUtils.getMsOfDay(changeCal) - zoneTime);
 							zoneChanges.put(turkeyName, 0);
 						}
 
@@ -265,8 +295,8 @@ public class AntennaDataGenerator {
 						String lZone = lastZone.get(turkeyName);
 
 						if (!zoneTimes.containsKey(turkeyName)) {
-							// Doesn't happen with fillDay
 							zoneTimes.put(turkeyName, new HashMap<String, Integer>());
+							zoneTimes.get(turkeyName).put(zone, TimeUtils.getMsOfDay(changeCal) - zoneTime);
 							zoneChanges.put(turkeyName, 0);
 						}
 
@@ -295,6 +325,7 @@ public class AntennaDataGenerator {
 			for (String turkey : zoneTimes.keySet()) {
 				int zoneTime = (int) (TimeUtils.parseDate(date).getTimeInMillis() + (24 * 3600000)
 						- lastZoneChange.get(turkey));
+
 				String zone = currentZone.get(turkey);
 
 				if (zoneTimes.get(turkey).containsKey(zone)) {

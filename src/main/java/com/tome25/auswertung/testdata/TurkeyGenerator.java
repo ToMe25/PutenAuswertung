@@ -82,7 +82,7 @@ public class TurkeyGenerator {
 			}
 		}
 
-		return new TurkeyInfo(id, transponders, null, null, false);
+		return new TurkeyInfo(id, transponders, null, null, null);
 	}
 
 	/**

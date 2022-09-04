@@ -123,7 +123,7 @@ public class TurkeyCSVTest {
 		Objects.requireNonNull(day, "The day to generate for can't be null.");
 
 		TurkeyInfo info = new TurkeyInfo("0", Arrays.asList(new String[] { "T1", "Trans 2", "T3" }), "Z1",
-				TimeUtils.parseTime(day, 10510), true);
+				TimeUtils.parseTime(day, 10510), null);
 		info.changeZone("Zone 2", TimeUtils.parseTime(day, 20410));
 		info.changeZone("Zone 2", TimeUtils.parseTime(day, 100060));
 		info.changeZone("Z1", TimeUtils.parseTime(day, 599610));

@@ -2,6 +2,7 @@ package com.tome25.auswertung;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -26,7 +27,7 @@ public class DataHandler {
 	 * 
 	 * @param antennaStream The stream handler to read the antenna records from.
 	 * @param turkeyStream  The stream handler to read
-	 *                      <code>turkey id -> transponder ids</code> mappings from.
+	 *                      {@code turkey id -> transponder ids} mappings from.
 	 * @param zonesStream   The stream handler to read zone definitions from.
 	 * @param outputStream  THe output stream handler to write the generated data
 	 *                      to.
@@ -41,10 +42,13 @@ public class DataHandler {
 
 		Map<String, TurkeyInfo> turkeyInfos = new TreeMap<>(IntOrStringComparator.INSTANCE);
 		String lastDate = null;
+		Calendar lastTime = null;
 		outputStream.println(CSVHandler.turkeyCsvHeader(zones.getKey().keySet()));
 
 		List<String> dates = new ArrayList<String>();
 
+		// FIXME handle missing days
+		Calendar startTime = null;
 		while (!antennaStream.done()) {
 			AntennaRecord record = CSVHandler.readAntennaRecord(antennaStream);
 			String turkeyId = record.transponder;
@@ -71,9 +75,17 @@ public class DataHandler {
 				dates.add(lastDate);
 			}
 
+			if (startTime == null) {
+				startTime = record.cal;
+			}
+
+			if (lastTime == null || record.cal.after(lastTime)) {
+				lastTime = record.cal;
+			}
+
 			if (!turkeyInfos.containsKey(turkeyId)) {
 				turkeyInfos.put(turkeyId, new TurkeyInfo(turkeyId, turkeys.getKey().get(turkeyId),
-						zones.getValue().get(record.antenna), record.cal, fillDays));
+						zones.getValue().get(record.antenna), record.cal, fillDays ? null : startTime));
 			} else {
 				try {
 					turkeyInfos.get(turkeyId).changeZone(zones.getValue().get(record.antenna), record.cal);
@@ -90,7 +102,12 @@ public class DataHandler {
 		}
 
 		for (TurkeyInfo ti : turkeyInfos.values()) {
-			ti.endDay(lastDate);
+			if (ti.hasDay(lastDate)) {
+				if (!fillDays) {
+					ti.changeZone(ti.getCurrentZone(), lastTime);
+				}
+				ti.endDay(lastDate);
+			}
 		}
 
 		for (String date : dates) {
@@ -123,7 +140,6 @@ public class DataHandler {
 	 */
 	private static void printDayOutput(IOutputStreamHandler output, Collection<TurkeyInfo> turkeys, String date,
 			Collection<String> zones, boolean finished) {
-		// TODO handle generating output for previous days.
 		boolean total = date == null;
 		for (TurkeyInfo ti : turkeys) {
 			if (total || ti.hasDay(date)) {

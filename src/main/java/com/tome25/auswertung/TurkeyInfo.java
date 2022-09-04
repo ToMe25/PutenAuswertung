@@ -31,12 +31,6 @@ public class TurkeyInfo {
 	public static final int MIN_ZONE_TIME = 5 * 60 * 1000;
 
 	/**
-	 * Whether beginnings and ends of days where the adjacent day is not known
-	 * should be assumed to be like the first/last record on that day.
-	 */
-	private final boolean fillDay;
-
-	/**
 	 * The string id of the turkey represented by this info object.
 	 */
 	private final String id;
@@ -45,6 +39,13 @@ public class TurkeyInfo {
 	 * A list containing all transponders that represent this turkey.
 	 */
 	private final List<String> transponders;
+
+	/**
+	 * The time at which records on the next day not immediately following another
+	 * recorded one should start.<br/>
+	 * Set to {@code null} to start at midnight.
+	 */
+	private Calendar startTime;
 
 	/**
 	 * A map containing a map containing the time this turkey spent in each recorded
@@ -114,11 +115,12 @@ public class TurkeyInfo {
 	 * @param time         The time of the first record of this turkey.<br/>
 	 *                     Both the date and the time of day.<br/>
 	 *                     Set to {@code null} to mark as not yet known.
-	 * @param fillDay      Whether beginnings and ends of days where the adjacent
-	 *                     day is not known should be assumed to be like the
-	 *                     first/last record on that day.
+	 * @param startTime    The time of the first recorded day at which the records
+	 *                     should start.<br/>
+	 *                     Set to {@code null} to start at midnight of the first day
+	 *                     at which they are recorded.
 	 */
-	public TurkeyInfo(String id, List<String> transponders, String currentZone, Calendar time, boolean fillDay) {
+	public TurkeyInfo(String id, List<String> transponders, String currentZone, Calendar time, Calendar startTime) {
 		if (time != null && (currentZone == null || currentZone.trim().isEmpty())) {
 			throw new NullPointerException("The current zone cannot be null when the date isn't null.");
 		}
@@ -132,13 +134,14 @@ public class TurkeyInfo {
 		this.currentZone = this.lastZone = currentZone;
 		this.currentTime = time;
 		this.lastZoneChange = time == null ? 0 : time.getTimeInMillis();
-		this.fillDay = fillDay;
+		this.startTime = startTime;
 
 		if (time != null) {
 			dayZoneTimes.put(TimeUtils.encodeDate(time), new HashMap<String, Integer>());
-			if (fillDay && currentZone != null) {
-				dayZoneTimes.get(TimeUtils.encodeDate(time)).put(currentZone, TimeUtils.getMsOfDay(time));
-				totalZoneTimes.put(currentZone, (long) TimeUtils.getMsOfDay(time));
+			if (fillDays() && currentZone != null) {
+				addTime(time, currentZone, TimeUtils.getMsOfDay(time));
+			} else if (currentZone != null) {
+				addTime(time, currentZone, (int) (time.getTimeInMillis() - startTime.getTimeInMillis()));
 			}
 		}
 	}
@@ -175,8 +178,13 @@ public class TurkeyInfo {
 		if (currentZone != null) {
 			int timeSpent = (int) (timeMs - currentTime.getTimeInMillis());
 			addTime(time, currentZone, timeSpent);
-		} else if (fillDay) {
+		} else if (fillDays()) {
 			addTime(time, newZone, TimeUtils.getMsOfDay(time));
+			currentZone = lastZone = newZone;
+			lastZoneChange = timeMs;
+		} else {
+			int recordTime = (int) (timeMs - startTime.getTimeInMillis());
+			addTime(time, newZone, recordTime);
 			currentZone = lastZone = newZone;
 			lastZoneChange = timeMs;
 		}
@@ -329,7 +337,7 @@ public class TurkeyInfo {
 	public void endDay(Calendar time) throws NullPointerException {
 		Objects.requireNonNull(time, "Time can't be null.");
 
-		if (fillDay) {
+		if (fillDays()) {
 			// FIXME probably produces 1ms offsets
 			Calendar cal = (Calendar) currentTime.clone();
 			cal.set(Calendar.HOUR_OF_DAY, 23);
@@ -383,10 +391,19 @@ public class TurkeyInfo {
 	 * Returns the time for which the values of this object are currently
 	 * calculated.
 	 * 
-	 * @return the current time.
+	 * @return The current time of this object.
 	 */
 	public int getCurrentTime() {
 		return TimeUtils.getMsOfDay(currentTime);
+	}
+
+	/**
+	 * Gets the zone this turkey is currently in.
+	 * 
+	 * @return The zone this turkey is currently in.
+	 */
+	public String getCurrentZone() {
+		return currentZone;
 	}
 
 	/**
@@ -428,10 +445,10 @@ public class TurkeyInfo {
 
 		if (currentTime == null) {
 			return -1;
-		} else if (TimeUtils.isSameDay(currentTime, TimeUtils.parseDate(date))) {
-			return todayZoneChanges;
 		} else if (dayZoneChanges.containsKey(date)) {
 			return dayZoneChanges.get(date);
+		} else if (TimeUtils.isSameDay(currentTime, TimeUtils.parseDate(date))) {
+			return todayZoneChanges;
 		} else {
 			return -1;
 		}
@@ -458,15 +475,29 @@ public class TurkeyInfo {
 	public boolean hasDay(String date) throws NullPointerException, IllegalArgumentException {
 		Objects.requireNonNull(date, "The date to check for can't be null.");
 
-		if (currentTime == null) {
-			return false;
-		}
+		return dayZoneTimes.containsKey(date);
+	}
 
-		if (dayZoneTimes.containsKey(date)) {
-			return true;
-		}
+	/**
+	 * Sets the time at which records should start the next time there is a new
+	 * recording start.<br/>
+	 * A recording start is when zone times are recorded, after days where there
+	 * were no records.
+	 * 
+	 * @param startTime The time where the records should begin.
+	 */
+	public void setStartTime(Calendar startTime) {
+		this.startTime = startTime;
+	}
 
-		return TimeUtils.isSameDay(currentTime, TimeUtils.parseDate(date));
+	/**
+	 * Whether the time before the first and after the last record of the first/last
+	 * day should be counted towards the first/last zone.
+	 * 
+	 * @return {@code true} if those times should be filled.
+	 */
+	private boolean fillDays() {
+		return startTime == null;
 	}
 
 }

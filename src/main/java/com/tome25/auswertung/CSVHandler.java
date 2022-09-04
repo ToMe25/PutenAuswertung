@@ -343,29 +343,38 @@ public class CSVHandler {
 			((ArrayList<String>) zones).sort(IntOrStringComparator.INSTANCE);
 		}
 
-		String result = null;
+		StringBuilder result = new StringBuilder();
 		if (date != null) {
-			result = StringUtils.join(DEFAULT_SEPARATOR, turkey.getId(), date,
-					Integer.toString(turkey.getDayZoneChanges(date)));
+			result.append(turkey.getId());
+			result.append(DEFAULT_SEPARATOR);
+			result.append(date);
+			result.append(DEFAULT_SEPARATOR);
+			result.append(Integer.toString(turkey.getDayZoneChanges(date)));
 		} else {
-			result = StringUtils.join(DEFAULT_SEPARATOR, turkey.getId(), "total",
-					Integer.toString(turkey.getTotalZoneChanges()));
+			result.append(turkey.getId());
+			result.append(DEFAULT_SEPARATOR);
+			result.append("total");
+			result.append(DEFAULT_SEPARATOR);
+			result.append(Integer.toString(turkey.getTotalZoneChanges()));
 		}
 
 		for (String zone : zones) {
 			if (zoneTimes.containsKey(zone)) {
 				Object time = zoneTimes.get(zone);
 				if (time instanceof Long) {
-					result += DEFAULT_SEPARATOR + TimeUtils.encodeTime((long) (Long) zoneTimes.get(zone));
+					result.append(DEFAULT_SEPARATOR);
+					result.append(TimeUtils.encodeTime((long) (Long) zoneTimes.get(zone)));
 				} else if (time instanceof Integer) {
-					result += DEFAULT_SEPARATOR + TimeUtils.encodeTime((int) (Integer) zoneTimes.get(zone));
+					result.append(DEFAULT_SEPARATOR);
+					result.append(TimeUtils.encodeTime((int) (Integer) zoneTimes.get(zone)));
 				}
 			} else {
-				result += DEFAULT_SEPARATOR + TimeUtils.encodeTime(0);
+				result.append(DEFAULT_SEPARATOR);
+				result.append(TimeUtils.encodeTime(0));
 			}
 		}
 
-		return result;
+		return result.toString();
 	}
 
 	/**
