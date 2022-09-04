@@ -172,10 +172,11 @@ public class TurkeyInfo {
 			endDay(time);
 		}
 
+		boolean newRec = !TimeUtils.isSameDay(currentTime, time) && !TimeUtils.isNextDay(currentTime, time);
+
 		long timeMs = time.getTimeInMillis();
 
-		// FIXME handle fillDay after missing days
-		if (currentZone != null) {
+		if (currentZone != null && !newRec) {
 			int timeSpent = (int) (timeMs - currentTime.getTimeInMillis());
 			addTime(time, currentZone, timeSpent);
 		} else if (fillDays()) {

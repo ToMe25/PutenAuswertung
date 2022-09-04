@@ -71,6 +71,15 @@ public class DataHandler {
 				if (outputStream.printsTemporary() && lastDate != null) {
 					printDayOutput(outputStream, turkeyInfos.values(), lastDate, zones.getKey().keySet(), false);
 				}
+
+				if (!fillDays && lastDate != null && !TimeUtils.isNextDay(lastTime, record.cal)) {
+					startTime = record.cal;
+					for (TurkeyInfo ti : turkeyInfos.values()) {
+						ti.changeZone(ti.getCurrentZone(), lastTime);
+						ti.setStartTime(startTime);
+					}
+				}
+
 				lastDate = record.date;
 				dates.add(lastDate);
 			}

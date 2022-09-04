@@ -37,14 +37,14 @@ public class AntennaDataGenerator {
 	 * The format of the first one is {@code turkey -> date -> zone -> time}.<br/>
 	 * The format of the second one is {@code turkey -> date -> zoneChanges}.
 	 * 
-	 * @param turkeys   The turkeys to move in the example data.
-	 * @param zones     The zones for the turkeys to move in.
-	 * @param output    The output stream handler to write the data to.
-	 * @param days      The number of days to generate example data for.
-	 * @param continous Whether there should be days missing in the example data.
-	 * @param fillDays  Whether the time before the first and after the last
-	 *                  measurement each day should be expected to be spent in the
-	 *                  first/last zone.
+	 * @param turkeys    The turkeys to move in the example data.
+	 * @param zones      The zones for the turkeys to move in.
+	 * @param output     The output stream handler to write the data to.
+	 * @param days       The number of days to generate example data for.
+	 * @param continuous Whether there should be days missing in the example data.
+	 * @param fillDays   Whether the time before the first and after the last
+	 *                   measurement each day should be expected to be spent in the
+	 *                   first/last zone.
 	 * @return A map containing where each turkey should have spent how much
 	 *         time.<br/>
 	 *         And a map containing how often each turkey changed its zone each day.
@@ -52,7 +52,7 @@ public class AntennaDataGenerator {
 	 */
 	public static Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>> generateAntennaData(
 			List<TurkeyInfo> turkeys, Map<String, List<String>> zones, IOutputStreamHandler output, int days,
-			boolean continous, boolean fillDays) throws NullPointerException {
+			boolean continuous, boolean fillDays) throws NullPointerException {
 		Objects.requireNonNull(turkeys, "The turkeys to generate input data for cannot be null.");
 		Objects.requireNonNull(zones, "The zones to use for the generated input can't be null.");
 		Objects.requireNonNull(output, "The output to write the file to can not be null.");
@@ -66,15 +66,18 @@ public class AntennaDataGenerator {
 		Map<String, Long> lastZoneChange = new HashMap<String, Long>();
 		Map<String, String> currentZone = new HashMap<String, String>();
 		Map<String, String> lastZone = new HashMap<String, String>();
+		Map<String, Long> lastRecord = new HashMap<String, Long>();
 
 		Calendar cal = Calendar.getInstance();
 		cal.set(2022, Calendar.FEBRUARY, 5);
 		for (int day = 0; day < days; day++) {
 			String date = TimeUtils.encodeDate(cal);
 			Pair<Map<String, Map<String, Integer>>, Map<String, Integer>> dayData = generateDayAntennaData(turkeys,
-					zones, date, output, lastZoneChange, currentZone, lastZone, fillDays);
+					zones, date, output, lastZoneChange, currentZone, lastZone, lastRecord, fillDays);
 			Map<String, Map<String, Integer>> dayTimes = dayData.getKey();
 			Map<String, Integer> dayChanges = dayData.getValue();
+
+			boolean skipNext = !continuous && RANDOM.nextInt(3) == 0;
 
 			for (String turkey : dayTimes.keySet()) {
 				if (!times.containsKey(turkey)) {
@@ -100,14 +103,13 @@ public class AntennaDataGenerator {
 					}
 				}
 
-				// TODO !continous
 				if (!fillDays) {
 					String zone = currentZone.get(turkey);
 
 					int zoneTime = 0;
-					if (day == days - 1) {
+					if (day == days - 1 || skipNext) {
 						long lastChange = 0;
-						for (Long change : lastZoneChange.values()) {
+						for (Long change : lastRecord.values()) {
 							if (change > lastChange) {
 								lastChange = change;
 							}
@@ -121,7 +123,11 @@ public class AntennaDataGenerator {
 					}
 
 					totalTimes.put(zone, totalTimes.get(zone) + zoneTime);
-					zoneDayTimes.put(zone, zoneDayTimes.get(zone) + zoneTime);
+					if (zoneDayTimes.containsKey(zone)) {
+						zoneDayTimes.put(zone, zoneDayTimes.get(zone) + zoneTime);
+					} else {
+						zoneDayTimes.put(zone, (long) zoneTime);
+					}
 				}
 
 				if (!changes.containsKey(turkey)) {
@@ -141,12 +147,13 @@ public class AntennaDataGenerator {
 				}
 			}
 
-			if (!continous && RANDOM.nextInt(5) == 0) {
+			if (skipNext) {
 				cal.add(Calendar.DATE, 2 + RANDOM.nextInt(5));
 
 				lastZoneChange = new HashMap<String, Long>();
 				currentZone = new HashMap<String, String>();
 				lastZone = new HashMap<String, String>();
+				lastRecord = new HashMap<String, Long>();
 			} else {
 				cal.add(Calendar.DATE, 1);
 			}
@@ -179,6 +186,9 @@ public class AntennaDataGenerator {
 	 *                       minutes.<br/>
 	 *                       Will be mutated to be used as day to day storage.<br/>
 	 *                       A new {@link HashMap} will be used if {@code null}.
+	 * @param lastRecord     The time stamp of the last record of each turkey.<br/>
+	 *                       Will be mutated to be used as day to day storage.<br/>
+	 *                       A new {@link HashMap} will be used if {@code null}.
 	 * @param fillDay        Whether the time before the first and after the last
 	 *                       record should be filled.
 	 * @return The times each turkey spent in each zone.
@@ -187,7 +197,7 @@ public class AntennaDataGenerator {
 	public static Pair<Map<String, Map<String, Integer>>, Map<String, Integer>> generateDayAntennaData(
 			List<TurkeyInfo> turkeys, Map<String, List<String>> zones, String date, IOutputStreamHandler output,
 			Map<String, Long> lastZoneChange, Map<String, String> currentZone, Map<String, String> lastZone,
-			boolean fillDay) throws NullPointerException {
+			Map<String, Long> lastRecord, boolean fillDay) throws NullPointerException {
 		Objects.requireNonNull(turkeys, "The turkeys to generate input data for can't be null.");
 		Objects.requireNonNull(zones, "The zones to use for the generated input can't be null.");
 		Objects.requireNonNull(date, "The date to generate data for can't be null.");
@@ -203,6 +213,10 @@ public class AntennaDataGenerator {
 
 		if (lastZone == null) {
 			lastZone = new HashMap<String, String>();
+		}
+
+		if (lastRecord == null) {
+			lastRecord = new HashMap<String, Long>();
 		}
 
 		// Generate 10-20 zone changes per transponder on average
@@ -270,6 +284,7 @@ public class AntennaDataGenerator {
 				currentZone.put(turkeyName, zone);
 				lastZone.put(turkeyName, zone);
 				zoneChanges.put(turkeyName, 0);
+				lastRecord.put(turkeyName, changeTime);
 			} else {
 				if (!currentZone.get(turkeyName).equals(zone)) {
 					zoneTime = (int) (changeTime - lastZoneChange.get(turkeyName));
@@ -316,6 +331,7 @@ public class AntennaDataGenerator {
 					currentZone.put(turkeyName, zone);
 					lastZoneChange.put(turkeyName, changeTime);
 				}
+				lastRecord.put(turkeyName, changeTime);
 			}
 
 			lastTime = changeTime;
