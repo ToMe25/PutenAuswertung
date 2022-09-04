@@ -68,8 +68,10 @@ public class AntennaRecord {
 
 	@Override
 	public String toString() {
-		return String.format("AntennaRecord[transponder=%s, date=%s, time=%s, antenna=%s, time of day=%d, calendar=%s]",
-				transponder, date, time, antenna, tod, cal);
+		return String.format(
+				"AntennaRecord[transponder=%s, date=%s, time=%s, antenna=%s, time of day=%d, time=%s, date=%s]",
+				transponder, date, time, antenna, tod, TimeUtils.encodeTime(TimeUtils.getMsOfDay(cal)),
+				TimeUtils.encodeDate(cal));
 	}
 
 	@Override

@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -58,9 +59,9 @@ public class AntennaDataGenerator {
 
 		output.println("Transponder;Date;Time;Antenne");
 		// turkey -> date -> zone -> time
-		Map<String, Map<String, Map<String, Long>>> times = new HashMap<String, Map<String, Map<String, Long>>>();
+		Map<String, Map<String, Map<String, Long>>> times = new LinkedHashMap<String, Map<String, Map<String, Long>>>();
 		// turkey -> date -> zone changes
-		Map<String, Map<String, Integer>> changes = new HashMap<String, Map<String, Integer>>();
+		Map<String, Map<String, Integer>> changes = new LinkedHashMap<String, Map<String, Integer>>();
 
 		Map<String, Long> lastZoneChange = new HashMap<String, Long>();
 		Map<String, String> currentZone = new HashMap<String, String>();
@@ -78,7 +79,7 @@ public class AntennaDataGenerator {
 
 			for (String turkey : dayTimes.keySet()) {
 				if (!times.containsKey(turkey)) {
-					times.put(turkey, new HashMap<String, Map<String, Long>>());
+					times.put(turkey, new LinkedHashMap<String, Map<String, Long>>());
 				}
 
 				Map<String, Long> zoneDayTimes = new HashMap<String, Long>();
@@ -262,6 +263,12 @@ public class AntennaDataGenerator {
 						lastZone.put(turkeyName, currentZone.get(turkeyName));
 					} else {
 						String lZone = lastZone.get(turkeyName);
+
+						if (!zoneTimes.containsKey(turkeyName)) {
+							// Doesn't happen with fillDay
+							zoneTimes.put(turkeyName, new HashMap<String, Integer>());
+							zoneChanges.put(turkeyName, 0);
+						}
 
 						if (zoneTimes.get(turkeyName).containsKey(lZone)) {
 							zoneTimes.get(turkeyName).put(lZone, zoneTimes.get(turkeyName).get(lZone) + zoneTime);

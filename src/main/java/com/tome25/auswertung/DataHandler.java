@@ -1,6 +1,7 @@
 package com.tome25.auswertung;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -42,6 +43,8 @@ public class DataHandler {
 		String lastDate = null;
 		outputStream.println(CSVHandler.turkeyCsvHeader(zones.getKey().keySet()));
 
+		List<String> dates = new ArrayList<String>();
+
 		while (!antennaStream.done()) {
 			AntennaRecord record = CSVHandler.readAntennaRecord(antennaStream);
 			String turkeyId = record.transponder;
@@ -61,10 +64,11 @@ public class DataHandler {
 			}
 
 			if (!record.date.equals(lastDate)) {
-				if (lastDate != null) {
-					printDayOutput(outputStream, turkeyInfos.values(), lastDate, zones.getKey().keySet());
+				if (outputStream.printsTemporary() && lastDate != null) {
+					printDayOutput(outputStream, turkeyInfos.values(), lastDate, zones.getKey().keySet(), false);
 				}
 				lastDate = record.date;
+				dates.add(lastDate);
 			}
 
 			if (!turkeyInfos.containsKey(turkeyId)) {
@@ -77,15 +81,22 @@ public class DataHandler {
 					LogHandler.err_println(
 							"New antenna record is before the last one for the same turkey. Skipping line.");
 					LogHandler.print_exception(e, "update turkey zone",
-							"Antenna Record: %s, fillDays: %s, new time: %s, current time: %s", record,
-							fillDays ? "true" : "false", record.time,
-							TimeUtils.encodeTime(turkeyInfos.get(turkeyId).getCurrentTime()));
+							"Antenna Record: %s, fillDays: %s, new time: %s, current time: %s, current date: %s",
+							record, fillDays ? "true" : "false", record.time,
+							TimeUtils.encodeTime(turkeyInfos.get(turkeyId).getCurrentTime()),
+							turkeyInfos.get(turkeyId).getCurrentDate());
 				}
 			}
 		}
 
-		printDayOutput(outputStream, turkeyInfos.values(), lastDate, zones.getKey().keySet());
-		printDayOutput(outputStream, turkeyInfos.values(), null, zones.getKey().keySet());
+		for (TurkeyInfo ti : turkeyInfos.values()) {
+			ti.endDay(lastDate);
+		}
+
+		for (String date : dates) {
+			printDayOutput(outputStream, turkeyInfos.values(), date, zones.getKey().keySet(), true);
+		}
+		printDayOutput(outputStream, turkeyInfos.values(), null, zones.getKey().keySet(), true);
 
 		try {
 			outputStream.close();
@@ -101,24 +112,26 @@ public class DataHandler {
 	 * Prints a line for each turkey that has been updated on the given day.<br/>
 	 * Or all turkeys of used for total output.
 	 * 
-	 * @param output  The {@link IOutputStreamHandler} to write the generated data
-	 *                to.
-	 * @param turkeys A collection of all the turkeys that are known.
-	 * @param date    The date for which to generate output. Set to {@code null} to
-	 *                produce total output.
-	 * @param zones   A collection containing the names of all the zones to write.
+	 * @param output   The {@link IOutputStreamHandler} to write the generated data
+	 *                 to.
+	 * @param turkeys  A collection of all the turkeys that are known.
+	 * @param date     The date for which to generate output. Set to {@code null} to
+	 *                 produce total output.
+	 * @param zones    A collection containing the names of all the zones to write.
+	 * @param finished If {@code true} all data is handled as non temporary.
 	 * @return The newly generated output.
 	 */
 	private static void printDayOutput(IOutputStreamHandler output, Collection<TurkeyInfo> turkeys, String date,
-			Collection<String> zones) {
-		// TODO add printAll printing all turkeys.
+			Collection<String> zones, boolean finished) {
 		// TODO handle generating output for previous days.
-		// TODO handle generating temporary output.
 		boolean total = date == null;
 		for (TurkeyInfo ti : turkeys) {
-			if (total || ti.getCurrentDate().equals(date)) {
-				ti.endDay(ti.getCurrentDate());
-				output.println(CSVHandler.turkeyToCsvLine(ti, date, zones));
+			if (total || ti.hasDay(date)) {
+				if (finished) {
+					output.println(CSVHandler.turkeyToCsvLine(ti, date, zones));
+				} else {
+					output.printDay(ti, date, zones);
+				}
 			}
 		}
 	}

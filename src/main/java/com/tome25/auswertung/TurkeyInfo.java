@@ -317,7 +317,6 @@ public class TurkeyInfo {
 	/**
 	 * Sets the current time for this object to the end of the current day, or the
 	 * beginning of the given day if {@code fillDay} is {@code true}.<br/>
-	 * Does not do anything if {@code fillDay} is {@code false}.<br/>
 	 * 
 	 * If time is on the current day it sets the time to the end of that day.<br/>
 	 * Otherwise sets it to the start of the given day.<br/>
@@ -338,14 +337,15 @@ public class TurkeyInfo {
 			cal.set(Calendar.SECOND, 59);
 			cal.set(Calendar.MILLISECOND, 999);
 			changeZone(currentZone, cal);
-			if (!TimeUtils.isSameDay(currentTime, time)) {
-				dayZoneChanges.put(TimeUtils.encodeDate(currentTime), todayZoneChanges);
-				String date = TimeUtils.encodeDate(time);
-				if (!dayZoneTimes.containsKey(date)) {
-					dayZoneTimes.put(date, new HashMap<String, Integer>());
-				}
-				todayZoneChanges = 0;
+		}
+
+		if (!TimeUtils.isSameDay(currentTime, time)) {
+			dayZoneChanges.put(TimeUtils.encodeDate(currentTime), todayZoneChanges);
+			String date = TimeUtils.encodeDate(time);
+			if (!dayZoneTimes.containsKey(date)) {
+				dayZoneTimes.put(date, new HashMap<String, Integer>());
 			}
+			todayZoneChanges = 0;
 		}
 	}
 
@@ -420,11 +420,15 @@ public class TurkeyInfo {
 	 * 
 	 * @param date The date for which to check.
 	 * @return The number of zone changes on the given date.
+	 * @throws NullPointerException     If {@code date} is {@code null}.
+	 * @throws IllegalArgumentException If {@code date} can't be parsed as a date.
 	 */
 	public int getDayZoneChanges(String date) {
+		Objects.requireNonNull(date, "The date to check for can't be null.");
+
 		if (currentTime == null) {
 			return -1;
-		} else if (date.equals(TimeUtils.encodeDate(currentTime))) {
+		} else if (TimeUtils.isSameDay(currentTime, TimeUtils.parseDate(date))) {
 			return todayZoneChanges;
 		} else if (dayZoneChanges.containsKey(date)) {
 			return dayZoneChanges.get(date);
@@ -441,6 +445,28 @@ public class TurkeyInfo {
 	 */
 	public int getTotalZoneChanges() {
 		return totalZoneChanges;
+	}
+
+	/**
+	 * Returns {@code true} if this object holds data for the given day.
+	 * 
+	 * @param date The day for which to check.
+	 * @return {@code true} if this object holds data for the given day.
+	 * @throws NullPointerException     If {@code date} is {@code null}.
+	 * @throws IllegalArgumentException If {@code date} can't be parsed as a date.
+	 */
+	public boolean hasDay(String date) throws NullPointerException, IllegalArgumentException {
+		Objects.requireNonNull(date, "The date to check for can't be null.");
+
+		if (currentTime == null) {
+			return false;
+		}
+
+		if (dayZoneTimes.containsKey(date)) {
+			return true;
+		}
+
+		return TimeUtils.isSameDay(currentTime, TimeUtils.parseDate(date));
 	}
 
 }

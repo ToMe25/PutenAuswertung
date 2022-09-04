@@ -144,6 +144,6 @@ public class PutenAuswertung {
 			return;
 		}
 
-		DataHandler.handleStreams(antennaHandler, turkeyHandler, zoneHandler, outputHandler, true);
+		DataHandler.handleStreams(antennaHandler, turkeyHandler, zoneHandler, outputHandler, false);
 	}
 }
