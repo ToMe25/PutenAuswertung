@@ -199,6 +199,18 @@ public class TurkeyInfo {
 				addTime(time, currentZone, -zoneTime);
 				addTime(time, lastZone, zoneTime);
 
+				if (zoneTime > TimeUtils.getMsOfDay(time)) {
+					Calendar yesterday = (Calendar) time.clone();
+					yesterday.add(Calendar.DATE, -1);
+					String yesterdayDate = TimeUtils.encodeDate(yesterday);
+
+					// FIXME not sure how to handle if it isn't
+					if (dayZoneChanges.containsKey(yesterdayDate)) {
+						dayZoneChanges.put(yesterdayDate, Math.max(0, dayZoneChanges.get(yesterdayDate) - 1));
+						todayZoneChanges++;
+					}
+				}
+
 				if (lastZone.equals(newZone)) {
 					todayZoneChanges--;
 					totalZoneChanges--;

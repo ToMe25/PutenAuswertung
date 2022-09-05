@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.List;
 import java.util.Map;
 
@@ -20,6 +21,7 @@ import com.tome25.auswertung.testdata.TurkeyGenerator;
 import com.tome25.auswertung.testdata.ZoneGenerator;
 import com.tome25.auswertung.tests.rules.TempFileStreamHandler;
 import com.tome25.auswertung.utils.Pair;
+import com.tome25.auswertung.utils.TimeUtils;
 
 /**
  * A class containing tests to verify the correctness of the generated output
@@ -39,30 +41,11 @@ public class OutputDataTest {
 	 */
 	@Test
 	public void basic() throws IOException {
-		TestMappings mappings = generateTestMappings(100, 5);
-		List<TurkeyInfo> turkeys = mappings.turkeys;
-		Map<String, List<String>> zones = mappings.zones;
-		FileInputStreamHandler turkeysIn = mappings.turkeysIn;
-		FileInputStreamHandler zonesIn = mappings.zonesIn;
-
-		Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder.newTempIOFile("antenna.csv");
-		FileOutputStreamHandler antennaOut = antennaPair.getValue();
-		FileInputStreamHandler antennaIn = antennaPair.getKey();
-		Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>> antennaData = AntennaDataGenerator
-				.generateAntennaData(turkeys, zones, antennaOut, 10, true, false);
-		Map<String, Map<String, Map<String, Long>>> antennaTimes = antennaData.getKey();
-		Map<String, Map<String, Integer>> antennaChanges = antennaData.getValue();
-		antennaOut.close();
-
-		Pair<FileInputStreamHandler, FileOutputStreamHandler> outputPair = tempFolder.newTempIOFile("output.csv");
-		FileOutputStreamHandler outputOut = outputPair.getValue();
-		FileInputStreamHandler outputIn = outputPair.getKey();
-		DataHandler.handleStreams(antennaIn, turkeysIn, zonesIn, outputOut, false);
-
-		Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>> outputData = CSVHandler
-				.readTotalsCSV(outputIn);
-		Map<String, Map<String, Map<String, Long>>> outputTimes = outputData.getKey();
-		Map<String, Map<String, Integer>> outputChanges = outputData.getValue();
+		TestTotals totals = generateTestValues(100, 5, 10, false, false);
+		Map<String, Map<String, Map<String, Long>>> antennaTimes = totals.antennaTimes;
+		Map<String, Map<String, Integer>> antennaChanges = totals.antennaChanges;
+		Map<String, Map<String, Map<String, Long>>> outputTimes = totals.outputTimes;
+		Map<String, Map<String, Integer>> outputChanges = totals.outputChanges;
 
 		for (String turkey : antennaTimes.keySet()) {
 			assertTrue("The output data is missing turkey \"" + turkey + "\".", outputTimes.containsKey(turkey));
@@ -119,30 +102,11 @@ public class OutputDataTest {
 	 */
 	@Test
 	public void basicNonCont() throws IOException {
-		TestMappings mappings = generateTestMappings(100, 5);
-		List<TurkeyInfo> turkeys = mappings.turkeys;
-		Map<String, List<String>> zones = mappings.zones;
-		FileInputStreamHandler turkeysIn = mappings.turkeysIn;
-		FileInputStreamHandler zonesIn = mappings.zonesIn;
-
-		Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder.newTempIOFile("antenna.csv");
-		FileOutputStreamHandler antennaOut = antennaPair.getValue();
-		FileInputStreamHandler antennaIn = antennaPair.getKey();
-		Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>> antennaData = AntennaDataGenerator
-				.generateAntennaData(turkeys, zones, antennaOut, 10, false, false);
-		Map<String, Map<String, Map<String, Long>>> antennaTimes = antennaData.getKey();
-		Map<String, Map<String, Integer>> antennaChanges = antennaData.getValue();
-		antennaOut.close();
-
-		Pair<FileInputStreamHandler, FileOutputStreamHandler> outputPair = tempFolder.newTempIOFile("output.csv");
-		FileOutputStreamHandler outputOut = outputPair.getValue();
-		FileInputStreamHandler outputIn = outputPair.getKey();
-		DataHandler.handleStreams(antennaIn, turkeysIn, zonesIn, outputOut, false);
-
-		Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>> outputData = CSVHandler
-				.readTotalsCSV(outputIn);
-		Map<String, Map<String, Map<String, Long>>> outputTimes = outputData.getKey();
-		Map<String, Map<String, Integer>> outputChanges = outputData.getValue();
+		TestTotals totals = generateTestValues(100, 5, 10, false, false);
+		Map<String, Map<String, Map<String, Long>>> antennaTimes = totals.antennaTimes;
+		Map<String, Map<String, Integer>> antennaChanges = totals.antennaChanges;
+		Map<String, Map<String, Map<String, Long>>> outputTimes = totals.outputTimes;
+		Map<String, Map<String, Integer>> outputChanges = totals.outputChanges;
 
 		for (String turkey : antennaTimes.keySet()) {
 			assertTrue("The output data is missing turkey \"" + turkey + "\".", outputTimes.containsKey(turkey));
@@ -198,30 +162,11 @@ public class OutputDataTest {
 	 */
 	@Test
 	public void fillDays() throws IOException {
-		TestMappings mappings = generateTestMappings(100, 5);
-		List<TurkeyInfo> turkeys = mappings.turkeys;
-		Map<String, List<String>> zones = mappings.zones;
-		FileInputStreamHandler turkeysIn = mappings.turkeysIn;
-		FileInputStreamHandler zonesIn = mappings.zonesIn;
-
-		Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder.newTempIOFile("antenna.csv");
-		FileOutputStreamHandler antennaOut = antennaPair.getValue();
-		FileInputStreamHandler antennaIn = antennaPair.getKey();
-		Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>> antennaData = AntennaDataGenerator
-				.generateAntennaData(turkeys, zones, antennaOut, 10, true, true);
-		Map<String, Map<String, Map<String, Long>>> antennaTimes = antennaData.getKey();
-		Map<String, Map<String, Integer>> antennaChanges = antennaData.getValue();
-		antennaOut.close();
-
-		Pair<FileInputStreamHandler, FileOutputStreamHandler> outputPair = tempFolder.newTempIOFile("output.csv");
-		FileOutputStreamHandler outputOut = outputPair.getValue();
-		FileInputStreamHandler outputIn = outputPair.getKey();
-		DataHandler.handleStreams(antennaIn, turkeysIn, zonesIn, outputOut, true);
-
-		Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>> outputData = CSVHandler
-				.readTotalsCSV(outputIn);
-		Map<String, Map<String, Map<String, Long>>> outputTimes = outputData.getKey();
-		Map<String, Map<String, Integer>> outputChanges = outputData.getValue();
+		TestTotals totals = generateTestValues(100, 5, 10, true, true);
+		Map<String, Map<String, Map<String, Long>>> antennaTimes = totals.antennaTimes;
+		Map<String, Map<String, Integer>> antennaChanges = totals.antennaChanges;
+		Map<String, Map<String, Map<String, Long>>> outputTimes = totals.outputTimes;
+		Map<String, Map<String, Integer>> outputChanges = totals.outputChanges;
 
 		for (String turkey : antennaTimes.keySet()) {
 			assertTrue("The output data is missing turkey \"" + turkey + "\".", outputTimes.containsKey(turkey));
@@ -287,30 +232,11 @@ public class OutputDataTest {
 	 */
 	@Test
 	public void fillDayNonCont() throws IOException {
-		TestMappings mappings = generateTestMappings(100, 5);
-		List<TurkeyInfo> turkeys = mappings.turkeys;
-		Map<String, List<String>> zones = mappings.zones;
-		FileInputStreamHandler turkeysIn = mappings.turkeysIn;
-		FileInputStreamHandler zonesIn = mappings.zonesIn;
-
-		Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder.newTempIOFile("antenna.csv");
-		FileOutputStreamHandler antennaOut = antennaPair.getValue();
-		FileInputStreamHandler antennaIn = antennaPair.getKey();
-		Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>> antennaData = AntennaDataGenerator
-				.generateAntennaData(turkeys, zones, antennaOut, 10, false, true);
-		Map<String, Map<String, Map<String, Long>>> antennaTimes = antennaData.getKey();
-		Map<String, Map<String, Integer>> antennaChanges = antennaData.getValue();
-		antennaOut.close();
-
-		Pair<FileInputStreamHandler, FileOutputStreamHandler> outputPair = tempFolder.newTempIOFile("output.csv");
-		FileOutputStreamHandler outputOut = outputPair.getValue();
-		FileInputStreamHandler outputIn = outputPair.getKey();
-		DataHandler.handleStreams(antennaIn, turkeysIn, zonesIn, outputOut, true);
-
-		Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>> outputData = CSVHandler
-				.readTotalsCSV(outputIn);
-		Map<String, Map<String, Map<String, Long>>> outputTimes = outputData.getKey();
-		Map<String, Map<String, Integer>> outputChanges = outputData.getValue();
+		TestTotals totals = generateTestValues(100, 5, 10, false, true);
+		Map<String, Map<String, Map<String, Long>>> antennaTimes = totals.antennaTimes;
+		Map<String, Map<String, Integer>> antennaChanges = totals.antennaChanges;
+		Map<String, Map<String, Map<String, Long>>> outputTimes = totals.outputTimes;
+		Map<String, Map<String, Integer>> outputChanges = totals.outputChanges;
 
 		for (String turkey : antennaTimes.keySet()) {
 			assertTrue("The output data is missing turkey \"" + turkey + "\".", outputTimes.containsKey(turkey));
@@ -369,6 +295,121 @@ public class OutputDataTest {
 	}
 
 	/**
+	 * A manually written antenna records file for testing zones times of less than
+	 * 5 mins crossing the day border.
+	 * 
+	 * @throws IOException If reading/writing/creating a temp file fails.
+	 */
+	@Test
+	public void shortCrossDate() throws IOException {
+		TestMappings mappings = generateTestMappings(2, 3);
+		List<TurkeyInfo> turkeys = mappings.turkeys;
+		Map<String, List<String>> zones = mappings.zones;
+		FileInputStreamHandler turkeysIn = mappings.turkeysIn;
+		FileInputStreamHandler zonesIn = mappings.zonesIn;
+		String t1 = turkeys.get(0).getTransponders().get(0);
+		String t2 = turkeys.get(1).getTransponders().get(0);
+		String a1 = zones.get("Zone 1").get(0);
+		String a2 = zones.get("Zone 2").get(0);
+		String a3 = zones.get("Zone 3").get(0);
+
+		Pair<FileInputStreamHandler, PrintStream> antennaPair = tempFolder.newTempInputFile("antenna.csv");
+		FileInputStreamHandler antennaIn = antennaPair.getKey();
+		PrintStream aps = antennaPair.getValue();
+		aps.printf("%s;06.03.2022;02:12:45.32;%s%n", t1, a2);
+		aps.printf("%s;06.03.2022;02:18:17.96;%s%n", t1, a3);
+		aps.printf("%s;06.03.2022;03:03:12.05;%s%n", t2, a1);
+		aps.printf("%s;06.03.2022;03:12:31.85;%s%n", t1, a3);
+		aps.printf("%s;06.03.2022;03:27:01.44;%s%n", t2, a2);
+		aps.printf("%s;06.03.2022;03:31:26.48;%s%n", t2, a1);
+		aps.printf("%s;06.03.2022;05:14:51.19;%s%n", t2, a1);
+		aps.printf("%s;06.03.2022;06:46:50.64;%s%n", t2, a2);
+		aps.printf("%s;06.03.2022;08:52:26.73;%s%n", t1, a2);
+		aps.printf("%s;06.03.2022;08:55:45.52;%s%n", t1, a3);
+		aps.printf("%s;06.03.2022;08:58:23.48;%s%n", t1, a1);
+		aps.printf("%s;06.03.2022;15:26:08.53;%s%n", t2, a1);
+		aps.printf("%s;06.03.2022;18:43:52.67;%s%n", t1, a2);
+		aps.printf("%s;06.03.2022;20:38:12.29;%s%n", t2, a1);
+		aps.printf("%s;06.03.2022;23:52:45.89;%s%n", t1, a3);
+		aps.printf("%s;06.03.2022;23:58:12.76;%s%n", t1, a2);
+		aps.printf("%s;06.03.2022;23:58:31.32;%s%n", t2, a2);
+		aps.printf("%s;07.03.2022;00:02:34.57;%s%n", t1, a3);
+		aps.printf("%s;07.03.2022;00:02:26.92;%s%n", t2, a3);
+		aps.printf("%s;07.03.2022;00:06:51.28;%s%n", t2, a3);
+		aps.printf("%s;07.03.2022;00:07:41.81;%s%n", t1, a1);
+		aps.printf("%s;07.03.2022;00:09:28.09;%s%n", t1, a2);
+		aps.printf("%s;07.03.2022;00:13:29.15;%s%n", t2, a2);
+		aps.printf("%s;07.03.2022;01:10:37.73;%s%n", t1, a3);
+		aps.printf("%s;07.03.2022;01:21:42.86;%s%n", t1, a2);
+		aps.close();
+
+		Pair<FileInputStreamHandler, FileOutputStreamHandler> outputPair = tempFolder.newTempIOFile("output.csv");
+		FileOutputStreamHandler outputOut = outputPair.getValue();
+		FileInputStreamHandler outputIn = outputPair.getKey();
+		DataHandler.handleStreams(antennaIn, turkeysIn, zonesIn, outputOut, false);
+		outputOut.close();
+
+		Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>> outputData = CSVHandler
+				.readTotalsCSV(outputIn);
+		Map<String, Map<String, Map<String, Long>>> outputTimes = outputData.getKey();
+		Map<String, Map<String, Integer>> outputChanges = outputData.getValue();
+
+		assertEquals("First day turkey \"0\" changes count didn't match.", 4,
+				(int) outputChanges.get("0").get("06.03.2022"));
+		assertEquals("Second day turkey \"0\" changes count didn't match.", 3,
+				(int) outputChanges.get("0").get("07.03.2022"));
+		assertEquals("Total turkey \"0\" changes count didn't match.", 7, (int) outputChanges.get("0").get("total"));
+
+		assertEquals("First day turkey \"1\" changes count didn't match.", 2,
+				(int) outputChanges.get("1").get("06.03.2022"));
+		assertEquals("Second day turkey \"1\" changes count didn't match.", 2,
+				(int) outputChanges.get("1").get("07.03.2022"));
+		assertEquals("Total turkey \"1\" changes count didn't match.", 4, (int) outputChanges.get("1").get("total"));
+
+		assertEquals("First day turkey \"0\" Zone 1 time didn't match.", TimeUtils.parseTime("09:45:29.19"),
+				(long) outputTimes.get("0").get("06.03.2022").get("Zone 1"));
+		assertEquals("First day turkey \"0\" Zone 2 time didn't match.", TimeUtils.parseTime("05:14:25.86"),
+				(long) outputTimes.get("0").get("06.03.2022").get("Zone 2"));
+		assertEquals("First day turkey \"0\" Zone 3 time didn't match.", TimeUtils.parseTime("06:47:19.63"),
+				(long) outputTimes.get("0").get("06.03.2022").get("Zone 3"));
+
+		assertEquals("First day turkey \"1\" Zone 1 time didn't match.", TimeUtils.parseTime("13:07:56.79"),
+				(long) outputTimes.get("1").get("06.03.2022").get("Zone 1"));
+		assertEquals("First day turkey \"1\" Zone 2 time didn't match.", TimeUtils.parseTime("08:39:17.89"),
+				(long) outputTimes.get("1").get("06.03.2022").get("Zone 2"));
+		assertEquals("First day turkey \"1\" Zone 3 time didn't match.", 0,
+				(long) outputTimes.get("1").get("06.03.2022").get("Zone 3"));
+
+		assertEquals("Second day turkey \"0\" Zone 1 time didn't match.", 0,
+				(long) outputTimes.get("0").get("07.03.2022").get("Zone 1"));
+		assertEquals("Second day turkey \"0\" Zone 2 time didn't match.", TimeUtils.parseTime("01:01:09.64"),
+				(long) outputTimes.get("0").get("07.03.2022").get("Zone 2"));
+		assertEquals("Second day turkey \"0\" Zone 3 time didn't match.", TimeUtils.parseTime("00:20:33.22"),
+				(long) outputTimes.get("0").get("07.03.2022").get("Zone 3"));
+
+		assertEquals("Second day turkey \"1\" Zone 1 time didn't match.", TimeUtils.parseTime("00:02:26.92"),
+				(long) outputTimes.get("1").get("07.03.2022").get("Zone 1"));
+		assertEquals("Second day turkey \"1\" Zone 2 time didn't match.", TimeUtils.parseTime("01:08:13.71"),
+				(long) outputTimes.get("1").get("07.03.2022").get("Zone 2"));
+		assertEquals("Second day turkey \"1\" Zone 3 time didn't match.", TimeUtils.parseTime("00:11:02.23"),
+				(long) outputTimes.get("1").get("07.03.2022").get("Zone 3"));
+
+		assertEquals("Total turkey \"0\" Zone 1 time didn't match.", TimeUtils.parseTime("09:45:29.19"),
+				(long) outputTimes.get("0").get("total").get("Zone 1"));
+		assertEquals("Total turkey \"0\" Zone 2 time didn't match.", TimeUtils.parseTime("06:15:35.50"),
+				(long) outputTimes.get("0").get("total").get("Zone 2"));
+		assertEquals("Total turkey \"0\" Zone 3 time didn't match.", TimeUtils.parseTime("07:07:52.85"),
+				(long) outputTimes.get("0").get("total").get("Zone 3"));
+
+		assertEquals("Total turkey \"1\" Zone 1 time didn't match.", TimeUtils.parseTime("13:10:23.71"),
+				(long) outputTimes.get("1").get("total").get("Zone 1"));
+		assertEquals("Total turkey \"1\" Zone 2 time didn't match.", TimeUtils.parseTime("09:47:31.60"),
+				(long) outputTimes.get("1").get("total").get("Zone 2"));
+		assertEquals("Total turkey \"1\" Zone 3 time didn't match.", TimeUtils.parseTime("00:11:02.23"),
+				(long) outputTimes.get("1").get("total").get("Zone 3"));
+	}
+
+	/**
 	 * Generates and writes to two files mapping files for turkeys and zones.
 	 * 
 	 * @param turkeys The number of turkeys to generate.
@@ -396,6 +437,46 @@ public class OutputDataTest {
 		zonesOut.close();
 
 		return new TestMappings(tks, zs, turkeysIn, zonesIn);
+	}
+
+	/**
+	 * Generates and writes mappings and totals files.
+	 * 
+	 * @param turkeys    The number of turkeys to generate and use for the test
+	 *                   data.
+	 * @param zones      The number of zones to generate and use for the test data.
+	 * @param days       The number of days worth of antenna records to generate and
+	 *                   use.
+	 * @param continuous Whether there should be days without records between the
+	 *                   days of records.
+	 * @param fillDays   Whether the time before the first and after the last record
+	 *                   on a day should be assumed to be spent in the first/last
+	 *                   zone.
+	 * @return An object containing both the generated "ideal" results, as well as
+	 *         the parsed output file.
+	 * @throws IOException If reading/writing/creating a temporary file failed.
+	 */
+	private TestTotals generateTestValues(int turkeys, int zones, int days, boolean continuous, boolean fillDays)
+			throws IOException {
+		TestMappings mappings = generateTestMappings(turkeys, zones);
+
+		Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder.newTempIOFile("antenna.csv");
+		FileOutputStreamHandler antennaOut = antennaPair.getValue();
+		FileInputStreamHandler antennaIn = antennaPair.getKey();
+		Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>> antennaData = AntennaDataGenerator
+				.generateAntennaData(mappings.turkeys, mappings.zones, antennaOut, days, continuous, fillDays);
+		antennaOut.close();
+
+		Pair<FileInputStreamHandler, FileOutputStreamHandler> outputPair = tempFolder.newTempIOFile("output.csv");
+		FileOutputStreamHandler outputOut = outputPair.getValue();
+		FileInputStreamHandler outputIn = outputPair.getKey();
+		DataHandler.handleStreams(antennaIn, mappings.turkeysIn, mappings.zonesIn, outputOut, fillDays);
+		outputOut.close();
+
+		Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>> outputData = CSVHandler
+				.readTotalsCSV(outputIn);
+
+		return new TestTotals(antennaData.getKey(), outputData.getKey(), antennaData.getValue(), outputData.getValue());
 	}
 
 	/**
@@ -444,6 +525,52 @@ public class OutputDataTest {
 			this.zonesIn = zonesIn;
 		}
 
+	}
+
+	/**
+	 * A utility class for this unit test to transfer all totals values at once.
+	 * 
+	 * @author theodor
+	 */
+	private class TestTotals {
+
+		/**
+		 * Generated times per zone per day per turkey.
+		 */
+		public final Map<String, Map<String, Map<String, Long>>> antennaTimes;
+
+		/**
+		 * Time per zone per day per turkey read from the output file.
+		 */
+		public final Map<String, Map<String, Map<String, Long>>> outputTimes;
+
+		/**
+		 * Generated zone change counts.
+		 */
+		public final Map<String, Map<String, Integer>> antennaChanges;
+
+		/**
+		 * Zone change counts parsed from the output file.
+		 */
+		public final Map<String, Map<String, Integer>> outputChanges;
+
+		/**
+		 * Creates a new TestTotals object and initializes all final fields.
+		 * 
+		 * @param antennaTimes   Calculated times per turkey per day per zone.
+		 * @param outputTimes    Time per turkey per day per zone parsed from the output
+		 *                       file.
+		 * @param antennaChanges Calculated zone changes per turkey.
+		 * @param outputChanges  Zone changes per turkey parsed from the output file.
+		 */
+		public TestTotals(Map<String, Map<String, Map<String, Long>>> antennaTimes,
+				Map<String, Map<String, Map<String, Long>>> outputTimes,
+				Map<String, Map<String, Integer>> antennaChanges, Map<String, Map<String, Integer>> outputChanges) {
+			this.antennaTimes = antennaTimes;
+			this.outputTimes = outputTimes;
+			this.antennaChanges = antennaChanges;
+			this.outputChanges = outputChanges;
+		}
 	}
 
 }
