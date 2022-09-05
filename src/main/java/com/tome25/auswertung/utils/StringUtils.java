@@ -144,17 +144,17 @@ public class StringUtils {
 	}
 
 	/**
-	 * Checks if the given string can be parsed as an integer.<br/>
-	 * Does not account for integer overflows.
+	 * Checks if the given string can be parsed as an integer.
 	 * 
 	 * @param str The string to check.
 	 * @return Whether or not the given string is a valid integer.
 	 */
 	public static boolean isInteger(String str) {
-		if (str == null || str.isEmpty()) {
+		if (str == null || str.trim().isEmpty()) {
 			return false;
 		}
 
+		str = str.trim();
 		int length = str.length();
 
 		int i = 0;
@@ -165,12 +165,22 @@ public class StringUtils {
 			i = 1;
 		}
 
+		if (length - i > 10) {
+			return false;
+		}
+
 		for (; i < length; i++) {
 			char c = str.charAt(i);
 			if (c < '0' || c > '9') {
 				return false;
 			}
 		}
+
+		long value = Long.parseLong(str);
+		if (value > Integer.MAX_VALUE || value < Integer.MIN_VALUE) {
+			return false;
+		}
+
 		return true;
 	}
 
