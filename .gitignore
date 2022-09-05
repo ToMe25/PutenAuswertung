@@ -7,7 +7,10 @@
 .classpath
 
 # Input
-Puten*.csv*
-Bereiche*.csv*
-AntennenDaten*.csv*
-PutenAuswertung.csv
+Puten.csv*
+Bereiche.csv*
+AntennenDaten.csv*
+
+# Output
+PutenAuswertungZeiten*.csv*
+PutenAuswertungAufenthalte*.csv*

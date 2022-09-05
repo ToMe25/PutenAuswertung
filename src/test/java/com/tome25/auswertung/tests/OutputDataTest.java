@@ -5,6 +5,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -14,6 +15,7 @@ import org.junit.Test;
 import com.tome25.auswertung.CSVHandler;
 import com.tome25.auswertung.DataHandler;
 import com.tome25.auswertung.TurkeyInfo;
+import com.tome25.auswertung.ZoneStay;
 import com.tome25.auswertung.stream.FileInputStreamHandler;
 import com.tome25.auswertung.stream.FileOutputStreamHandler;
 import com.tome25.auswertung.testdata.AntennaDataGenerator;
@@ -44,8 +46,10 @@ public class OutputDataTest {
 		TestTotals totals = generateTestValues(100, 5, 10, false, false);
 		Map<String, Map<String, Map<String, Long>>> antennaTimes = totals.antennaTimes;
 		Map<String, Map<String, Integer>> antennaChanges = totals.antennaChanges;
+		Map<String, List<ZoneStay>> antennaStays = totals.antennaStays;
 		Map<String, Map<String, Map<String, Long>>> outputTimes = totals.outputTimes;
 		Map<String, Map<String, Integer>> outputChanges = totals.outputChanges;
+		Map<String, List<ZoneStay>> outputStays = totals.outputStays;
 
 		for (String turkey : antennaTimes.keySet()) {
 			assertTrue("The output data is missing turkey \"" + turkey + "\".", outputTimes.containsKey(turkey));
@@ -54,10 +58,14 @@ public class OutputDataTest {
 		for (String turkey : outputTimes.keySet()) {
 			assertTrue("There was no zone changes count output for the turkey \"" + turkey + "\".",
 					outputChanges.containsKey(turkey));
+			assertTrue("There was no zone stays output for the turkey \"" + turkey + "\".",
+					outputStays.containsKey(turkey));
 			assertTrue("There are no generated zone times for the turkey \"" + turkey + "\".",
-					outputChanges.containsKey(turkey));
+					antennaTimes.containsKey(turkey));
 			assertTrue("There are no generated zone changes count for the turkey \"" + turkey + "\".",
-					outputChanges.containsKey(turkey));
+					antennaChanges.containsKey(turkey));
+			assertTrue("There are no generated stays for the turkey \"" + turkey + "\".",
+					antennaStays.containsKey(turkey));
 
 			assertEquals("The output dates for turkey \"" + turkey + "\" didn't match.",
 					antennaTimes.get(turkey).keySet(), outputTimes.get(turkey).keySet());
@@ -91,6 +99,14 @@ public class OutputDataTest {
 							outputZoneTimes.containsKey(zone));
 				}
 			}
+
+			assertEquals("The number of zone stays for turkey \"" + turkey + "\" didn't match.",
+					antennaStays.get(turkey).size(), outputStays.get(turkey).size());
+
+			for (ZoneStay stay : outputStays.get(turkey)) {
+				assertTrue("The stay " + stay + " did not match a generated one.",
+						antennaStays.get(turkey).contains(stay));
+			}
 		}
 	}
 
@@ -102,11 +118,13 @@ public class OutputDataTest {
 	 */
 	@Test
 	public void basicNonCont() throws IOException {
-		TestTotals totals = generateTestValues(100, 5, 10, false, false);
+		TestTotals totals = generateTestValues(500, 5, 100, false, false);
 		Map<String, Map<String, Map<String, Long>>> antennaTimes = totals.antennaTimes;
 		Map<String, Map<String, Integer>> antennaChanges = totals.antennaChanges;
+		Map<String, List<ZoneStay>> antennaStays = totals.antennaStays;
 		Map<String, Map<String, Map<String, Long>>> outputTimes = totals.outputTimes;
 		Map<String, Map<String, Integer>> outputChanges = totals.outputChanges;
+		Map<String, List<ZoneStay>> outputStays = totals.outputStays;
 
 		for (String turkey : antennaTimes.keySet()) {
 			assertTrue("The output data is missing turkey \"" + turkey + "\".", outputTimes.containsKey(turkey));
@@ -115,10 +133,14 @@ public class OutputDataTest {
 		for (String turkey : outputTimes.keySet()) {
 			assertTrue("There was no zone changes count output for the turkey \"" + turkey + "\".",
 					outputChanges.containsKey(turkey));
+			assertTrue("There was no zone stays output for the turkey \"" + turkey + "\".",
+					outputStays.containsKey(turkey));
 			assertTrue("There are no generated zone times for the turkey \"" + turkey + "\".",
-					outputChanges.containsKey(turkey));
+					antennaTimes.containsKey(turkey));
 			assertTrue("There are no generated zone changes count for the turkey \"" + turkey + "\".",
-					outputChanges.containsKey(turkey));
+					antennaChanges.containsKey(turkey));
+			assertTrue("There are no generated stays for the turkey \"" + turkey + "\".",
+					antennaStays.containsKey(turkey));
 
 			assertEquals("The output dates for turkey \"" + turkey + "\" didn't match.",
 					antennaTimes.get(turkey).keySet(), outputTimes.get(turkey).keySet());
@@ -151,6 +173,14 @@ public class OutputDataTest {
 					assertTrue("The output is missing a zone for turkey \"" + turkey + "\".",
 							outputZoneTimes.containsKey(zone));
 				}
+			}
+
+			assertEquals("The number of zone stays for turkey \"" + turkey + "\" didn't match.",
+					antennaStays.get(turkey).size(), outputStays.get(turkey).size());
+
+			for (ZoneStay stay : outputStays.get(turkey)) {
+				assertTrue("The stay " + stay + " did not match a generated one.",
+						antennaStays.get(turkey).contains(stay));
 			}
 		}
 	}
@@ -165,8 +195,10 @@ public class OutputDataTest {
 		TestTotals totals = generateTestValues(100, 5, 10, true, true);
 		Map<String, Map<String, Map<String, Long>>> antennaTimes = totals.antennaTimes;
 		Map<String, Map<String, Integer>> antennaChanges = totals.antennaChanges;
+		Map<String, List<ZoneStay>> antennaStays = totals.antennaStays;
 		Map<String, Map<String, Map<String, Long>>> outputTimes = totals.outputTimes;
 		Map<String, Map<String, Integer>> outputChanges = totals.outputChanges;
+		Map<String, List<ZoneStay>> outputStays = totals.outputStays;
 
 		for (String turkey : antennaTimes.keySet()) {
 			assertTrue("The output data is missing turkey \"" + turkey + "\".", outputTimes.containsKey(turkey));
@@ -175,10 +207,14 @@ public class OutputDataTest {
 		for (String turkey : outputTimes.keySet()) {
 			assertTrue("There was no zone changes count output for the turkey \"" + turkey + "\".",
 					outputChanges.containsKey(turkey));
+			assertTrue("There was no zone stays output for the turkey \"" + turkey + "\".",
+					outputStays.containsKey(turkey));
 			assertTrue("There are no generated zone times for the turkey \"" + turkey + "\".",
-					outputChanges.containsKey(turkey));
+					antennaTimes.containsKey(turkey));
 			assertTrue("There are no generated zone changes count for the turkey \"" + turkey + "\".",
-					outputChanges.containsKey(turkey));
+					antennaChanges.containsKey(turkey));
+			assertTrue("There are no generated stays for the turkey \"" + turkey + "\".",
+					antennaStays.containsKey(turkey));
 
 			assertEquals("The output dates for turkey \"" + turkey + "\" didn't match.",
 					antennaTimes.get(turkey).keySet(), outputTimes.get(turkey).keySet());
@@ -221,6 +257,14 @@ public class OutputDataTest {
 							+ "\" wasn't 24h.", 24 * 3600000, dayTotal);
 				}
 			}
+
+			assertEquals("The number of zone stays for turkey \"" + turkey + "\" didn't match.",
+					antennaStays.get(turkey).size(), outputStays.get(turkey).size());
+
+			for (ZoneStay stay : outputStays.get(turkey)) {
+				assertTrue("The stay " + stay + " did not match a generated one.",
+						antennaStays.get(turkey).contains(stay));
+			}
 		}
 	}
 
@@ -231,12 +275,14 @@ public class OutputDataTest {
 	 * @throws IOException If an input file can't be read/written/created.
 	 */
 	@Test
-	public void fillDayNonCont() throws IOException {
+	public void fillDaysNonCont() throws IOException {
 		TestTotals totals = generateTestValues(100, 5, 10, false, true);
 		Map<String, Map<String, Map<String, Long>>> antennaTimes = totals.antennaTimes;
 		Map<String, Map<String, Integer>> antennaChanges = totals.antennaChanges;
+		Map<String, List<ZoneStay>> antennaStays = totals.antennaStays;
 		Map<String, Map<String, Map<String, Long>>> outputTimes = totals.outputTimes;
 		Map<String, Map<String, Integer>> outputChanges = totals.outputChanges;
+		Map<String, List<ZoneStay>> outputStays = totals.outputStays;
 
 		for (String turkey : antennaTimes.keySet()) {
 			assertTrue("The output data is missing turkey \"" + turkey + "\".", outputTimes.containsKey(turkey));
@@ -245,10 +291,14 @@ public class OutputDataTest {
 		for (String turkey : outputTimes.keySet()) {
 			assertTrue("There was no zone changes count output for the turkey \"" + turkey + "\".",
 					outputChanges.containsKey(turkey));
+			assertTrue("There was no zone stays output for the turkey \"" + turkey + "\".",
+					outputStays.containsKey(turkey));
 			assertTrue("There are no generated zone times for the turkey \"" + turkey + "\".",
-					outputChanges.containsKey(turkey));
+					antennaTimes.containsKey(turkey));
 			assertTrue("There are no generated zone changes count for the turkey \"" + turkey + "\".",
-					outputChanges.containsKey(turkey));
+					antennaChanges.containsKey(turkey));
+			assertTrue("There are no generated stays for the turkey \"" + turkey + "\".",
+					antennaStays.containsKey(turkey));
 
 			assertEquals("The output dates for turkey \"" + turkey + "\" didn't match.",
 					antennaTimes.get(turkey).keySet(), outputTimes.get(turkey).keySet());
@@ -290,6 +340,14 @@ public class OutputDataTest {
 					assertEquals("The sum of all zone totals of turkey \"" + turkey + "\" for day \"" + date
 							+ "\" wasn't 24h.", 24 * 3600000, dayTotal);
 				}
+			}
+
+			assertEquals("The number of zone stays for turkey \"" + turkey + "\" didn't match.",
+					antennaStays.get(turkey).size(), outputStays.get(turkey).size());
+
+			for (ZoneStay stay : outputStays.get(turkey)) {
+				assertTrue("The stay " + stay + " did not match a generated one.",
+						antennaStays.get(turkey).contains(stay));
 			}
 		}
 	}
@@ -333,26 +391,34 @@ public class OutputDataTest {
 		aps.printf("%s;06.03.2022;23:52:45.89;%s%n", t1, a3);
 		aps.printf("%s;06.03.2022;23:58:12.76;%s%n", t1, a2);
 		aps.printf("%s;06.03.2022;23:58:31.32;%s%n", t2, a2);
-		aps.printf("%s;07.03.2022;00:02:34.57;%s%n", t1, a3);
 		aps.printf("%s;07.03.2022;00:02:26.92;%s%n", t2, a3);
+		aps.printf("%s;07.03.2022;00:02:34.57;%s%n", t1, a3);
 		aps.printf("%s;07.03.2022;00:06:51.28;%s%n", t2, a3);
 		aps.printf("%s;07.03.2022;00:07:41.81;%s%n", t1, a1);
 		aps.printf("%s;07.03.2022;00:09:28.09;%s%n", t1, a2);
 		aps.printf("%s;07.03.2022;00:13:29.15;%s%n", t2, a2);
 		aps.printf("%s;07.03.2022;01:10:37.73;%s%n", t1, a3);
+		aps.printf("%s;07.03.2022;01:19:51.21;%s%n", t2, a1);
 		aps.printf("%s;07.03.2022;01:21:42.86;%s%n", t1, a2);
 		aps.close();
 
-		Pair<FileInputStreamHandler, FileOutputStreamHandler> outputPair = tempFolder.newTempIOFile("output.csv");
-		FileOutputStreamHandler outputOut = outputPair.getValue();
-		FileInputStreamHandler outputIn = outputPair.getKey();
-		DataHandler.handleStreams(antennaIn, turkeysIn, zonesIn, outputOut, false);
-		outputOut.close();
+		Pair<FileInputStreamHandler, FileOutputStreamHandler> totalsPair = tempFolder.newTempIOFile("totals.csv");
+		FileOutputStreamHandler totalsOut = totalsPair.getValue();
+		FileInputStreamHandler totalsIn = totalsPair.getKey();
 
-		Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>> outputData = CSVHandler
-				.readTotalsCSV(outputIn);
-		Map<String, Map<String, Map<String, Long>>> outputTimes = outputData.getKey();
-		Map<String, Map<String, Integer>> outputChanges = outputData.getValue();
+		Pair<FileInputStreamHandler, FileOutputStreamHandler> staysPair = tempFolder.newTempIOFile("stays.csv");
+		FileOutputStreamHandler staysOut = staysPair.getValue();
+		FileInputStreamHandler staysIn = staysPair.getKey();
+		DataHandler.handleStreams(antennaIn, turkeysIn, zonesIn, totalsOut, staysOut, false);
+		totalsOut.close();
+		staysOut.close();
+
+		Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>> totalsData = CSVHandler
+				.readTotalsCSV(totalsIn);
+		totalsIn.close();
+
+		Map<String, Map<String, Map<String, Long>>> outputTimes = totalsData.getKey();
+		Map<String, Map<String, Integer>> outputChanges = totalsData.getValue();
 
 		assertEquals("First day turkey \"0\" changes count didn't match.", 4,
 				(int) outputChanges.get("0").get("06.03.2022"));
@@ -362,9 +428,9 @@ public class OutputDataTest {
 
 		assertEquals("First day turkey \"1\" changes count didn't match.", 2,
 				(int) outputChanges.get("1").get("06.03.2022"));
-		assertEquals("Second day turkey \"1\" changes count didn't match.", 2,
+		assertEquals("Second day turkey \"1\" changes count didn't match.", 3,
 				(int) outputChanges.get("1").get("07.03.2022"));
-		assertEquals("Total turkey \"1\" changes count didn't match.", 4, (int) outputChanges.get("1").get("total"));
+		assertEquals("Total turkey \"1\" changes count didn't match.", 5, (int) outputChanges.get("1").get("total"));
 
 		assertEquals("First day turkey \"0\" Zone 1 time didn't match.", TimeUtils.parseTime("09:45:29.19"),
 				(long) outputTimes.get("0").get("06.03.2022").get("Zone 1"));
@@ -387,9 +453,9 @@ public class OutputDataTest {
 		assertEquals("Second day turkey \"0\" Zone 3 time didn't match.", TimeUtils.parseTime("00:20:33.22"),
 				(long) outputTimes.get("0").get("07.03.2022").get("Zone 3"));
 
-		assertEquals("Second day turkey \"1\" Zone 1 time didn't match.", TimeUtils.parseTime("00:02:26.92"),
+		assertEquals("Second day turkey \"1\" Zone 1 time didn't match.", TimeUtils.parseTime("00:04:18.57"),
 				(long) outputTimes.get("1").get("07.03.2022").get("Zone 1"));
-		assertEquals("Second day turkey \"1\" Zone 2 time didn't match.", TimeUtils.parseTime("01:08:13.71"),
+		assertEquals("Second day turkey \"1\" Zone 2 time didn't match.", TimeUtils.parseTime("01:06:22.06"),
 				(long) outputTimes.get("1").get("07.03.2022").get("Zone 2"));
 		assertEquals("Second day turkey \"1\" Zone 3 time didn't match.", TimeUtils.parseTime("00:11:02.23"),
 				(long) outputTimes.get("1").get("07.03.2022").get("Zone 3"));
@@ -401,12 +467,59 @@ public class OutputDataTest {
 		assertEquals("Total turkey \"0\" Zone 3 time didn't match.", TimeUtils.parseTime("07:07:52.85"),
 				(long) outputTimes.get("0").get("total").get("Zone 3"));
 
-		assertEquals("Total turkey \"1\" Zone 1 time didn't match.", TimeUtils.parseTime("13:10:23.71"),
+		assertEquals("Total turkey \"1\" Zone 1 time didn't match.", TimeUtils.parseTime("13:12:15.36"),
 				(long) outputTimes.get("1").get("total").get("Zone 1"));
-		assertEquals("Total turkey \"1\" Zone 2 time didn't match.", TimeUtils.parseTime("09:47:31.60"),
+		assertEquals("Total turkey \"1\" Zone 2 time didn't match.", TimeUtils.parseTime("09:45:39.95"),
 				(long) outputTimes.get("1").get("total").get("Zone 2"));
 		assertEquals("Total turkey \"1\" Zone 3 time didn't match.", TimeUtils.parseTime("00:11:02.23"),
 				(long) outputTimes.get("1").get("total").get("Zone 3"));
+
+		Map<String, List<ZoneStay>> staysData = CSVHandler.readStaysCSV(staysIn);
+		staysIn.close();
+
+		List<ZoneStay> t1Stays = new ArrayList<ZoneStay>();
+		t1Stays.add(new ZoneStay("0", "Zone 2", TimeUtils.parseTime("06.03.2022", "02:12:45.32"),
+				TimeUtils.parseTime("06.03.2022", "02:18:17.96")));
+		t1Stays.add(new ZoneStay("0", "Zone 3", TimeUtils.parseTime("06.03.2022", "02:18:17.96"),
+				TimeUtils.parseTime("06.03.2022", "08:58:23.48")));
+		t1Stays.add(new ZoneStay("0", "Zone 1", TimeUtils.parseTime("06.03.2022", "08:58:23.48"),
+				TimeUtils.parseTime("06.03.2022", "18:43:52.67")));
+		t1Stays.add(new ZoneStay("0", "Zone 2", TimeUtils.parseTime("06.03.2022", "18:43:52.67"),
+				TimeUtils.parseTime("06.03.2022", "23:52:45.89")));
+		t1Stays.add(new ZoneStay("0", "Zone 3", TimeUtils.parseTime("06.03.2022", "23:52:45.89"),
+				TimeUtils.parseTime("07.03.2022", "00:09:28.09")));
+		t1Stays.add(new ZoneStay("0", "Zone 2", TimeUtils.parseTime("07.03.2022", "00:09:28.09"),
+				TimeUtils.parseTime("07.03.2022", "01:10:37.73")));
+		t1Stays.add(new ZoneStay("0", "Zone 3", TimeUtils.parseTime("07.03.2022", "01:10:37.73"),
+				TimeUtils.parseTime("07.03.2022", "01:21:42.86")));
+
+		assertEquals("The number of zone stays for turkey \"0\" didn't match.", t1Stays.size(),
+				staysData.get("0").size());
+
+		for (int i = 0; i < staysData.get("0").size() && i < t1Stays.size(); i++) {
+			assertEquals("A zone stay for turkey \"0\" didn't match.", t1Stays.get(i), staysData.get("0").get(i));
+		}
+
+		List<ZoneStay> t2Stays = new ArrayList<ZoneStay>();
+		t2Stays.add(new ZoneStay("1", "Zone 1", TimeUtils.parseTime("06.03.2022", "02:12:45.32"),
+				TimeUtils.parseTime("06.03.2022", "06:46:50.64")));
+		t2Stays.add(new ZoneStay("1", "Zone 2", TimeUtils.parseTime("06.03.2022", "06:46:50.64"),
+				TimeUtils.parseTime("06.03.2022", "15:26:08.53")));
+		t2Stays.add(new ZoneStay("1", "Zone 1", TimeUtils.parseTime("06.03.2022", "15:26:08.53"),
+				TimeUtils.parseTime("07.03.2022", "00:02:26.92")));
+		t2Stays.add(new ZoneStay("1", "Zone 3", TimeUtils.parseTime("07.03.2022", "00:02:26.92"),
+				TimeUtils.parseTime("07.03.2022", "00:13:29.15")));
+		t2Stays.add(new ZoneStay("1", "Zone 2", TimeUtils.parseTime("07.03.2022", "00:13:29.15"),
+				TimeUtils.parseTime("07.03.2022", "01:19:51.21")));
+		t2Stays.add(new ZoneStay("1", "Zone 1", TimeUtils.parseTime("07.03.2022", "01:19:51.21"),
+				TimeUtils.parseTime("07.03.2022", "01:21:42.86")));
+
+		assertEquals("The number of zone stays for turkey \"1\" didn't match.", t2Stays.size(),
+				staysData.get("1").size());
+
+		for (int i = 0; i < staysData.get("1").size() && i < t2Stays.size(); i++) {
+			assertEquals("A zone stay for turkey \"1\" didn't match.", t2Stays.get(i), staysData.get("1").get(i));
+		}
 	}
 
 	/**
@@ -463,20 +576,30 @@ public class OutputDataTest {
 		Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder.newTempIOFile("antenna.csv");
 		FileOutputStreamHandler antennaOut = antennaPair.getValue();
 		FileInputStreamHandler antennaIn = antennaPair.getKey();
-		Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>> antennaData = AntennaDataGenerator
+		Pair<Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>>, Map<String, List<ZoneStay>>> antennaData = AntennaDataGenerator
 				.generateAntennaData(mappings.turkeys, mappings.zones, antennaOut, days, continuous, fillDays);
 		antennaOut.close();
 
-		Pair<FileInputStreamHandler, FileOutputStreamHandler> outputPair = tempFolder.newTempIOFile("output.csv");
-		FileOutputStreamHandler outputOut = outputPair.getValue();
-		FileInputStreamHandler outputIn = outputPair.getKey();
-		DataHandler.handleStreams(antennaIn, mappings.turkeysIn, mappings.zonesIn, outputOut, fillDays);
-		outputOut.close();
+		Pair<FileInputStreamHandler, FileOutputStreamHandler> totalsPair = tempFolder.newTempIOFile("totals.csv");
+		FileOutputStreamHandler totalsOut = totalsPair.getValue();
+		FileInputStreamHandler totalsIn = totalsPair.getKey();
 
-		Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>> outputData = CSVHandler
-				.readTotalsCSV(outputIn);
+		Pair<FileInputStreamHandler, FileOutputStreamHandler> staysPair = tempFolder.newTempIOFile("stays.csv");
+		FileOutputStreamHandler staysOut = staysPair.getValue();
+		FileInputStreamHandler staysIn = staysPair.getKey();
+		DataHandler.handleStreams(antennaIn, mappings.turkeysIn, mappings.zonesIn, totalsOut, staysOut, fillDays);
+		totalsOut.close();
+		staysOut.close();
 
-		return new TestTotals(antennaData.getKey(), outputData.getKey(), antennaData.getValue(), outputData.getValue());
+		Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>> outputTotals = CSVHandler
+				.readTotalsCSV(totalsIn);
+		totalsIn.close();
+
+		Map<String, List<ZoneStay>> outputStays = CSVHandler.readStaysCSV(staysIn);
+		staysIn.close();
+
+		return new TestTotals(antennaData.getKey().getKey(), outputTotals.getKey(), antennaData.getKey().getValue(),
+				outputTotals.getValue(), antennaData.getValue(), outputStays);
 	}
 
 	/**
@@ -555,6 +678,16 @@ public class OutputDataTest {
 		public final Map<String, Map<String, Integer>> outputChanges;
 
 		/**
+		 * Generated zone stays per turkey.
+		 */
+		public final Map<String, List<ZoneStay>> antennaStays;
+
+		/**
+		 * Zone stays per turkey parsed from the output file.
+		 */
+		public final Map<String, List<ZoneStay>> outputStays;
+
+		/**
 		 * Creates a new TestTotals object and initializes all final fields.
 		 * 
 		 * @param antennaTimes   Calculated times per turkey per day per zone.
@@ -565,11 +698,14 @@ public class OutputDataTest {
 		 */
 		public TestTotals(Map<String, Map<String, Map<String, Long>>> antennaTimes,
 				Map<String, Map<String, Map<String, Long>>> outputTimes,
-				Map<String, Map<String, Integer>> antennaChanges, Map<String, Map<String, Integer>> outputChanges) {
+				Map<String, Map<String, Integer>> antennaChanges, Map<String, Map<String, Integer>> outputChanges,
+				Map<String, List<ZoneStay>> antennaStays, Map<String, List<ZoneStay>> outputStays) {
 			this.antennaTimes = antennaTimes;
 			this.outputTimes = outputTimes;
 			this.antennaChanges = antennaChanges;
 			this.outputChanges = outputChanges;
+			this.antennaStays = antennaStays;
+			this.outputStays = outputStays;
 		}
 	}
 

@@ -110,7 +110,7 @@ public class FileInputStreamHandler implements IInputStreamHandler {
 			stream.close();
 		} else {
 			LogHandler.err_println("Trying to close an already closed FileInputStreamHandler.", true);
-			LogHandler.err_println("Input Stream Handler: " + toString(), true);
+			LogHandler.print_debug_info("stream handler: %s", toString());
 		}
 	}
 

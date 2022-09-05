@@ -7,8 +7,6 @@ import com.tome25.auswertung.stream.FileInputStreamHandler;
 import com.tome25.auswertung.stream.FileOutputStreamHandler;
 import com.tome25.auswertung.stream.IInputStreamHandler;
 import com.tome25.auswertung.stream.IOutputStreamHandler;
-import com.tome25.auswertung.stream.MultiOutputStreamHandler;
-import com.tome25.auswertung.stream.SysOutStreamHandler;
 import com.tome25.auswertung.utils.StringUtils;
 
 /**
@@ -42,9 +40,14 @@ public class PutenAuswertung {
 	private static final String DEFAULT_BEREICHE_FILE = "Bereiche.csv";
 
 	/**
-	 * The default output file for the generated analysis data.
+	 * The default output file for the daily zone time and zone change totals.
 	 */
-	private static final String DEFAULT_OUTPUT_FILE = "PutenAuswertung.csv";
+	private static final String DEFAULT_TOTALS_FILE = "PutenAuswertungZeiten.csv";
+
+	/**
+	 * The default ouput file for the individual zone stays.
+	 */
+	private static final String DEFAULT_STAYS_FILE = "PutenAuswertungAufenthalte.csv";
 
 	public static void main(String... args) {
 		File antennaFile = null;
@@ -131,19 +134,25 @@ public class PutenAuswertung {
 					StringUtils.join(", ", (Object[]) args));
 		}
 
-		IOutputStreamHandler outputHandler = null;
+		IOutputStreamHandler totalHandler = null;
 		try {
-			FileOutputStreamHandler fiout = new FileOutputStreamHandler(new File(DEFAULT_OUTPUT_FILE));
-			SysOutStreamHandler sysout = new SysOutStreamHandler();
-			outputHandler = new MultiOutputStreamHandler(fiout, sysout);
+			totalHandler = new FileOutputStreamHandler(new File(DEFAULT_TOTALS_FILE), false, true);
 		} catch (FileNotFoundException e) {
-			LogHandler.err_println("Faild to open file output stream for generated data.");
+			LogHandler.err_println("Faild to open file output stream for generated totals data.");
 		}
 
-		if (antennaHandler == null || turkeyHandler == null || zoneHandler == null || outputHandler == null) {
+		IOutputStreamHandler staysHandler = null;
+		try {
+			staysHandler = new FileOutputStreamHandler(new File(DEFAULT_STAYS_FILE), false, true);
+		} catch (FileNotFoundException e) {
+			LogHandler.err_println("Faild to open file output stream for generated stays data.");
+		}
+
+		if (antennaHandler == null || turkeyHandler == null || zoneHandler == null || totalHandler == null
+				|| staysHandler == null) {
 			return;
 		}
 
-		DataHandler.handleStreams(antennaHandler, turkeyHandler, zoneHandler, outputHandler, false);
+		DataHandler.handleStreams(antennaHandler, turkeyHandler, zoneHandler, totalHandler, staysHandler, false);
 	}
 }

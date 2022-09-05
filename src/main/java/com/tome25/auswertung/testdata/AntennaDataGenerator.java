@@ -13,6 +13,7 @@ import java.util.Objects;
 import java.util.Random;
 
 import com.tome25.auswertung.TurkeyInfo;
+import com.tome25.auswertung.ZoneStay;
 import com.tome25.auswertung.stream.IOutputStreamHandler;
 import com.tome25.auswertung.utils.Pair;
 import com.tome25.auswertung.utils.TimeUtils;
@@ -33,9 +34,10 @@ public class AntennaDataGenerator {
 	/**
 	 * Generates example antenna record date and writes it to a file.<br/>
 	 * Also calculates how long each turkey should have spent where.<br/>
-	 * This method returns two maps:<br/>
+	 * This method returns three maps:<br/>
 	 * The format of the first one is {@code turkey -> date -> zone -> time}.<br/>
-	 * The format of the second one is {@code turkey -> date -> zoneChanges}.
+	 * The format of the second one is {@code turkey -> date -> zoneChanges}.<br/>
+	 * The format of the third map is {@code turkey -> zoneStays}.
 	 * 
 	 * @param turkeys    The turkeys to move in the example data.
 	 * @param zones      The zones for the turkeys to move in.
@@ -45,12 +47,10 @@ public class AntennaDataGenerator {
 	 * @param fillDays   Whether the time before the first and after the last
 	 *                   measurement each day should be expected to be spent in the
 	 *                   first/last zone.
-	 * @return A map containing where each turkey should have spent how much
-	 *         time.<br/>
-	 *         And a map containing how often each turkey changed its zone each day.
+	 * @return The three maps described above.
 	 * @throws NullPointerException If one of the arguments is {@code null}.
 	 */
-	public static Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>> generateAntennaData(
+	public static Pair<Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>>, Map<String, List<ZoneStay>>> generateAntennaData(
 			List<TurkeyInfo> turkeys, Map<String, List<String>> zones, IOutputStreamHandler output, int days,
 			boolean continuous, boolean fillDays) throws NullPointerException {
 		Objects.requireNonNull(turkeys, "The turkeys to generate input data for cannot be null.");
@@ -62,6 +62,8 @@ public class AntennaDataGenerator {
 		Map<String, Map<String, Map<String, Long>>> times = new LinkedHashMap<String, Map<String, Map<String, Long>>>();
 		// turkey -> date -> zone changes
 		Map<String, Map<String, Integer>> changes = new LinkedHashMap<String, Map<String, Integer>>();
+		// turkey -> zone stays
+		Map<String, List<ZoneStay>> stays = new LinkedHashMap<String, List<ZoneStay>>();
 
 		Map<String, Long> lastZoneChange = new HashMap<String, Long>();
 		Map<String, String> currentZone = new HashMap<String, String>();
@@ -72,14 +74,16 @@ public class AntennaDataGenerator {
 		cal.set(2022, Calendar.FEBRUARY, 5);
 		for (int day = 0; day < days; day++) {
 			String date = TimeUtils.encodeDate(cal);
-			Pair<Map<String, Map<String, Integer>>, Map<String, Integer>> dayData = generateDayAntennaData(turkeys,
-					zones, date, output, lastZoneChange, currentZone, lastZone, lastRecord, fillDays);
-			Map<String, Map<String, Integer>> dayTimes = dayData.getKey();
-			Map<String, Integer> dayChanges = dayData.getValue();
+			Pair<Pair<Map<String, Map<String, Integer>>, Map<String, Integer>>, Map<String, List<ZoneStay>>> dayData = generateDayAntennaData(
+					turkeys, zones, date, output, lastZoneChange, currentZone, lastZone, lastRecord, fillDays);
+			Map<String, Map<String, Integer>> dayTimes = dayData.getKey().getKey();
+			Map<String, Integer> dayChanges = dayData.getKey().getValue();
+			Map<String, List<ZoneStay>> dayStays = dayData.getValue();
 
 			boolean skipNext = !continuous && RANDOM.nextInt(3) == 0;
 
 			for (String turkey : dayTimes.keySet()) {
+				// Times handling below
 				if (!times.containsKey(turkey)) {
 					times.put(turkey, new LinkedHashMap<String, Map<String, Long>>());
 				}
@@ -103,18 +107,18 @@ public class AntennaDataGenerator {
 					}
 				}
 
+				long lastChange = 0;
+				for (Long change : lastRecord.values()) {
+					if (change > lastChange) {
+						lastChange = change;
+					}
+				}
+
 				if (!fillDays) {
 					String zone = currentZone.get(turkey);
 
 					int zoneTime = 0;
 					if (day == days - 1 || skipNext) {
-						long lastChange = 0;
-						for (Long change : lastRecord.values()) {
-							if (change > lastChange) {
-								lastChange = change;
-							}
-						}
-
 						zoneTime = (int) (lastChange - lastZoneChange.get(turkey));
 					} else {
 						Calendar changeCal = new GregorianCalendar();
@@ -130,6 +134,7 @@ public class AntennaDataGenerator {
 					}
 				}
 
+				// Changes handling below
 				if (!changes.containsKey(turkey)) {
 					changes.put(turkey, new HashMap<String, Integer>());
 				}
@@ -145,6 +150,43 @@ public class AntennaDataGenerator {
 				} else {
 					changes.get(turkey).put("total", dayChanges.get(turkey));
 				}
+
+				// Stays handling below
+				if (!stays.containsKey(turkey)) {
+					stays.put(turkey, dayStays.get(turkey));
+				} else {
+					ZoneStay lastStay = stays.get(turkey).get(stays.get(turkey).size() - 1);
+					ZoneStay firstDayStay = dayStays.get(turkey).get(0);
+
+					if (lastStay.getZone().equals(firstDayStay.getZone())
+							&& lastStay.getExitDate().equals(firstDayStay.getEntryDate())) {
+						lastStay.setExitTime(firstDayStay.getExitCal());
+						dayStays.get(turkey).remove(firstDayStay);
+					}
+
+					stays.get(turkey).addAll(dayStays.get(turkey));
+				}
+
+				if (day == days - 1 || skipNext) {
+					Calendar lastChangeCal = new GregorianCalendar();
+					lastChangeCal.setTimeInMillis(lastChange);
+					Calendar endCal = null;
+					if (fillDays) {
+						endCal = TimeUtils.parseDate(date);
+						endCal.add(Calendar.DATE, 1);
+					} else {
+						endCal = lastChangeCal;
+					}
+
+					ZoneStay lastStay = stays.get(turkey).get(stays.get(turkey).size() - 1);
+					
+					if (lastStay.getZone().equals(currentZone.get(turkey))) {
+						lastStay.setExitTime(endCal);
+					} else if (endCal.getTimeInMillis() > lastStay.getExitCal().getTimeInMillis()) {
+						stays.get(turkey)
+								.add(new ZoneStay(turkey, currentZone.get(turkey), lastStay.getExitCal(), endCal));
+					}
+				}
 			}
 
 			if (skipNext) {
@@ -159,16 +201,21 @@ public class AntennaDataGenerator {
 			}
 		}
 
-		return new Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>>(times, changes);
+		Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>> totals = new Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>>(
+				times, changes);
+
+		return new Pair<Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>>, Map<String, List<ZoneStay>>>(
+				totals, stays);
 	}
 
 	/**
 	 * Generates example antenna records for a single day, and writes them to a
 	 * file.<br/>
 	 * Also generates reference times for how long each turkey spent where.<br/>
-	 * This methods returns two maps:<br/>
+	 * This methods returns three maps:<br/>
 	 * The first resulting map format is {@code turkey -> zone -> time}.<br/>
 	 * The second resulting map format is {@code turkey -> zoneChanges}.<br/>
+	 * The third map format is {@code turkey -> zoneStays}.<br/>
 	 * Writes valid data, not suitable for error handling tests.
 	 * 
 	 * @param turkeys        A list of turkeys to record in the antenna records
@@ -194,7 +241,7 @@ public class AntennaDataGenerator {
 	 * @return The times each turkey spent in each zone.
 	 * @throws NullPointerException If one of the parameters is {@code null}.
 	 */
-	public static Pair<Map<String, Map<String, Integer>>, Map<String, Integer>> generateDayAntennaData(
+	public static Pair<Pair<Map<String, Map<String, Integer>>, Map<String, Integer>>, Map<String, List<ZoneStay>>> generateDayAntennaData(
 			List<TurkeyInfo> turkeys, Map<String, List<String>> zones, String date, IOutputStreamHandler output,
 			Map<String, Long> lastZoneChange, Map<String, String> currentZone, Map<String, String> lastZone,
 			Map<String, Long> lastRecord, boolean fillDay) throws NullPointerException {
@@ -241,6 +288,9 @@ public class AntennaDataGenerator {
 		Map<String, Map<String, Integer>> zoneTimes = new HashMap<String, Map<String, Integer>>();
 		Map<String, Integer> zoneChanges = new HashMap<String, Integer>(); // Turkey -> Zone Changes
 
+		// Turkey -> zone stays
+		Map<String, List<ZoneStay>> stays = new HashMap<String, List<ZoneStay>>();
+
 		for (int i = 0; i < numChanges; i++) {
 			TurkeyInfo turkey = turkeys.get(RANDOM.nextInt(turkeys.size()));
 			String turkeyName = turkey.getId();
@@ -250,6 +300,7 @@ public class AntennaDataGenerator {
 
 			long changeTime = lastTime + timePerChange + RANDOM.nextInt(timePerChange / 10) - timePerChange / 20;
 			changeTime = ((changeTime + 5) / 10) * 10;// round to 10.
+			changeTime = Math.max(lastTime, changeTime);
 
 			if (startTime == -1) {
 				startTime = changeTime;
@@ -273,12 +324,17 @@ public class AntennaDataGenerator {
 			if (!currentZone.containsKey(turkeyName)) {
 				lastZoneChange.put(turkeyName, changeCal.getTimeInMillis());
 
+				zoneTimes.put(turkeyName, new HashMap<String, Integer>());
+				stays.put(turkeyName, new ArrayList<ZoneStay>());
+
 				if (fillDay) {
-					zoneTimes.put(turkeyName, new HashMap<String, Integer>());
 					zoneTimes.get(turkeyName).put(zone, TimeUtils.getMsOfDay(changeCal));
+					stays.get(turkeyName).add(new ZoneStay(turkeyName, zone, TimeUtils.parseDate(date)));
 				} else {
-					zoneTimes.put(turkeyName, new HashMap<String, Integer>());
 					zoneTimes.get(turkeyName).put(zone, (int) (changeTime - startTime));
+					Calendar startCal = new GregorianCalendar();
+					startCal.setTimeInMillis(startTime);
+					stays.get(turkeyName).add(new ZoneStay(turkeyName, zone, startCal));
 				}
 
 				currentZone.put(turkeyName, zone);
@@ -289,6 +345,9 @@ public class AntennaDataGenerator {
 				if (!currentZone.get(turkeyName).equals(zone)) {
 					zoneTime = (int) (changeTime - lastZoneChange.get(turkeyName));
 
+					Calendar lastChangeCal = new GregorianCalendar();
+					lastChangeCal.setTimeInMillis(lastZoneChange.get(turkeyName));
+
 					if (zoneTime >= TurkeyInfo.MIN_ZONE_TIME) {
 						String cZone = currentZone.get(turkeyName);
 
@@ -296,6 +355,12 @@ public class AntennaDataGenerator {
 							zoneTimes.put(turkeyName, new HashMap<String, Integer>());
 							zoneTimes.get(turkeyName).put(cZone, TimeUtils.getMsOfDay(changeCal) - zoneTime);
 							zoneChanges.put(turkeyName, 0);
+
+							stays.put(turkeyName, new ArrayList<ZoneStay>());
+							stays.get(turkeyName).add(new ZoneStay(turkeyName, cZone, lastChangeCal));
+						} else if (!currentZone.get(turkeyName).equals(lastZone.get(turkeyName))) {
+							stays.get(turkeyName).get(stays.get(turkeyName).size() - 1).setExitTime(lastChangeCal);
+							stays.get(turkeyName).add(new ZoneStay(turkeyName, cZone, lastChangeCal));
 						}
 
 						if (zoneTimes.get(turkeyName).containsKey(cZone)) {
@@ -313,6 +378,9 @@ public class AntennaDataGenerator {
 							zoneTimes.put(turkeyName, new HashMap<String, Integer>());
 							zoneTimes.get(turkeyName).put(zone, TimeUtils.getMsOfDay(changeCal) - zoneTime);
 							zoneChanges.put(turkeyName, 0);
+
+							stays.put(turkeyName, new ArrayList<ZoneStay>());
+							stays.get(turkeyName).add(new ZoneStay(turkeyName, zone, lastChangeCal));
 						}
 
 						if (zoneTimes.get(turkeyName).containsKey(lZone)) {
@@ -326,8 +394,10 @@ public class AntennaDataGenerator {
 						} else if (currentZone.get(turkeyName).equals(lastZone.get(turkeyName))) {
 							zoneChanges.put(turkeyName, zoneChanges.get(turkeyName) + 1);
 						}
+
 					}
 
+					stays.get(turkeyName).get(stays.get(turkeyName).size() - 1).setExitTime(changeCal);
 					currentZone.put(turkeyName, zone);
 					lastZoneChange.put(turkeyName, changeTime);
 				}
@@ -352,6 +422,10 @@ public class AntennaDataGenerator {
 			}
 		}
 
-		return new Pair<Map<String, Map<String, Integer>>, Map<String, Integer>>(zoneTimes, zoneChanges);
+		Pair<Map<String, Map<String, Integer>>, Map<String, Integer>> totals = new Pair<Map<String, Map<String, Integer>>, Map<String, Integer>>(
+				zoneTimes, zoneChanges);
+
+		return new Pair<Pair<Map<String, Map<String, Integer>>, Map<String, Integer>>, Map<String, List<ZoneStay>>>(
+				totals, stays);
 	}
 }

@@ -4,8 +4,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.TreeMap;
 
 import com.tome25.auswertung.stream.IInputStreamHandler;
@@ -29,25 +31,36 @@ public class DataHandler {
 	 * @param turkeyStream  The stream handler to read
 	 *                      {@code turkey id -> transponder ids} mappings from.
 	 * @param zonesStream   The stream handler to read zone definitions from.
-	 * @param outputStream  THe output stream handler to write the generated data
-	 *                      to.
+	 * @param totalsStream  The output stream handler to write the daily total times
+	 *                      per zone and zone changes to.
+	 * @param staysStream   The output stream handler to write the individual zone
+	 *                      stays to.
 	 * @param fillDays      Whether the beginning and end of days should be filled
 	 *                      with the same value as the closest record for each
 	 *                      turkey.
+	 * @throws NullPointerException If one of the stream handlers is {@code null}.
 	 */
 	public static void handleStreams(IInputStreamHandler antennaStream, IInputStreamHandler turkeyStream,
-			IInputStreamHandler zonesStream, IOutputStreamHandler outputStream, boolean fillDays) {
+			IInputStreamHandler zonesStream, IOutputStreamHandler totalsStream, IOutputStreamHandler staysStream,
+			boolean fillDays) throws NullPointerException {
+		Objects.requireNonNull(antennaStream, "The stream handler to read antenna data from can't be null.");
+		Objects.requireNonNull(turkeyStream, "The stream handler to read turkey mappings from can't be null.");
+		Objects.requireNonNull(zonesStream, "The stream handler to read zone mappings from can't be null.");
+		Objects.requireNonNull(totalsStream, "The stream handler to write totals to can't be null.");
+		Objects.requireNonNull(staysStream, "The stream handler to write stays to can't be null.");
+
 		Pair<Map<String, List<String>>, Map<String, String>> zones = CSVHandler.readMappingCSV(zonesStream);
 		Pair<Map<String, List<String>>, Map<String, String>> turkeys = CSVHandler.readMappingCSV(turkeyStream);
 
 		Map<String, TurkeyInfo> turkeyInfos = new TreeMap<>(IntOrStringComparator.INSTANCE);
 		String lastDate = null;
-		Calendar lastTime = null;
-		outputStream.println(CSVHandler.turkeyCsvHeader(zones.getKey().keySet()));
+		Map<String, Calendar> lastTimes = new HashMap<String, Calendar>();
+
+		totalsStream.println(CSVHandler.turkeyCsvHeader(zones.getKey().keySet()));
+		staysStream.println(CSVHandler.staysCsvHeader());
 
 		List<String> dates = new ArrayList<String>();
 
-		// FIXME handle missing days
 		Calendar startTime = null;
 		while (!antennaStream.done()) {
 			AntennaRecord record = CSVHandler.readAntennaRecord(antennaStream);
@@ -67,15 +80,19 @@ public class DataHandler {
 				LogHandler.print_debug_info("Antenna Record: %s, fillDays: %s", record, fillDays ? "true" : "false");
 			}
 
+			if (startTime == null) {
+				startTime = record.cal;
+			}
+
 			if (!record.date.equals(lastDate)) {
-				if (outputStream.printsTemporary() && lastDate != null) {
-					printDayOutput(outputStream, turkeyInfos.values(), lastDate, zones.getKey().keySet(), false);
+				if (totalsStream.printsTemporary() && lastDate != null) {
+					printDayOutput(totalsStream, turkeyInfos.values(), lastDate, zones.getKey().keySet(), false);
 				}
 
-				if (!fillDays && lastDate != null && !TimeUtils.isNextDay(lastTime, record.cal)) {
+				if (!fillDays && lastDate != null && !TimeUtils.isNextDay(lastDate, record.date)) {
 					startTime = record.cal;
 					for (TurkeyInfo ti : turkeyInfos.values()) {
-						ti.changeZone(ti.getCurrentZone(), lastTime);
+						ti.changeZone(ti.getCurrentZone(), lastTimes.get(lastDate));
 						ti.setStartTime(startTime);
 					}
 				}
@@ -84,16 +101,19 @@ public class DataHandler {
 				dates.add(lastDate);
 			}
 
-			if (startTime == null) {
-				startTime = record.cal;
-			}
-
-			if (lastTime == null || record.cal.after(lastTime)) {
-				lastTime = record.cal;
+			if (!lastTimes.containsKey(record.date) || record.cal.after(lastTimes.get(record.date))) {
+				lastTimes.put(record.date, record.cal);
+			} else if (!record.cal.equals(lastTimes.get(record.date))) {
+				LogHandler.err_println("New antenna record is before the last one. Skipping line.");
+				LogHandler.print_debug_info(
+						"antenna record: %s, fillDays: %s, new time: %s, new date: %s, current time: %s, current date: %s",
+						record, fillDays ? "true" : "false", record.time, record.date,
+						TimeUtils.encodeTime(TimeUtils.getMsOfDay(lastTimes.get(record.date))), lastDate);
+				continue;
 			}
 
 			if (!turkeyInfos.containsKey(turkeyId)) {
-				turkeyInfos.put(turkeyId, new TurkeyInfo(turkeyId, turkeys.getKey().get(turkeyId),
+				turkeyInfos.put(turkeyId, new TurkeyInfo(turkeyId, turkeys.getKey().get(turkeyId), staysStream,
 						zones.getValue().get(record.antenna), record.cal, fillDays ? null : startTime));
 			} else {
 				try {
@@ -102,8 +122,8 @@ public class DataHandler {
 					LogHandler.err_println(
 							"New antenna record is before the last one for the same turkey. Skipping line.");
 					LogHandler.print_exception(e, "update turkey zone",
-							"Antenna Record: %s, fillDays: %s, new time: %s, current time: %s, current date: %s",
-							record, fillDays ? "true" : "false", record.time,
+							"Antenna Record: %s, fillDays: %s, new time: %s, new date: %s, current time: %s, current date: %s",
+							record, fillDays ? "true" : "false", record.time, record.date,
 							TimeUtils.encodeTime(turkeyInfos.get(turkeyId).getCurrentTime()),
 							turkeyInfos.get(turkeyId).getCurrentDate());
 				}
@@ -111,24 +131,25 @@ public class DataHandler {
 		}
 
 		for (TurkeyInfo ti : turkeyInfos.values()) {
-			if (ti.hasDay(lastDate)) {
-				if (!fillDays) {
-					ti.changeZone(ti.getCurrentZone(), lastTime);
-				}
-				ti.endDay(lastDate);
+			if (!fillDays) {
+				ti.changeZone(ti.getCurrentZone(), lastTimes.get(ti.getCurrentDate()));
 			}
+			ti.endDay(ti.getCurrentDate());
+			ti.printCurrentStay(false);
 		}
 
 		for (String date : dates) {
-			printDayOutput(outputStream, turkeyInfos.values(), date, zones.getKey().keySet(), true);
+			printDayOutput(totalsStream, turkeyInfos.values(), date, zones.getKey().keySet(), true);
 		}
-		printDayOutput(outputStream, turkeyInfos.values(), null, zones.getKey().keySet(), true);
+		printDayOutput(totalsStream, turkeyInfos.values(), null, zones.getKey().keySet(), true);
 
 		try {
-			outputStream.close();
+			totalsStream.close();
+			staysStream.close();
 		} catch (IOException e) {
-			LogHandler.err_println("An exception occurred while closing the output stream handler.", true);
-			LogHandler.print_exception(e, "close output stream handler", "Output Stream Handler: %s", outputStream);
+			LogHandler.err_println("An exception occurred while closing an output stream handler.", true);
+			LogHandler.print_exception(e, "close output stream handler",
+					"Totals stream handler: %s, Stays stream handler: %s", totalsStream, staysStream);
 		}
 	}
 

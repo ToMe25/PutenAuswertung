@@ -2,11 +2,13 @@ package com.tome25.auswertung;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import com.tome25.auswertung.stream.IOutputStreamHandler;
 import com.tome25.auswertung.utils.TimeUtils;
 
 /**
@@ -41,6 +43,12 @@ public class TurkeyInfo {
 	private final List<String> transponders;
 
 	/**
+	 * The output stream handler to write {@link ZoneStay ZoneStays} to after
+	 * finishing them.
+	 */
+	private final IOutputStreamHandler stayOut;
+
+	/**
 	 * The time at which records on the next day not immediately following another
 	 * recorded one should start.<br/>
 	 * Set to {@code null} to start at midnight.
@@ -65,11 +73,11 @@ public class TurkeyInfo {
 	private String currentZone;
 
 	/**
-	 * The name of the zone this turkey was in before it entered the one it is
-	 * currently in.<br/>
-	 * Might match {@code currentZone} because of debouncing.
+	 * A {@link ZoneStay} representing where the turkey is currently counted as
+	 * staying it, and since when.<br/>
+	 * Written to {@code stayOut} once the turkey switches zones.
 	 */
-	private String lastZone;
+	private ZoneStay lastStay;
 
 	/**
 	 * The time for which the other values are currently calculated.
@@ -109,6 +117,10 @@ public class TurkeyInfo {
 	 * @param id           The string id used to represent this turkey.
 	 * @param transponders A list containing the string ids of the transponders
 	 *                     tracking this turkey.
+	 * @param stayOut      The stream handler to write {@link ZoneStay ZoneStays} to
+	 *                     after they are finished.<br/>
+	 *                     Settings this to {@code null} will prevent zone stays
+	 *                     from being written.
 	 * @param currentZone  The zone this turkey is currently in.<br/>
 	 *                     Can only be {@code null} if {@code date} is also
 	 *                     {@code null}.
@@ -119,10 +131,15 @@ public class TurkeyInfo {
 	 *                     should start.<br/>
 	 *                     Set to {@code null} to start at midnight of the first day
 	 *                     at which they are recorded.
+	 * @throws NullPointerException If {@code id} or {@code stayOut} is
+	 *                              {@code null}.
 	 */
-	public TurkeyInfo(String id, List<String> transponders, String currentZone, Calendar time, Calendar startTime) {
+	public TurkeyInfo(String id, List<String> transponders, IOutputStreamHandler stayOut, String currentZone,
+			Calendar time, Calendar startTime) throws NullPointerException {
+		Objects.requireNonNull(id, "The turkey id cannot be null.");
+
 		if (time != null && (currentZone == null || currentZone.trim().isEmpty())) {
-			throw new NullPointerException("The current zone cannot be null when the date isn't null.");
+			throw new NullPointerException("The current zone cannot be null when the current time isn't null.");
 		}
 
 		if (currentZone != null) {
@@ -131,12 +148,16 @@ public class TurkeyInfo {
 
 		this.id = id;
 		this.transponders = transponders;
-		this.currentZone = this.lastZone = currentZone;
+		this.stayOut = stayOut;
+		this.currentZone = currentZone;
 		this.currentTime = time;
 		this.lastZoneChange = time == null ? 0 : time.getTimeInMillis();
 		this.startTime = startTime;
 
 		if (time != null) {
+			lastStay = new ZoneStay(id, currentZone,
+					startTime == null ? TimeUtils.parseDate(TimeUtils.encodeDate(time)) : startTime);
+
 			dayZoneTimes.put(TimeUtils.encodeDate(time), new HashMap<String, Integer>());
 			if (fillDays() && currentZone != null) {
 				addTime(time, currentZone, TimeUtils.getMsOfDay(time));
@@ -173,6 +194,9 @@ public class TurkeyInfo {
 		}
 
 		boolean newRec = !TimeUtils.isSameDay(currentTime, time) && !TimeUtils.isNextDay(currentTime, time);
+		if (startTime != null && currentTime != null && startTime.before(currentTime)) {
+			newRec = false;
+		}
 
 		long timeMs = time.getTimeInMillis();
 
@@ -181,23 +205,62 @@ public class TurkeyInfo {
 			addTime(time, currentZone, timeSpent);
 		} else if (fillDays()) {
 			addTime(time, newZone, TimeUtils.getMsOfDay(time));
-			currentZone = lastZone = newZone;
-			lastZoneChange = timeMs;
+
+			if (newRec && stayOut != null) {
+				// FIXME probably produces 1ms offsets
+				Calendar cal = (Calendar) currentTime.clone();
+				cal.set(Calendar.HOUR_OF_DAY, 23);
+				cal.set(Calendar.MINUTE, 59);
+				cal.set(Calendar.SECOND, 59);
+				cal.set(Calendar.MILLISECOND, 999);
+
+				if (!currentZone.equals(lastStay.getZone()) && lastZoneChange < currentTime.getTimeInMillis()) {
+					Calendar lastCal = new GregorianCalendar();
+					lastCal.setTimeInMillis(lastZoneChange);
+					lastStay.setExitTime(lastCal);
+					stayOut.println(CSVHandler.stayToCsvLine(lastStay));
+					lastStay = new ZoneStay(id, currentZone, lastCal, cal);
+					stayOut.println(CSVHandler.stayToCsvLine(lastStay));
+				} else {
+					lastStay.setExitTime(cal);
+					stayOut.println(CSVHandler.stayToCsvLine(lastStay));
+				}
+			}
+
+			currentZone = newZone;
+			Calendar dayStart = TimeUtils.parseDate(TimeUtils.encodeDate(time));
+			lastZoneChange = dayStart.getTimeInMillis();
+			lastStay = new ZoneStay(id, newZone, dayStart);
 		} else {
 			int recordTime = (int) (timeMs - startTime.getTimeInMillis());
 			addTime(time, newZone, recordTime);
-			currentZone = lastZone = newZone;
-			lastZoneChange = timeMs;
+
+			if (newRec && stayOut != null) {
+				if (!currentZone.equals(lastStay.getZone()) && lastZoneChange < currentTime.getTimeInMillis()) {
+					Calendar lastCal = new GregorianCalendar();
+					lastCal.setTimeInMillis(lastZoneChange);
+					lastStay.setExitTime(lastCal);
+					stayOut.println(CSVHandler.stayToCsvLine(lastStay));
+					lastStay = new ZoneStay(id, currentZone, lastCal, currentTime);
+					stayOut.println(CSVHandler.stayToCsvLine(lastStay));
+				} else {
+					lastStay.setExitTime(currentTime);
+					stayOut.println(CSVHandler.stayToCsvLine(lastStay));
+				}
+			}
+
+			currentZone = newZone;
+			lastZoneChange = startTime.getTimeInMillis();
+			lastStay = new ZoneStay(id, newZone, (Calendar) startTime.clone());
 		}
 
 		currentTime = time;
 
-		int zoneTime = -1;
+		int zoneTime = (int) (timeMs - lastZoneChange);
 		if (currentZone != null && !newZone.equals(currentZone)) {
-			zoneTime = (int) (timeMs - lastZoneChange);
 			if (zoneTime < MIN_ZONE_TIME) {// TODO disable with argument
 				addTime(time, currentZone, -zoneTime);
-				addTime(time, lastZone, zoneTime);
+				addTime(time, lastStay.getZone(), zoneTime);
 
 				if (zoneTime > TimeUtils.getMsOfDay(time)) {
 					Calendar yesterday = (Calendar) time.clone();
@@ -211,21 +274,39 @@ public class TurkeyInfo {
 					}
 				}
 
-				if (lastZone.equals(newZone)) {
+				if (lastStay.getZone().equals(newZone)) {
 					todayZoneChanges--;
 					totalZoneChanges--;
-				} else if (lastZone.equals(currentZone)) {
+				} else if (lastStay.getZone().equals(currentZone)) {
 					todayZoneChanges++;
 					totalZoneChanges++;
 				}
 			} else {
 				todayZoneChanges++;
 				totalZoneChanges++;
-				lastZone = currentZone;
+
+				if (!lastStay.getZone().equals(currentZone)) {
+					Calendar lastChangeCal = new GregorianCalendar();
+					lastChangeCal.setTimeInMillis(lastZoneChange);
+					if (stayOut != null) {
+						lastStay.setExitTime(lastChangeCal);
+						stayOut.println(CSVHandler.stayToCsvLine(lastStay));
+					}
+					lastStay = new ZoneStay(id, currentZone, lastChangeCal);
+				}
 			}
 
 			lastZoneChange = timeMs;
+		} else if (zoneTime > MIN_ZONE_TIME && !lastStay.getZone().equals(currentZone)) {
+			Calendar lastChangeCal = new GregorianCalendar();
+			lastChangeCal.setTimeInMillis(lastZoneChange);
+			if (stayOut != null) {
+				lastStay.setExitTime(lastChangeCal);
+				stayOut.println(CSVHandler.stayToCsvLine(lastStay));
+			}
+			lastStay = new ZoneStay(id, currentZone, lastChangeCal);
 		}
+
 		currentZone = newZone;
 	}
 
@@ -371,6 +452,30 @@ public class TurkeyInfo {
 	}
 
 	/**
+	 * Sets the exit time of the current {@link ZoneStay} and prints it to the
+	 * output file.
+	 * 
+	 * @param temporary Whether the stay should be printed as temporary output.
+	 */
+	public void printCurrentStay(boolean temporary) {
+		if (stayOut == null) {
+			return;
+		}
+
+		if (!currentZone.equals(lastStay.getZone()) && lastZoneChange < currentTime.getTimeInMillis()) {
+			Calendar lastCal = new GregorianCalendar();
+			lastCal.setTimeInMillis(lastZoneChange);
+			lastStay.setExitTime(lastCal);
+			stayOut.println(CSVHandler.stayToCsvLine(lastStay), temporary);
+			lastStay = new ZoneStay(id, currentZone, lastCal, currentTime);
+			stayOut.println(CSVHandler.stayToCsvLine(lastStay), temporary);
+		} else {
+			lastStay.setExitTime(currentTime);
+			stayOut.println(CSVHandler.stayToCsvLine(lastStay), temporary);
+		}
+	}
+
+	/**
 	 * Gets the string id representing the turkey represented by this object.
 	 * 
 	 * @return the string id representing the turkey represented by this object.
@@ -511,6 +616,16 @@ public class TurkeyInfo {
 	 */
 	private boolean fillDays() {
 		return startTime == null;
+	}
+
+	@Override
+	public String toString() {
+		return String.format(
+				"TurkeyInfo[id=%s, transponders=%s, stayOut=%s, startTimeDate=%s, startTimeOfDay=%s, dayZoneTimes=%s, totalZoneTimes=%s, currentZone=%s, lastStay=%s, currentTimeDate=%s, currentTimeOfDay=%s, lastZoneChange=%d, todayZoneChanges=%d, totalZoneChanges=%d, dayZoneChanges=%s]",
+				id, transponders, stayOut, TimeUtils.encodeDate(startTime),
+				TimeUtils.encodeTime(TimeUtils.getMsOfDay(startTime)), dayZoneTimes, totalZoneTimes, currentZone,
+				lastStay, TimeUtils.encodeDate(currentTime), TimeUtils.encodeTime(TimeUtils.getMsOfDay(currentTime)),
+				lastZoneChange, todayZoneChanges, totalZoneChanges, dayZoneChanges);
 	}
 
 }
