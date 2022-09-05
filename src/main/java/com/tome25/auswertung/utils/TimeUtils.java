@@ -145,7 +145,31 @@ public class TimeUtils {
 		int seconds = (int) (time % 60000 / 1000);
 		int hundredths = (int) (time % 1000 / 10);
 
-		return String.format("%02d:%02d:%02d.%02d", hours, minutes, seconds, hundredths);
+		StringBuilder result = new StringBuilder();
+		if (hours < 10) {
+			result.append('0');
+		}
+		result.append(hours);
+		result.append(':');
+
+		if (minutes < 10) {
+			result.append('0');
+		}
+		result.append(minutes);
+		result.append(':');
+
+		if (seconds < 10) {
+			result.append('0');
+		}
+		result.append(seconds);
+		result.append('.');
+
+		if (hundredths < 10) {
+			result.append('0');
+		}
+		result.append(hundredths);
+
+		return result.toString();
 	}
 
 	/**
@@ -159,8 +183,34 @@ public class TimeUtils {
 	public static String encodeDate(Calendar date) throws NullPointerException {
 		Objects.requireNonNull(date, "The date to encode can't be null.");
 
-		return String.format("%02d.%02d.%04d", date.get(Calendar.DATE), date.get(Calendar.MONTH) + 1,
-				date.get(Calendar.YEAR));
+		StringBuilder result = new StringBuilder();
+		int day = date.get(Calendar.DATE);
+		if (day < 10) {
+			result.append('0');
+		}
+		result.append(day);
+		result.append('.');
+
+		int month = date.get(Calendar.MONTH) + 1;
+		if (month < 10) {
+			result.append('0');
+		}
+		result.append(month);
+		result.append('.');
+
+		int year = date.get(Calendar.YEAR);
+		if (year < 1000) {
+			result.append('0');
+			if (year < 100) {
+				result.append('0');
+				if (year < 10) {
+					result.append('0');
+				}
+			}
+		}
+		result.append(year);
+
+		return result.toString();
 	}
 
 	/**
