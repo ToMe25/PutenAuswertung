@@ -60,10 +60,11 @@ public class DataHandler {
 		staysStream.println(CSVHandler.staysCsvHeader());
 
 		List<String> dates = new ArrayList<String>();
+		short[] tokenOrder = new short[] { 0, 1, 2, 3 };
 
 		Calendar startTime = null;
 		while (!antennaStream.done()) {
-			AntennaRecord record = CSVHandler.readAntennaRecord(antennaStream);
+			AntennaRecord record = CSVHandler.readAntennaRecord(antennaStream, tokenOrder);
 			String turkeyId = record.transponder;
 			if (turkeys.getValue().containsKey(record.transponder)) {
 				turkeyId = turkeys.getValue().get(record.transponder);

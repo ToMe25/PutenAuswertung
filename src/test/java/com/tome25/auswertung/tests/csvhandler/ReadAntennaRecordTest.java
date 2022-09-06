@@ -1,5 +1,6 @@
 package com.tome25.auswertung.tests.csvhandler;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
@@ -42,7 +43,7 @@ public class ReadAntennaRecordTest {
 		FileInputStreamHandler fiin = tempFile.getKey();
 
 		pout.println("Trans1;02.04.2021;22:01:25.32;Ant2");
-		AntennaRecord rec = CSVHandler.readAntennaRecord(fiin);
+		AntennaRecord rec = CSVHandler.readAntennaRecord(fiin, null);
 		AntennaRecord refRec = new AntennaRecord("Trans1", "02.04.2021", "22:01:25.32", "Ant2");
 		assertEquals("The read antenna record did not match.", refRec, rec);
 	}
@@ -66,7 +67,7 @@ public class ReadAntennaRecordTest {
 
 		int i = 0;
 		AntennaRecord rec = null;
-		while ((rec = CSVHandler.readAntennaRecord(fiin)) != null) {
+		while ((rec = CSVHandler.readAntennaRecord(fiin, null)) != null) {
 			if (i == 12) {
 				assertNull("Reading another line after the last didn't return null.", rec); // Always fails.
 			}
@@ -89,14 +90,14 @@ public class ReadAntennaRecordTest {
 	 */
 	@Test
 	public void readHeader() throws IOException {
-		Pair<FileInputStreamHandler, PrintStream> tempFile = tempFolder.newTempInputFile("multiple_data.csv");
+		Pair<FileInputStreamHandler, PrintStream> tempFile = tempFolder.newTempInputFile("header_data.csv");
 		PrintStream pout = tempFile.getValue();
 		FileInputStreamHandler fiin = tempFile.getKey();
 
 		pout.println("Transponder;Date;Time;Antenna");
 		pout.println("T5;01.03.2022;11:21:55.11;Ant7");
 
-		AntennaRecord rec = CSVHandler.readAntennaRecord(fiin);
+		AntennaRecord rec = CSVHandler.readAntennaRecord(fiin, null);
 		AntennaRecord refRec = new AntennaRecord("T5", "01.03.2022", "11:21:55.11", "Ant7");
 		assertEquals("The antenna record parsed after a header didn't match.", refRec, rec);
 	}
@@ -115,7 +116,7 @@ public class ReadAntennaRecordTest {
 
 		pout.println("Transponder 1;01.01.2022;01:23:45.67;Antenna 1");
 
-		AntennaRecord rec = CSVHandler.readAntennaRecord(fiin);
+		AntennaRecord rec = CSVHandler.readAntennaRecord(fiin, null);
 		AntennaRecord refRec = new AntennaRecord("Transponder 1", "01.01.2022", "01:23:45.67", "Antenna 1");
 		assertEquals("The antenna record parsed after a header didn't match.", refRec, rec);
 	}
@@ -133,7 +134,7 @@ public class ReadAntennaRecordTest {
 
 		pout.println("Transponder 1;01.01.2022;01:23:45.67;Antenna 1;");
 
-		AntennaRecord rec = CSVHandler.readAntennaRecord(fiin);
+		AntennaRecord rec = CSVHandler.readAntennaRecord(fiin, null);
 		AntennaRecord refRec = new AntennaRecord("Transponder 1", "01.01.2022", "01:23:45.67", "Antenna 1");
 		assertEquals("The antenna record parsed after a header didn't match.", refRec, rec);
 	}
@@ -152,7 +153,7 @@ public class ReadAntennaRecordTest {
 		pout.println("Trans1;01.01.2022;Antenna1");
 		pout.println("T2;01.01.2022;01:01:01.00;A2");
 
-		AntennaRecord rec = CSVHandler.readAntennaRecord(fiin);
+		AntennaRecord rec = CSVHandler.readAntennaRecord(fiin, null);
 		AntennaRecord refRef = new AntennaRecord("T2", "01.01.2022", "01:01:01.00", "A2");
 		assertEquals("Reading a line with a missing column caused the next line to fail.", refRef, rec);
 		errorLog.checkLine(
@@ -173,7 +174,7 @@ public class ReadAntennaRecordTest {
 		pout.println("Trans1;01.01.2022;08:58:29.61;Antenna1;Test");
 		pout.println("Trans1;01.01.2022;09:00:00.00;Antenna2");
 
-		AntennaRecord rec = CSVHandler.readAntennaRecord(fiin);
+		AntennaRecord rec = CSVHandler.readAntennaRecord(fiin, null);
 		AntennaRecord refRec = new AntennaRecord("Trans1", "01.01.2022", "09:00:00.00", "Antenna2");
 		assertEquals("The line after one with an additional column didn't match.", refRec, rec);
 		errorLog.checkLine(
@@ -189,7 +190,7 @@ public class ReadAntennaRecordTest {
 	 */
 	@Test(expected = NullPointerException.class)
 	public void readNull() throws NullPointerException {
-		CSVHandler.readAntennaRecord(null);
+		CSVHandler.readAntennaRecord(null, null);
 	}
 
 	/**
@@ -202,7 +203,7 @@ public class ReadAntennaRecordTest {
 		Pair<FileInputStreamHandler, PrintStream> tempFile = tempFolder.newTempInputFile("empty_data.csv");
 		FileInputStreamHandler fiin = tempFile.getKey();
 
-		AntennaRecord rec = CSVHandler.readAntennaRecord(fiin);
+		AntennaRecord rec = CSVHandler.readAntennaRecord(fiin, null);
 		assertNull("Reading from an empty file didn't return null.", rec);
 		errorLog.checkLine("Failed to read an antenna record from the input file.", 0);
 	}
@@ -222,7 +223,7 @@ public class ReadAntennaRecordTest {
 		pout.println("Trans1;;12:54:56.00;Ant1");
 		pout.println("Transponder2;01.01.2022;12:55:00.12;Antenna2");
 
-		AntennaRecord rec = CSVHandler.readAntennaRecord(fiin);
+		AntennaRecord rec = CSVHandler.readAntennaRecord(fiin, null);
 		AntennaRecord refRec = new AntennaRecord("Transponder2", "01.01.2022", "12:55:00.12", "Antenna2");
 		assertEquals("The antenna record after one with an empty column didn't match.", refRec, rec);
 		errorLog.checkLine("Input line \"Trans1;;12:54:56.00;Ant1\" contained an empty token. Skipping line.", 0);
@@ -246,7 +247,7 @@ public class ReadAntennaRecordTest {
 		pout.println("Trans1;01.01.2022;15:24.12;Ant1");
 		pout.println("Trans2;02.05.2022;01:41:02.23;Ant3");
 
-		AntennaRecord rec = CSVHandler.readAntennaRecord(fiin);
+		AntennaRecord rec = CSVHandler.readAntennaRecord(fiin, null);
 		AntennaRecord refRec = new AntennaRecord("Trans2", "02.05.2022", "01:41:02.23", "Ant3");
 		assertEquals("Reading a line with invalid time didn't correctly read the next line.", refRec, rec);
 		errorLog.checkLine(
@@ -255,7 +256,7 @@ public class ReadAntennaRecordTest {
 		pout.println("Trans1;01.01.2020;312:12:Sec.12;Ant1");
 		pout.println("Transponder2;02.05.2022;01:41:02.23;Antenna2");
 
-		rec = CSVHandler.readAntennaRecord(fiin);
+		rec = CSVHandler.readAntennaRecord(fiin, null);
 		refRec = new AntennaRecord("Transponder2", "02.05.2022", "01:41:02.23", "Antenna2");
 		assertEquals("The line after one with an invalid time didn't match.", refRec, rec);
 		errorLog.checkLine(
@@ -276,10 +277,107 @@ public class ReadAntennaRecordTest {
 		pout.println();
 		pout.println("T1;01.01.2022;01:01:01.01;A1");
 
-		AntennaRecord rec = CSVHandler.readAntennaRecord(fiin);
+		AntennaRecord rec = CSVHandler.readAntennaRecord(fiin, null);
 		AntennaRecord refRec = new AntennaRecord("T1", "01.01.2022", "01:01:01.01", "A1");
 		assertEquals("The line after an empty one was read incorrectly.", refRec, rec);
 		errorLog.checkLine("Skipped an empty line from input file.", 0);
+	}
+
+	/**
+	 * Tests reading {@link AntennaRecord AntennaRecords} with reordered columns.
+	 * 
+	 * @throws IOException If reading/writing/creating the temp file fails.
+	 */
+	@Test
+	public void readReordered() throws IOException {
+		Pair<FileInputStreamHandler, PrintStream> tempFile = tempFolder.newTempInputFile("reordered_data.csv");
+		PrintStream pout = tempFile.getValue();
+		FileInputStreamHandler fiin = tempFile.getKey();
+
+		pout.println("Transponder;Antenna;Time;Date");
+		pout.println("Trans 1;Ant 2;05:21:56.12;13.05.2021");
+		pout.println("Trans 1;Ant 1;12:12:12.12;13.05.2021");
+
+		short order[] = new short[] { 0, 1, 2, 3 };
+		AntennaRecord rec = CSVHandler.readAntennaRecord(fiin, order);
+		AntennaRecord refRec = new AntennaRecord("Trans 1", "13.05.2021", "05:21:56.12", "Ant 2");
+		assertEquals("The first read antenna record didn't match.", refRec, rec);
+		assertArrayEquals("The token order array didn't match after reading the first token.",
+				new short[] { 0, 3, 2, 1 }, order);
+		rec = CSVHandler.readAntennaRecord(fiin, order);
+		refRec = new AntennaRecord("Trans 1", "13.05.2021", "12:12:12.12", "Ant 1");
+		assertEquals("The second read antenna record didn't match.", refRec, rec);
+	}
+
+	/**
+	 * Test reading a header line containing an invalid header.
+	 * 
+	 * @throws IOException If reading/writing/creating the temp file fails.
+	 */
+	@Test
+	public void readUnknownHeader() throws IOException {
+		Pair<FileInputStreamHandler, PrintStream> tempFile = tempFolder.newTempInputFile("unknown_header_data.csv");
+		PrintStream pout = tempFile.getValue();
+		FileInputStreamHandler fiin = tempFile.getKey();
+
+		pout.println("Transponder;Date;Test;Antenna");
+		pout.println("T2;22.12.2012;01:02:03.04;A2");
+
+		AntennaRecord rec = CSVHandler.readAntennaRecord(fiin, null);
+		AntennaRecord refRec = new AntennaRecord("T2", "22.12.2012", "01:02:03.04", "A2");
+		assertEquals("A default order antenna record wasn't read correctly.", refRec, rec);
+		errorLog.checkLine("Found invalid header \"test\".", 0);
+		errorLog.checkLine("Header line \"Transponder;Date;Test;Antenna\" was invalid. Assuming default column order.");
+	}
+
+	/**
+	 * Tests reading a header line containing a duplicate header.
+	 * 
+	 * @throws IOException If reading/writing/creating the temp file fails.
+	 */
+	@Test
+	public void readDuplicateHeader() throws IOException {
+		Pair<FileInputStreamHandler, PrintStream> tempFile = tempFolder.newTempInputFile("duplicate_header_data.csv");
+		PrintStream pout = tempFile.getValue();
+		FileInputStreamHandler fiin = tempFile.getKey();
+
+		pout.println("Transponder;Time;Time;Antenna");
+		pout.println("T1;01.07.2022;12:54:27.93;A1");
+
+		AntennaRecord rec = CSVHandler.readAntennaRecord(fiin, null);
+		AntennaRecord refRec = new AntennaRecord("T1", "01.07.2022", "12:54:27.93", "A1");
+		assertEquals("A default order antenna record wasn't read correctly.", refRec, rec);
+		errorLog.checkLine("Header line \"Transponder;Time;Time;Antenna\" was invalid. Assuming default column order.",
+				0);
+	}
+
+	/**
+	 * Test giving {@link CSVHandler#readAntennaRecord} an invalid token order.
+	 * 
+	 * @throws IllegalArgumentException Always.
+	 * @throws IOException              If creating the temp file fails.
+	 */
+	@Test(expected = IllegalArgumentException.class)
+	public void readInvalidOrder() throws IllegalArgumentException, IOException {
+		Pair<FileInputStreamHandler, PrintStream> tempFile = tempFolder.newTempInputFile("invalid_order_data.csv");
+		FileInputStreamHandler fiin = tempFile.getKey();
+
+		CSVHandler.readAntennaRecord(fiin, new short[] { 0, 1, 1, 2 });
+	}
+
+	/**
+	 * Test giving {@link CSVHandler#readAntennaRecord} a token order with too few
+	 * elements.
+	 * 
+	 * @throws IllegalArgumentException Always.
+	 * @throws IOException              If creating the temp file fails.
+	 */
+	@Test(expected = IllegalArgumentException.class)
+	public void readInvalidOrderLen() throws IllegalArgumentException, IOException {
+		Pair<FileInputStreamHandler, PrintStream> tempFile = tempFolder.newTempInputFile("invalid_order_len_data.csv");
+		FileInputStreamHandler fiin = tempFile.getKey();
+
+		CSVHandler.readAntennaRecord(fiin, new short[] { 0, 1, 2 });
 	}
 
 }

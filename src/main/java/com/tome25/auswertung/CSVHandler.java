@@ -63,10 +63,10 @@ public class CSVHandler {
 
 				String tokens[] = line.trim().split(SEPARATOR_REGEX);
 				if (tokens.length < 2) {
-					LogHandler.err_println(String
-							.format("Input line \"%s\" did not contain at least two tokens. Skipping line.", line));
+					LogHandler.err_println(
+							"Input line \"" + line + "\" did not contain at least two tokens. Skipping line.");
 					LogHandler.print_debug_info(
-							"Input Stream Handler: %s, Separator Chars: %s, tokens: [%s], line: \"%s\"",
+							"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
 							input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", (Object[]) tokens), line);
 					continue;
 				}
@@ -77,20 +77,20 @@ public class CSVHandler {
 				}
 
 				if (first.containsKey(tokens[0])) {
-					LogHandler
-							.err_println(String.format("Found duplicate entity id \"%s\". Skipping line.", tokens[0]));
-					LogHandler.print_debug_info("Input Stream Handler: %s, Separator Chars: %s, tokens: [%s]",
-							input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", (Object[]) tokens));
+					LogHandler.err_println("Found duplicate entity id \"" + tokens[0] + "\". Skipping line.");
+					LogHandler.print_debug_info(
+							"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
+							input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", (Object[]) tokens), line);
 					continue;
 				}
 
 				List<String> list = new ArrayList<>();
 				for (int i = 1; i < tokens.length; i++) {
 					if (second.containsKey(tokens[i])) {
-						LogHandler.err_println(
-								String.format("Found duplicate id \"%s\". Ignoring this occurrence.", tokens[i]));
-						LogHandler.print_debug_info("Input Stream Handler: %s, Separator Chars: %s, tokens: [%s]",
-								input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", (Object[]) tokens));
+						LogHandler.err_println("Found duplicate id \"" + tokens[i] + "\". Ignoring this occurrence.");
+						LogHandler.print_debug_info(
+								"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
+								input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", (Object[]) tokens), line);
 					} else {
 						list.add(tokens[i]);
 						second.put(tokens[i], tokens[0]);
@@ -218,13 +218,43 @@ public class CSVHandler {
 	 * Reads the next {@link AntennaRecord} from the given input.<br/>
 	 * Handles skipping the header line and unparsable lines.
 	 * 
-	 * @param input The stream handler to read from.
+	 * @param input      The stream handler to read from.
+	 * @param tokenOrder The order in which the tokens to be parsed are in the input
+	 *                   file.<br/>
+	 *                   Set to {@code null} to use the default(0, 1, 2, 3).<br/>
+	 *                   If a header line is found this array is updated.<br/>
+	 *                   This is what each number in the array represents:<br/>
+	 *                   <ul>
+	 *                   <li>The first: The position of the recorded
+	 *                   transponder</li>
+	 *                   <li>The second: The position of the record date</li>
+	 *                   <li>The third: The position of the record time</li>
+	 *                   <li>The fourth: The position of the recording antenna</li>
+	 *                   </ul>
 	 * @return The newly created {@link AntennaRecord}. Or null if there was none.
 	 * @throws NullPointerException If the input stream handler to read from is
 	 *                              {@code null}.
 	 */
-	public static AntennaRecord readAntennaRecord(IInputStreamHandler input) throws NullPointerException {
+	public static AntennaRecord readAntennaRecord(IInputStreamHandler input, short[] tokenOrder)
+			throws NullPointerException, IllegalArgumentException {
 		Objects.requireNonNull(input, "The input stream handler to read can't be null.");
+
+		if (tokenOrder == null) {
+			tokenOrder = new short[] { 0, 1, 2, 3 };
+		}
+
+		if (tokenOrder.length != 4) {
+			throw new IllegalArgumentException("Token order has to be 4 numbers long.");
+		}
+
+		short valid = 0;
+		for (int i = 0; i < tokenOrder.length; i++) {
+			valid ^= (1 << tokenOrder[i]);
+		}
+
+		if (valid != 0b1111) {
+			throw new IllegalArgumentException("Token order has to contain each number from 0 to 3 exactly once.");
+		}
 
 		AntennaRecord result = null;
 		boolean last_failed = false;
@@ -243,31 +273,71 @@ public class CSVHandler {
 
 				tokens = line.trim().split(SEPARATOR_REGEX);
 				if (tokens.length != 4) {
-					LogHandler.err_println(String
-							.format("Input line \"%s\" did not contain exactly four tokens. Skipping line.", line));
+					LogHandler.err_println(
+							"Input line \"" + line + "\" did not contain exactly four tokens. Skipping line.");
 					LogHandler.print_debug_info(
 							"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
 							input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", (Object[]) tokens), line);
 					continue;
 				}
 
-				if (tokens[0].equalsIgnoreCase("transponder")) {
+				if (tokens[0].equalsIgnoreCase("transponder") || tokens[1].equalsIgnoreCase("transponder")
+						|| tokens[2].equalsIgnoreCase("transponder") || tokens[3].equalsIgnoreCase("transponder")) {
 					LogHandler.out_println("Read header line: " + line, true);
+					tokenOrder[0] = tokenOrder[1] = tokenOrder[2] = tokenOrder[3] = 0;
+
+					for (short i = 0; i < tokens.length; i++) {
+						tokens[i] = tokens[i].toLowerCase();
+						if (tokens[i].equals("transponder")) {
+							tokenOrder[0] = i;
+						} else if (tokens[i].equals("date") || tokens[i].equals("datum")) {
+							tokenOrder[1] = i;
+						} else if (tokens[i].equals("time") || tokens[i].equals("zeit")) {
+							tokenOrder[2] = i;
+						} else if (tokens[i].equals("antenna") || tokens[i].equals("antenne")) {
+							tokenOrder[3] = i;
+						} else {
+							LogHandler.err_println("Found invalid header \"" + tokens[i] + "\".");
+							LogHandler.print_debug_info(
+									"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
+									input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", (Object[]) tokens), line);
+							break;
+						}
+					}
+
+					valid = 0;
+					for (int i = 0; i < tokenOrder.length; i++) {
+						valid ^= (1 << tokenOrder[i]);
+					}
+
+					if (valid != 0b1111) {
+						LogHandler.err_println(
+								"Header line \"" + line + "\" was invalid. Assuming default column order.");
+						LogHandler.print_debug_info(
+								"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
+								input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", (Object[]) tokens), line);
+						tokenOrder[0] = 0;
+						tokenOrder[1] = 1;
+						tokenOrder[2] = 2;
+						tokenOrder[3] = 3;
+					} else {
+						LogHandler.out_println("Valid header line \"" + line + "\" found. Reordering columns.");
+					}
 					continue;
 				}
 
 				for (String token : tokens) {
 					if (token.trim().isEmpty()) {
-						LogHandler.err_println(
-								String.format("Input line \"%s\" contained an empty token. Skipping line.", line));
+						LogHandler.err_println("Input line \"" + line + "\" contained an empty token. Skipping line.");
 						LogHandler.print_debug_info(
-								"Input Stream Handler: %s, Spearator Chars: %s, Tokens: [%s], Line: \"%s\"",
+								"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
 								input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", (Object[]) tokens), line);
 						continue main_loop;
 					}
 				}
 
-				result = new AntennaRecord(tokens[0], tokens[1], tokens[2], tokens[3]);
+				result = new AntennaRecord(tokens[tokenOrder[0]], tokens[tokenOrder[1]], tokens[tokenOrder[2]],
+						tokens[tokenOrder[3]]);
 				break;
 			} catch (IOException e) {
 				if (last_failed) {
@@ -284,8 +354,7 @@ public class CSVHandler {
 					last_failed = true;
 				}
 			} catch (IllegalArgumentException e) {
-				LogHandler.err_println(
-						String.format("Parsing time of day or date of line \"%s\" failed. Skipping line.", line));
+				LogHandler.err_println("Parsing time of day or date of line \"" + line + "\" failed. Skipping line.");
 				LogHandler.print_exception(e, "parse record time", "Input Stream Handler: %s, Tokens: [%s]",
 						input.toString(), StringUtils.join(", ", (Object[]) tokens));
 			}
