@@ -13,7 +13,7 @@ public class LogHandler {
 	/**
 	 * Whether debug information should be written to the system output.
 	 */
-	private static boolean debug = true;
+	private static boolean debug = false;
 
 	/**
 	 * Whether anything, besides potentially the output data, should be written to
