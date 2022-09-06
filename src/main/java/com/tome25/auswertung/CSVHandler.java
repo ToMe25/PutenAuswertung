@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -410,7 +411,7 @@ public class CSVHandler {
 
 		if (zones == null || zones.isEmpty()) {
 			zones = new ArrayList<String>(zoneTimes.keySet());
-			((ArrayList<String>) zones).sort(IntOrStringComparator.INSTANCE);
+			Collections.sort((List<String>) zones, IntOrStringComparator.INSTANCE);
 		}
 
 		StringBuilder result = new StringBuilder();
