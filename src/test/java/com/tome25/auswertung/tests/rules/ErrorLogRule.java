@@ -182,10 +182,17 @@ public class ErrorLogRule implements TestRule {
 		public void evaluate() throws Throwable {
 			PrintStream oldErr = LogHandler.getError();
 			LogHandler.setError(pout);
+			boolean oldDebug = LogHandler.isDebug();
+			LogHandler.setDebug(true);
+			boolean oldSilent = LogHandler.isSilent();
+			LogHandler.setSilent(false);
+
 			try {
 				base.evaluate();
 			} finally {
 				LogHandler.setError(oldErr);
+				LogHandler.setDebug(oldDebug);
+				LogHandler.setSilent(oldSilent);
 			}
 		}
 

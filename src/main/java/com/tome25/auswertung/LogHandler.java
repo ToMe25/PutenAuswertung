@@ -205,4 +205,41 @@ public class LogHandler {
 	public static void setError(PrintStream err) {
 		error = err;
 	}
+
+	/**
+	 * Checks whether the log handler is currently printing debug messages.
+	 * 
+	 * @return {@code true} if debug messages are printed.
+	 */
+	public static boolean isDebug() {
+		return debug;
+	}
+
+	/**
+	 * Sets whether the log handler should print debug messages.
+	 * 
+	 * @param debug Whether the log handler should print debug messages.
+	 */
+	public static void setDebug(boolean debug) {
+		LogHandler.debug = debug;
+	}
+
+	/**
+	 * Checks whether the log handler should print any messages at all.
+	 * 
+	 * @return {@code true} if the log handler does not print anything at all.
+	 */
+	public static boolean isSilent() {
+		return silent;
+	}
+
+	/**
+	 * Sets whether the log handler should be silent, meaning it doesn't print any
+	 * messages at all.
+	 * 
+	 * @param silent Whether the log handler should be silent.
+	 */
+	public static void setSilent(boolean silent) {
+		LogHandler.silent = silent;
+	}
 }
