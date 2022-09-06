@@ -3,6 +3,7 @@ package com.tome25.auswertung.utils;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.Objects;
+import java.util.TimeZone;
 
 /**
  * A class containing utility methods related to time stamp, time, and date
@@ -91,6 +92,10 @@ public class TimeUtils {
 	public static Calendar parseTime(String date, int time) throws NullPointerException, IllegalArgumentException {
 		Objects.requireNonNull(date, "The date to parse can't be null.");
 
+		// Prevents a whole bunch of issues.
+		// Placing this here calls it way too often, but makes unit tests easier.
+		TimeZone.setDefault(TimeZone.getTimeZone("GMT"));
+
 		if (time < 0) {
 			throw new IllegalArgumentException("Time of day can't be negative.");
 		}
@@ -101,10 +106,9 @@ public class TimeUtils {
 		}
 
 		Calendar c = new GregorianCalendar();
-		c.set(Integer.parseInt(dateSplit[2]), Integer.parseInt(dateSplit[1]) - 1, Integer.parseInt(dateSplit[0]), 0, 0,
-				0);
-		c.set(Calendar.MILLISECOND, 0);
-		c.add(Calendar.MILLISECOND, time);
+		c.setTimeInMillis(time);
+		c.set(Integer.parseInt(dateSplit[2]), Integer.parseInt(dateSplit[1]) - 1, Integer.parseInt(dateSplit[0]));
+		c.add(Calendar.DATE, time / (24 * 3600000));
 
 		return c;
 	}

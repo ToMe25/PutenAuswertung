@@ -70,8 +70,8 @@ public class AntennaDataGenerator {
 		Map<String, String> lastZone = new HashMap<String, String>();
 		Map<String, Long> lastRecord = new HashMap<String, Long>();
 
-		Calendar cal = Calendar.getInstance();
-		cal.set(2022, Calendar.FEBRUARY, 5);
+		Calendar cal = new GregorianCalendar();
+		cal.set(2022, Calendar.FEBRUARY, 5, 0, 0, 0);
 		for (int day = 0; day < days; day++) {
 			String date = TimeUtils.encodeDate(cal);
 			Pair<Pair<Map<String, Map<String, Integer>>, Map<String, Integer>>, Map<String, List<ZoneStay>>> dayData = generateDayAntennaData(

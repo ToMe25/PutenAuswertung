@@ -118,7 +118,7 @@ public class OutputDataTest {
 	 */
 	@Test
 	public void basicNonCont() throws IOException {
-		TestTotals totals = generateTestValues(500, 5, 100, false, false);
+		TestTotals totals = generateTestValues(100, 5, 10, false, false);
 		Map<String, Map<String, Map<String, Long>>> antennaTimes = totals.antennaTimes;
 		Map<String, Map<String, Integer>> antennaChanges = totals.antennaChanges;
 		Map<String, List<ZoneStay>> antennaStays = totals.antennaStays;
