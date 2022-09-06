@@ -112,13 +112,17 @@ public class LogHandler {
 	 * @param info_arg The formatting args from info.
 	 */
 	public static void print_debug_info(String info, Object... info_args) {
+		if (!debug || silent) {
+			return;
+		}
+
 		if (info == null || info.isEmpty()) {
 			LogHandler.err_println("print_debug_info: Received empty debug info string.", true);
 			return;
 		}
 
 		String info_str = "Additional debug Information: " + String.format(info, info_args);
-		err_println(info_str);
+		err_println(info_str, true);
 	}
 
 	/**
