@@ -1,7 +1,13 @@
 package com.tome25.auswertung;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.util.IllegalFormatException;
+import java.util.Objects;
+
+import com.tome25.auswertung.stream.MultiOutputStream;
 
 /**
  * The class responsible for handling the printing of status and debug info.
@@ -13,7 +19,7 @@ public class LogHandler {
 	/**
 	 * Whether debug information should be written to the system output.
 	 */
-	private static boolean debug = false;
+	private static boolean debug = true;
 
 	/**
 	 * Whether anything, besides potentially the output data, should be written to
@@ -32,6 +38,18 @@ public class LogHandler {
 	 * Set to {@code null} to use {@link System#err}.
 	 */
 	private static PrintStream error = null;
+
+	/**
+	 * The underlying {@link MultiOutputStream} writing the the primary output
+	 * stream, and the log files.
+	 */
+	private static MultiOutputStream out;
+
+	/**
+	 * The underlying {@link MultiOutputStream} writing the the primary error
+	 * stream, and the log files.
+	 */
+	private static MultiOutputStream err;
 
 	/**
 	 * Writes the given string to the system output if not in silent mode.<br/>
@@ -178,12 +196,15 @@ public class LogHandler {
 
 	/**
 	 * Sets the new output stream to write log messages to.<br/>
-	 * Set to {@code null} to use {@link System#out}.
+	 * Set to {@code null} to use {@link System#out}.<br/>
+	 * Completely replaces the output stream, potentially removing all log files
+	 * added using {@link #addLogFile}.
 	 * 
 	 * @param output the new standard output stream.
 	 */
 	public static void setOutput(PrintStream out) {
 		output = out;
+		LogHandler.out = null;
 	}
 
 	/**
@@ -198,12 +219,15 @@ public class LogHandler {
 
 	/**
 	 * Sets the new output stream to write error messages to.<br/>
-	 * Set to {@code null} to use {@link System#err}.
+	 * Set to {@code null} to use {@link System#err}.<br/>
+	 * Completely replaces the error stream, potentially removing all log files
+	 * added using {@link #addLogFile}.
 	 * 
 	 * @param output the new standard error stream.
 	 */
 	public static void setError(PrintStream err) {
 		error = err;
+		LogHandler.err = null;
 	}
 
 	/**
@@ -241,5 +265,49 @@ public class LogHandler {
 	 */
 	public static void setSilent(boolean silent) {
 		LogHandler.silent = silent;
+	}
+
+	/**
+	 * Adds the given file as a log file to write the system log to.
+	 * 
+	 * @param log The file to write to.
+	 * @param out If the file should be added as a log file for the output stream.
+	 * @param err If the file should be added as a log file for the error stream.
+	 * @throws FileNotFoundException if the file exists but is a directory rather
+	 *                               than a regular file, does not exist but cannot
+	 *                               be created, or cannot be opened for any other
+	 *                               reason
+	 * @throws SecurityException     if a security manager exists and its
+	 *                               {@code checkWrite} method denies write access
+	 *                               to the file.
+	 * @throws NullPointerException  If {@code log} is {@code null}.
+	 */
+	public static void addLogFile(File log, boolean out, boolean err)
+			throws FileNotFoundException, SecurityException, NullPointerException {
+		Objects.requireNonNull(log, "The log file to add can't be null.");
+
+		if (!out && !err) {
+			return;
+		}
+
+		FileOutputStream fiout = new FileOutputStream(log);
+
+		if (err) {
+			if (LogHandler.err == null) {
+				LogHandler.err = new MultiOutputStream(error == null ? System.err : error, fiout);
+				error = new PrintStream(LogHandler.err);
+			} else {
+				LogHandler.err.addStream(fiout);
+			}
+		}
+
+		if (out) {
+			if (LogHandler.out == null) {
+				LogHandler.out = new MultiOutputStream(output == null ? System.out : output, fiout);
+				output = new PrintStream(LogHandler.out);
+			} else {
+				LogHandler.out.addStream(fiout);
+			}
+		}
 	}
 }

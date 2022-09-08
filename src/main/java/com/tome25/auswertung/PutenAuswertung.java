@@ -45,11 +45,24 @@ public class PutenAuswertung {
 	private static final String DEFAULT_TOTALS_FILE = "PutenAuswertungZeiten.csv";
 
 	/**
-	 * The default ouput file for the individual zone stays.
+	 * The default output file for the individual zone stays.
 	 */
 	private static final String DEFAULT_STAYS_FILE = "PutenAuswertungAufenthalte.csv";
 
+	/**
+	 * The default file to write the system log to.
+	 */
+	private static final String DEFAULT_LOG_FILE = "PutenAuswertung.log";
+
 	public static void main(String... args) {
+		File logFile = new File(DEFAULT_LOG_FILE);
+		try {
+			LogHandler.addLogFile(logFile, true, true);
+		} catch (FileNotFoundException e) {
+			LogHandler.err_println("Failed to open log file.");
+			LogHandler.print_exception(e, "open log file", "Log file: \"%s\"", logFile.getAbsolutePath());
+		}
+
 		File antennaFile = null;
 		for (String in : DEFAULT_INPUT_FILE) {
 			antennaFile = new File(in);
@@ -154,5 +167,7 @@ public class PutenAuswertung {
 		}
 
 		DataHandler.handleStreams(antennaHandler, turkeyHandler, zoneHandler, totalHandler, staysHandler, false);
+
+		LogHandler.out_println("Finished data analysis. Exiting.");
 	}
 }

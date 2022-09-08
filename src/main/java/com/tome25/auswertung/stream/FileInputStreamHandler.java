@@ -133,4 +133,13 @@ public class FileInputStreamHandler implements IInputStreamHandler {
 				bav == -1 ? "error" : Integer.toString(bav));
 	}
 
+	/**
+	 * Gets the file this stream handle is reading from.
+	 * 
+	 * @return The file this stream handle is reading from.
+	 */
+	public File getInputFile() {
+		return input_file;
+	}
+
 }

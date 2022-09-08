@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
 
+import com.tome25.auswertung.stream.FileInputStreamHandler;
 import com.tome25.auswertung.stream.IInputStreamHandler;
 import com.tome25.auswertung.stream.IOutputStreamHandler;
 import com.tome25.auswertung.utils.Pair;
@@ -61,6 +62,11 @@ public class DataHandler {
 
 		List<String> dates = new ArrayList<String>();
 		short[] tokenOrder = new short[] { 0, 1, 2, 3 };
+
+		if (antennaStream instanceof FileInputStreamHandler) {// TODO convert to some kind of generic getInputName
+			LogHandler.out_println(
+					"Started reading file " + ((FileInputStreamHandler) antennaStream).getInputFile().getPath(), true);
+		}
 
 		Calendar startTime = null;
 		while (!antennaStream.done()) {
@@ -151,6 +157,11 @@ public class DataHandler {
 			LogHandler.err_println("An exception occurred while closing an output stream handler.", true);
 			LogHandler.print_exception(e, "close output stream handler",
 					"Totals stream handler: %s, Stays stream handler: %s", totalsStream, staysStream);
+		}
+
+		if (antennaStream instanceof FileInputStreamHandler) {// TODO convert to some kind of generic getInputName
+			LogHandler.out_println(
+					"Finished reading file " + ((FileInputStreamHandler) antennaStream).getInputFile().getPath(), true);
 		}
 	}
 

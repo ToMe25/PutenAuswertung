@@ -14,3 +14,4 @@ AntennenDaten.csv*
 # Output
 PutenAuswertungZeiten*.csv*
 PutenAuswertungAufenthalte*.csv*
+PutenAuswertung*.log

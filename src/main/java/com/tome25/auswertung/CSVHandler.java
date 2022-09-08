@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import com.tome25.auswertung.stream.FileInputStreamHandler;
 import com.tome25.auswertung.stream.IInputStreamHandler;
 import com.tome25.auswertung.stream.IOutputStreamHandler;
 import com.tome25.auswertung.utils.Pair;
@@ -51,6 +52,11 @@ public class CSVHandler {
 			throws NullPointerException {
 		Objects.requireNonNull(input, "input cannot be null.");
 
+		if (input instanceof FileInputStreamHandler) {// TODO convert to some kind of generic getInputName
+			LogHandler.out_println("Started reading file " + ((FileInputStreamHandler) input).getInputFile().getPath(),
+					true);
+		}
+
 		Map<String, List<String>> first = new LinkedHashMap<>();
 		Map<String, String> second = new HashMap<>();
 		boolean last_failed = false;
@@ -73,7 +79,7 @@ public class CSVHandler {
 				}
 
 				if (tokens[0].equalsIgnoreCase("bereich") || tokens[0].equalsIgnoreCase("tier")) {
-					LogHandler.out_println("Read header line: " + line, true);
+					LogHandler.out_println("Read header line \"" + line + "\".", true);
 					continue;
 				}
 
@@ -114,6 +120,11 @@ public class CSVHandler {
 					last_failed = true;
 				}
 			}
+		}
+
+		if (input instanceof FileInputStreamHandler) {// TODO convert to some kind of generic getInputName
+			LogHandler.out_println("Finished reading file " + ((FileInputStreamHandler) input).getInputFile().getPath(),
+					true);
 		}
 
 		return new Pair<>(first, second);
@@ -284,7 +295,7 @@ public class CSVHandler {
 
 				if (tokens[0].equalsIgnoreCase("transponder") || tokens[1].equalsIgnoreCase("transponder")
 						|| tokens[2].equalsIgnoreCase("transponder") || tokens[3].equalsIgnoreCase("transponder")) {
-					LogHandler.out_println("Read header line: " + line, true);
+					LogHandler.out_println("Read header line \"" + line + "\".", true);
 					tokenOrder[0] = tokenOrder[1] = tokenOrder[2] = tokenOrder[3] = 0;
 
 					for (short i = 0; i < tokens.length; i++) {
