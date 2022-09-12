@@ -266,14 +266,25 @@ public class TimeUtilsTest {
 	}
 
 	/**
+	 * Tests converting a date string and a time of day in ms to a {@link Calendar}.
+	 */
+	@Test
+	public void dateStringAndTimeToCal() {
+		Calendar cal = TimeUtils.parseTime("12.02.2022", 4671720);
+		Calendar refCal = new GregorianCalendar(2022, Calendar.FEBRUARY, 12, 1, 17, 51);
+		refCal.set(Calendar.MILLISECOND, 720);
+		assertEquals("Parsed date with time didn't match.", refCal, cal);
+	}
+
+	/**
 	 * Tests parsing a time of day and date to a single {@link Calendar} object.
 	 */
 	@Test
-	public void parseTimeAndDate() {
+	public void dateAndTimeStringToCal() {
 		Calendar cal = TimeUtils.parseTime("03.10.2020", "12:54:03.68");
 		Calendar refCal = new GregorianCalendar(2020, Calendar.OCTOBER, 3, 12, 54, 3);
 		refCal.set(Calendar.MILLISECOND, 680);
-		assertEquals("Parsed time with date didn't match.", refCal, cal);
+		assertEquals("Parsed date and time didn't match.", refCal, cal);
 	}
 
 	/**
