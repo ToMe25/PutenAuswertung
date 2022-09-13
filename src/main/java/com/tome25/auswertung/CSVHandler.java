@@ -10,6 +10,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 import com.tome25.auswertung.stream.FileInputStreamHandler;
 import com.tome25.auswertung.stream.IInputStreamHandler;
@@ -34,13 +35,13 @@ public class CSVHandler {
 	/**
 	 * A regex string containing all the characters to split csv files at.
 	 */
-	private static final String SEPARATOR_REGEX = "[,;\t]";
+	private static final Pattern SEPARATOR_REGEX = Pattern.compile("[,;\t]");
 
 	/**
 	 * A regex string matching a valid id.<br/>
 	 * Ids can contain letters, digits, and spaces.
 	 */
-	private static final String ID_REGEX = "[A-Za-z0-9\\s]+";
+	private static final Pattern ID_REGEX = Pattern.compile("[A-Za-z0-9\\s]+");
 
 	/**
 	 * Reads the data from the stream handler as a CSV file and converts it to a two
@@ -69,12 +70,12 @@ public class CSVHandler {
 		while (!input.done()) {
 			try {
 				String line = input.readline();
-				if (line == null || line.isEmpty()) {
+				if (line == null || line.trim().isEmpty()) {
 					LogHandler.err_println("Read an empty line from Input Stream Handler : " + input.toString(), true);
 					continue;
 				}
 
-				String tokens[] = line.trim().split(SEPARATOR_REGEX);
+				String tokens[] = SEPARATOR_REGEX.split(line.trim());
 				if (tokens.length < 2) {
 					LogHandler.err_println(
 							"Input line \"" + line + "\" did not contain at least two tokens. Skipping line.");
@@ -95,7 +96,7 @@ public class CSVHandler {
 							"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
 							input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", (Object[]) tokens), line);
 					continue;
-				} else if (!tokens[0].matches(ID_REGEX)) {
+				} else if (!ID_REGEX.matcher(tokens[0]).matches()) {
 					LogHandler.err_println("Found invalid entity id \"" + tokens[0] + "\". Skipping line.");
 					LogHandler.print_debug_info(
 							"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
@@ -115,7 +116,7 @@ public class CSVHandler {
 						LogHandler.print_debug_info(
 								"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
 								input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", (Object[]) tokens), line);
-					} else if (!tokens[i].matches(ID_REGEX)) {
+					} else if (!ID_REGEX.matcher(tokens[i]).matches()) {
 						LogHandler.err_println("Found invalid id \"" + tokens[i] + "\". Skipping.");
 						LogHandler.print_debug_info(
 								"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
@@ -315,7 +316,7 @@ public class CSVHandler {
 					continue;
 				}
 
-				tokens = line.trim().split(SEPARATOR_REGEX);
+				tokens = SEPARATOR_REGEX.split(line.trim());
 				if (tokens.length != 4) {
 					LogHandler.err_println(
 							"Input line \"" + line + "\" did not contain exactly four tokens. Skipping line.");
@@ -381,14 +382,14 @@ public class CSVHandler {
 					}
 				}
 
-				if (!tokens[tokenOrder[0]].matches(ID_REGEX)) {
+				if (!ID_REGEX.matcher(tokens[tokenOrder[0]]).matches()) {
 					LogHandler.err_println("Input line \"" + line + "\" contains invalid transponder id \""
 							+ tokens[tokenOrder[0]] + "\". Skipping line.");
 					LogHandler.print_debug_info(
 							"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
 							input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", (Object[]) tokens), line);
 					continue;
-				} else if (!tokens[tokenOrder[3]].matches(ID_REGEX)) {
+				} else if (!ID_REGEX.matcher(tokens[tokenOrder[3]]).matches()) {
 					LogHandler.err_println("Input line \"" + line + "\" contains invalid antenna id \""
 							+ tokens[tokenOrder[3]] + "\". Skipping line.");
 					LogHandler.print_debug_info(
@@ -561,7 +562,7 @@ public class CSVHandler {
 			throw new IOException("Invalid input file");
 		}
 
-		String headers[] = headerLine.split(SEPARATOR_REGEX);
+		String headers[] = SEPARATOR_REGEX.split(headerLine);
 
 		if (headers.length < 4) {
 			LogHandler.err_println(
@@ -580,12 +581,12 @@ public class CSVHandler {
 			String time = null;
 			try {
 				line = input.readline();
-				if (line == null || line.isEmpty()) {
+				if (line == null || line.trim().isEmpty()) {
 					LogHandler.err_println("Read an empty line from Input Stream Handler : " + input.toString(), true);
 					continue;
 				}
 
-				tokens = line.trim().split(SEPARATOR_REGEX);
+				tokens = SEPARATOR_REGEX.split(line.trim());
 				if (tokens.length < 4) {
 					LogHandler.err_println(String
 							.format("Input line \"%s\" did not contain at least four tokens. Skipping line.", line));
@@ -687,12 +688,12 @@ public class CSVHandler {
 			String tokens[] = null;
 			try {
 				line = input.readline();
-				if (line == null || line.isEmpty()) {
+				if (line == null || line.trim().isEmpty()) {
 					LogHandler.err_println("Read an empty line from Input Stream Handler : " + input.toString(), true);
 					continue;
 				}
 
-				tokens = line.trim().split(SEPARATOR_REGEX);
+				tokens = SEPARATOR_REGEX.split(line.trim());
 				if (tokens.length != 7) {
 					LogHandler.err_println(String
 							.format("Input line \"%s\" did not contain exactly seven tokens. Skipping line.", line));
