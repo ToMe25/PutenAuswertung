@@ -70,6 +70,11 @@ public class PutenAuswertung {
 				break;
 			}
 
+			antennaFile = new File(in.charAt(0) + in.substring(1).toLowerCase());
+			if (antennaFile.exists() && antennaFile.isFile()) {
+				break;
+			}
+
 			antennaFile = new File(in.toLowerCase());
 			if (antennaFile.exists() && antennaFile.isFile()) {
 				break;
