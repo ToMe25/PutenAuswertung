@@ -27,14 +27,20 @@ import com.tome25.auswertung.utils.TimeUtils;
 public class CSVHandler {
 
 	/**
+	 * The default character to use as a value separator in produced csvs.
+	 */
+	public static final char DEFAULT_SEPARATOR = ';';
+
+	/**
 	 * A regex string containing all the characters to split csv files at.
 	 */
 	private static final String SEPARATOR_REGEX = "[,;\t]";
 
 	/**
-	 * The default character to use as a value separator in produced csvs.
+	 * A regex string matching a valid id.<br/>
+	 * Ids can contain letters, digits, and spaces.
 	 */
-	public static final char DEFAULT_SEPARATOR = ';';
+	private static final String ID_REGEX = "[A-Za-z0-9\\s]+";
 
 	/**
 	 * Reads the data from the stream handler as a CSV file and converts it to a two
@@ -89,6 +95,12 @@ public class CSVHandler {
 							"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
 							input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", (Object[]) tokens), line);
 					continue;
+				} else if (!tokens[0].matches(ID_REGEX)) {
+					LogHandler.err_println("Found invalid entity id \"" + tokens[0] + "\". Skipping line.");
+					LogHandler.print_debug_info(
+							"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
+							input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", (Object[]) tokens), line);
+					continue;
 				}
 
 				List<String> list = new ArrayList<>();
@@ -98,11 +110,31 @@ public class CSVHandler {
 						LogHandler.print_debug_info(
 								"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
 								input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", (Object[]) tokens), line);
+					} else if (tokens[i].isEmpty()) {
+						LogHandler.err_println("Found empty value in line \"" + line + "\". Skipping.", true);
+						LogHandler.print_debug_info(
+								"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
+								input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", (Object[]) tokens), line);
+					} else if (!tokens[i].matches(ID_REGEX)) {
+						LogHandler.err_println("Found invalid id \"" + tokens[i] + "\". Skipping.");
+						LogHandler.print_debug_info(
+								"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
+								input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", (Object[]) tokens), line);
 					} else {
 						list.add(tokens[i]);
 						second.put(tokens[i], tokens[0]);
 					}
 				}
+
+				if (list.isEmpty()) {
+					LogHandler.err_println(
+							"Input line \"" + line + "\" did not contain at least one valid value. Skipping line.");
+					LogHandler.print_debug_info(
+							"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
+							input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", (Object[]) tokens), line);
+					continue;
+				}
+
 				first.put(tokens[0], list);
 				last_failed = false;
 			} catch (IOException e) {
@@ -338,14 +370,31 @@ public class CSVHandler {
 					continue;
 				}
 
-				for (String token : tokens) {
-					if (token.trim().isEmpty()) {
+				for (int i = 0; i < tokens.length; i++) {
+					tokens[i] = tokens[i].trim();
+					if (tokens[i].isEmpty()) {
 						LogHandler.err_println("Input line \"" + line + "\" contained an empty token. Skipping line.");
 						LogHandler.print_debug_info(
 								"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
 								input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", (Object[]) tokens), line);
 						continue main_loop;
 					}
+				}
+
+				if (!tokens[tokenOrder[0]].matches(ID_REGEX)) {
+					LogHandler.err_println("Input line \"" + line + "\" contains invalid transponder id \""
+							+ tokens[tokenOrder[0]] + "\". Skipping line.");
+					LogHandler.print_debug_info(
+							"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
+							input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", (Object[]) tokens), line);
+					continue;
+				} else if (!tokens[tokenOrder[3]].matches(ID_REGEX)) {
+					LogHandler.err_println("Input line \"" + line + "\" contains invalid antenna id \""
+							+ tokens[tokenOrder[3]] + "\". Skipping line.");
+					LogHandler.print_debug_info(
+							"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
+							input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", (Object[]) tokens), line);
+					continue;
 				}
 
 				result = new AntennaRecord(tokens[tokenOrder[0]], tokens[tokenOrder[1]], tokens[tokenOrder[2]],

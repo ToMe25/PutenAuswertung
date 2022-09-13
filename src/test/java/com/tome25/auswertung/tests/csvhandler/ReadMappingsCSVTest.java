@@ -48,6 +48,9 @@ public class ReadMappingsCSVTest {
 	 * Tests parsing a very simple mappings csv without a header line.<br/>
 	 * Uses semicolon as the separator.
 	 * 
+	 * Tests keys and values with all valid character types(upper case letters,
+	 * lower case letters, digits, and spaces).
+	 * 
 	 * @throws IOException if something goes wrong with file handling, idk
 	 */
 	@Test
@@ -56,7 +59,7 @@ public class ReadMappingsCSVTest {
 		PrintStream out = tempFile.getValue();
 		FileInputStreamHandler fiin = tempFile.getKey();
 
-		out.println("Key;Value 1;val 2");
+		out.println("Key 0;Value 1;val 2");
 		out.println("test;test1;test2");
 		Pair<Map<String, List<String>>, Map<String, String>> pair = CSVHandler.readMappingCSV(fiin);
 
@@ -65,13 +68,13 @@ public class ReadMappingsCSVTest {
 				pair.getKey().containsKey("Tier"));
 
 		assertTrue("Basic mappings.csv representation did not containg first line key.",
-				pair.getKey().containsKey("Key"));
+				pair.getKey().containsKey("Key 0"));
 		assertTrue("Basic mappings.csv representation did not containg second line key.",
 				pair.getKey().containsKey("test"));
 		assertTrue("Basic mappings.csv didn't contain first value line first value.",
-				pair.getKey().get("Key").contains("Value 1"));
+				pair.getKey().get("Key 0").contains("Value 1"));
 		assertTrue("Basic mappings.csv didn't contain first value line second value.",
-				pair.getKey().get("Key").contains("val 2"));
+				pair.getKey().get("Key 0").contains("val 2"));
 
 		assertTrue("Basic mappings.csv didn't contain first value line first value.",
 				pair.getValue().containsKey("Value 1"));
@@ -80,10 +83,10 @@ public class ReadMappingsCSVTest {
 
 		Pair<Map<String, List<String>>, Map<String, String>> refPair = new Pair<Map<String, List<String>>, Map<String, String>>(
 				new LinkedHashMap<String, List<String>>(), new HashMap<String, String>());
-		refPair.getKey().put("Key", new ArrayList<String>(Arrays.asList("Value 1", "val 2")));
+		refPair.getKey().put("Key 0", new ArrayList<String>(Arrays.asList("Value 1", "val 2")));
 		refPair.getKey().put("test", new ArrayList<String>(Arrays.asList("test1", "test2")));
-		refPair.getValue().put("Value 1", "Key");
-		refPair.getValue().put("val 2", "Key");
+		refPair.getValue().put("Value 1", "Key 0");
+		refPair.getValue().put("val 2", "Key 0");
 		refPair.getValue().put("test1", "test");
 		refPair.getValue().put("test2", "test");
 
@@ -189,7 +192,7 @@ public class ReadMappingsCSVTest {
 			out.print("Key " + i + ";");
 			ArrayList<String> values = new ArrayList<String>();
 			for (int j = 0; j < (i / 5 + 1) * (i % 5 + 1); j++) {
-				String val = "Value" + i + ":" + j;
+				String val = "Value" + i + " " + j;
 				out.print(val + ";");
 				values.add(val);
 				refPair.getValue().put(val, "Key " + i);
@@ -212,8 +215,7 @@ public class ReadMappingsCSVTest {
 	 */
 	@Test
 	public void readDuplicateKey() throws IOException {
-		Pair<FileInputStreamHandler, PrintStream> tempFile = tempFolder
-				.newTempInputFile("duplicate_key_mappings.csv");
+		Pair<FileInputStreamHandler, PrintStream> tempFile = tempFolder.newTempInputFile("duplicate_key_mappings.csv");
 		PrintStream out = tempFile.getValue();
 		FileInputStreamHandler fiin = tempFile.getKey();
 
@@ -334,6 +336,170 @@ public class ReadMappingsCSVTest {
 		pair = CSVHandler.readMappingCSV(fiin);
 		assertFalse("The parsed mappings contained the key of the header line.", pair.getKey().containsKey("Bereich"));
 		assertEquals("The mappings parsed from a file with header line did not match.", refPair, pair);
+	}
+
+	/**
+	 * Tests reading a mappings file that contains a key with no value.
+	 * 
+	 * @throws IOException If reading/writing/creating the temporary file tails
+	 */
+	@Test
+	public void readNoValueLine() throws IOException {
+		Pair<FileInputStreamHandler, PrintStream> tempFile = tempFolder.newTempInputFile("no_value_mappings.csv");
+		PrintStream out = tempFile.getValue();
+		FileInputStreamHandler fiin = tempFile.getKey();
+
+		out.println("Key 1;Value 1");
+		out.println("Key 2;");
+		out.println("Key 3;Value 2;Value 3");
+
+		Pair<Map<String, List<String>>, Map<String, String>> pair = CSVHandler.readMappingCSV(fiin);
+
+		Pair<Map<String, List<String>>, Map<String, String>> refPair = new Pair<Map<String, List<String>>, Map<String, String>>(
+				new LinkedHashMap<String, List<String>>(), new HashMap<String, String>());
+		refPair.getKey().put("Key 1", Arrays.asList("Value 1"));
+		refPair.getKey().put("Key 3", Arrays.asList("Value 2", "Value 3"));
+
+		refPair.getValue().put("Value 1", "Key 1");
+		refPair.getValue().put("Value 2", "Key 3");
+		refPair.getValue().put("Value 3", "Key 3");
+
+		assertFalse("The parsed mappings contained a key without value.", pair.getKey().containsKey("Key 2"));
+		assertEquals("The parsed mappings didn't match.", refPair, pair);
+
+		errorLog.checkLine("Input line \"Key 2;\" did not contain at least two tokens. Skipping line.", 0);
+	}
+
+	/**
+	 * Tests reading an input line containing an empty value.
+	 * 
+	 * @throws IOException If reading/writing/creating the temporary file fails.
+	 */
+	@Test
+	public void readEmptyValue() throws IOException {
+		Pair<FileInputStreamHandler, PrintStream> tempFile = tempFolder.newTempInputFile("empty_value_mappings.csv");
+		PrintStream out = tempFile.getValue();
+		FileInputStreamHandler fiin = tempFile.getKey();
+
+		out.println("Key 1;Value 1");
+		out.println("Key 2;;Value 2");
+		out.println("Key 3;Value 3;Value 4");
+
+		Pair<Map<String, List<String>>, Map<String, String>> pair = CSVHandler.readMappingCSV(fiin);
+
+		Pair<Map<String, List<String>>, Map<String, String>> refPair = new Pair<Map<String, List<String>>, Map<String, String>>(
+				new LinkedHashMap<String, List<String>>(), new HashMap<String, String>());
+		refPair.getKey().put("Key 1", Arrays.asList("Value 1"));
+		refPair.getKey().put("Key 2", Arrays.asList("Value 2"));
+		refPair.getKey().put("Key 3", Arrays.asList("Value 3", "Value 4"));
+
+		refPair.getValue().put("Value 1", "Key 1");
+		refPair.getValue().put("Value 2", "Key 2");
+		refPair.getValue().put("Value 3", "Key 3");
+		refPair.getValue().put("Value 4", "Key 3");
+
+		assertEquals("The parsed mappings with an empty value didn't match.", refPair, pair);
+
+		errorLog.checkLine("Found empty value in line \"Key 2;;Value 2\". Skipping.", 0);
+	}
+
+	/**
+	 * Reads a mappings csv containing an invalid key.
+	 * 
+	 * @throws IOException If reading/writing/creating the temp file fails.
+	 */
+	@Test
+	public void readInvalidKey() throws IOException {
+		Pair<FileInputStreamHandler, PrintStream> tempFile = tempFolder.newTempInputFile("invalid_key_mappings.csv");
+		PrintStream out = tempFile.getValue();
+		FileInputStreamHandler fiin = tempFile.getKey();
+
+		out.println("Key 1;Value 1");
+		out.println("Key #2;Value 2");
+		out.println("Key 3;Value 3;Value 4");
+
+		Pair<Map<String, List<String>>, Map<String, String>> pair = CSVHandler.readMappingCSV(fiin);
+
+		Pair<Map<String, List<String>>, Map<String, String>> refPair = new Pair<Map<String, List<String>>, Map<String, String>>(
+				new LinkedHashMap<String, List<String>>(), new HashMap<String, String>());
+		refPair.getKey().put("Key 1", Arrays.asList("Value 1"));
+		refPair.getKey().put("Key 3", Arrays.asList("Value 3", "Value 4"));
+
+		refPair.getValue().put("Value 1", "Key 1");
+		refPair.getValue().put("Value 3", "Key 3");
+		refPair.getValue().put("Value 4", "Key 3");
+
+		assertFalse("The parsed mappings contained the invalid key.", pair.getKey().containsKey("Key #2"));
+		assertEquals("The parsed mappings didn't match.", refPair, pair);
+
+		errorLog.checkLine("Found invalid entity id \"Key #2\". Skipping line.", 0);
+	}
+
+	/**
+	 * Reads a mappings csv containing an invalid value.
+	 * 
+	 * @throws IOException If reading/writing/creating the temp file fails.
+	 */
+	@Test
+	public void readInvalidValue() throws IOException {
+		Pair<FileInputStreamHandler, PrintStream> tempFile = tempFolder.newTempInputFile("invalid_value_mappings.csv");
+		PrintStream out = tempFile.getValue();
+		FileInputStreamHandler fiin = tempFile.getKey();
+
+		out.println("Key 1;Value 1");
+		out.println("Key 2;Value #2;Value 3");
+		out.println("Key 3;Value 4;Value 5");
+
+		Pair<Map<String, List<String>>, Map<String, String>> pair = CSVHandler.readMappingCSV(fiin);
+
+		Pair<Map<String, List<String>>, Map<String, String>> refPair = new Pair<Map<String, List<String>>, Map<String, String>>(
+				new LinkedHashMap<String, List<String>>(), new HashMap<String, String>());
+		refPair.getKey().put("Key 1", Arrays.asList("Value 1"));
+		refPair.getKey().put("Key 2", Arrays.asList("Value 3"));
+		refPair.getKey().put("Key 3", Arrays.asList("Value 4", "Value 5"));
+
+		refPair.getValue().put("Value 1", "Key 1");
+		refPair.getValue().put("Value 3", "Key 2");
+		refPair.getValue().put("Value 4", "Key 3");
+		refPair.getValue().put("Value 5", "Key 3");
+
+		assertFalse("The parsed mappings contained the invalid value.", pair.getValue().containsKey("Value #2"));
+		assertEquals("The parsed mappings didn't match.", refPair, pair);
+
+		errorLog.checkLine("Found invalid id \"Value #2\". Skipping.", 0);
+	}
+
+	/**
+	 * Reads mappings with a line that contains a value, but no valid one.
+	 * 
+	 * @throws IOException If reading/writing/creating the temporary file fails.
+	 */
+	@Test
+	public void readNoValidValue() throws IOException {
+		Pair<FileInputStreamHandler, PrintStream> tempFile = tempFolder.newTempInputFile("no_valid_value_mappings.csv");
+		PrintStream out = tempFile.getValue();
+		FileInputStreamHandler fiin = tempFile.getKey();
+
+		out.println("Key 1;Value 1");
+		out.println("Key 2;Value #2");
+		out.println("Key 3;Value 3;Value 4");
+
+		Pair<Map<String, List<String>>, Map<String, String>> pair = CSVHandler.readMappingCSV(fiin);
+
+		Pair<Map<String, List<String>>, Map<String, String>> refPair = new Pair<Map<String, List<String>>, Map<String, String>>(
+				new LinkedHashMap<String, List<String>>(), new HashMap<String, String>());
+		refPair.getKey().put("Key 1", Arrays.asList("Value 1"));
+		refPair.getKey().put("Key 3", Arrays.asList("Value 3", "Value 4"));
+
+		refPair.getValue().put("Value 1", "Key 1");
+		refPair.getValue().put("Value 3", "Key 3");
+		refPair.getValue().put("Value 4", "Key 3");
+
+		assertFalse("The parsed mappings contained the key without valid.", pair.getKey().containsKey("Key 2"));
+		assertEquals("The parsed mappings didn't match.", refPair, pair);
+
+		errorLog.checkLine("Found invalid id \"Value #2\". Skipping.", 0);
+		errorLog.checkLine("Input line \"Key 2;Value #2\" did not contain at least one valid value. Skipping line.");
 	}
 
 }

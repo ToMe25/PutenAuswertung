@@ -380,4 +380,49 @@ public class ReadAntennaRecordTest {
 		CSVHandler.readAntennaRecord(fiin, new short[] { 0, 1, 2 });
 	}
 
+	/**
+	 * Tests reading a data file with a line with an invalid transponder.
+	 * 
+	 * @throws IOException If reading/writing/creating the temp file fails.
+	 */
+	@Test
+	public void readInvalidTransponder() throws IOException {
+		Pair<FileInputStreamHandler, PrintStream> tempFile = tempFolder
+				.newTempInputFile("invalid_transponder_data.csv");
+		PrintStream pout = tempFile.getValue();
+		FileInputStreamHandler fiin = tempFile.getKey();
+
+		pout.println("#1;01.01.2022;05:53:17.71;Ant1");
+		pout.println("Trans2;01.01.2022;17:41:32.59;Ant2");
+
+		AntennaRecord rec = CSVHandler.readAntennaRecord(fiin, null);
+		AntennaRecord refRec = new AntennaRecord("Trans2", "01.01.2022", "17:41:32.59", "Ant2");
+		assertEquals("Reading a line with invalid transponder didn't correctly read the next line.", refRec, rec);
+		errorLog.checkLine(
+				"Input line \"#1;01.01.2022;05:53:17.71;Ant1\" contains invalid transponder id \"#1\". Skipping line.",
+				0);
+	}
+
+	/**
+	 * Tests reading a data file with a line with an invalid antenna.
+	 * 
+	 * @throws IOException If reading/writing/creating the temp file fails.
+	 */
+	@Test
+	public void readInvalidAntenna() throws IOException {
+		Pair<FileInputStreamHandler, PrintStream> tempFile = tempFolder.newTempInputFile("invalid_antenna_data.csv");
+		PrintStream pout = tempFile.getValue();
+		FileInputStreamHandler fiin = tempFile.getKey();
+
+		pout.println("Trans1;01.01.2022;05:53:17.71;Antenna #1");
+		pout.println("Trans2;01.01.2022;17:41:32.59;Ant2");
+
+		AntennaRecord rec = CSVHandler.readAntennaRecord(fiin, null);
+		AntennaRecord refRec = new AntennaRecord("Trans2", "01.01.2022", "17:41:32.59", "Ant2");
+		assertEquals("Reading a line with invalid transponder didn't correctly read the next line.", refRec, rec);
+		errorLog.checkLine(
+				"Input line \"Trans1;01.01.2022;05:53:17.71;Antenna #1\" contains invalid antenna id \"Antenna #1\". Skipping line.",
+				0);
+	}
+
 }
