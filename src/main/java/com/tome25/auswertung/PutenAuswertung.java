@@ -58,6 +58,8 @@ public class PutenAuswertung {
 		File logFile = new File(DEFAULT_LOG_FILE);
 		try {
 			LogHandler.addLogFile(logFile, true, true);
+			LogHandler.overrideSysErr();
+			LogHandler.overrideSysOut();
 		} catch (FileNotFoundException e) {
 			LogHandler.err_println("Failed to open log file.");
 			LogHandler.print_exception(e, "open log file", "Log file: \"%s\"", logFile.getAbsolutePath());

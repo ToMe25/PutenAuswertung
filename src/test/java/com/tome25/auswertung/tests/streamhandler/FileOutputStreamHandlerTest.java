@@ -1,4 +1,4 @@
-package com.tome25.auswertung.tests.streamhandler.output;
+package com.tome25.auswertung.tests.streamhandler;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;

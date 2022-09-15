@@ -52,6 +52,16 @@ public class LogHandler {
 	private static MultiOutputStream err;
 
 	/**
+	 * The system output stream from before the LogHandler overrode it.
+	 */
+	private static PrintStream oldOut = null;
+
+	/**
+	 * The system error stream from before the LogHandler overrode it.
+	 */
+	private static PrintStream oldErr = null;
+
+	/**
 	 * Writes the given string to the system output if not in silent mode.<br/>
 	 * Changes to the next line after writing.<br/>
 	 * The given text is not considered debug info, however it is not printed in
@@ -308,6 +318,88 @@ public class LogHandler {
 			} else {
 				LogHandler.out.addStream(fiout);
 			}
+		}
+	}
+
+	/**
+	 * Overrides the system standard output with the output stream used by this log
+	 * handler.<br/>
+	 * Doesn't do anything if this log handler is already writing to
+	 * {@link System#out}.
+	 * 
+	 * @see #overrideSysErr()
+	 * @see #resetSysOut()
+	 */
+	public static void overrideSysOut() {
+		if (output == null) {
+			return;
+		}
+
+		if (oldOut == null) {
+			oldOut = System.out;
+		}
+
+		System.setOut(output);
+	}
+
+	/**
+	 * Overrides the system standard error with the output stream used by this log
+	 * handler.<br/>
+	 * Doesn't do anything if this log handler is already writing errors to
+	 * {@link System#err}.
+	 * 
+	 * @see #overrideSysOut()
+	 * @see #resetSysErr()
+	 */
+	public static void overrideSysErr() {
+		if (error == null) {
+			return;
+		}
+
+		if (oldErr == null) {
+			oldErr = System.err;
+		}
+
+		System.setErr(error);
+	}
+
+	/**
+	 * Resets the system output stream to the one it was before it was changed by
+	 * the log handler.<br/>
+	 * If {@link #overrideSysOut()} was called twice, it resets to the one before
+	 * the first call, unless this method was called between those two calls.
+	 * 
+	 * Does not do anything if {@link #overrideSysOut()} wasn't called since this
+	 * method was last called.
+	 * 
+	 * @see #overrideSysOut()
+	 * @see #resetSysErr()
+	 */
+	public static void resetSysOut() {
+		if (oldOut != null) {
+			System.setOut(oldOut);
+
+			oldOut = null;
+		}
+	}
+
+	/**
+	 * Resets the system error stream to the one it was before it was changed by the
+	 * log handler.<br/>
+	 * If {@link #overrideSysErr()} was called twice, it resets to the one before
+	 * the first call, unless this method was called between those two calls.
+	 * 
+	 * Does not do anything if {@link #overrideSysErr()} wasn't called since this
+	 * method was last called.
+	 * 
+	 * @see #overrideSysErr()
+	 * @see #resetSysOut()
+	 */
+	public static void resetSysErr() {
+		if (oldErr != null) {
+			System.setErr(oldErr);
+
+			oldErr = null;
 		}
 	}
 }
