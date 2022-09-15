@@ -45,7 +45,7 @@ public class OutputDataTest {
 	 */
 	@Test
 	public void basic() throws IOException {
-		TestResults results = generateTestValues(100, 5, 10, true, false);
+		TestResults results = generateTestValues(100, 5, 10, true, false, tempFolder);
 		validateResults(results, false);
 	}
 
@@ -57,7 +57,7 @@ public class OutputDataTest {
 	 */
 	@Test
 	public void basicNonCont() throws IOException {
-		TestResults results = generateTestValues(100, 5, 10, false, false);
+		TestResults results = generateTestValues(100, 5, 10, false, false, tempFolder);
 		validateResults(results, false);
 	}
 
@@ -68,7 +68,7 @@ public class OutputDataTest {
 	 */
 	@Test
 	public void fillDays() throws IOException {
-		TestResults results = generateTestValues(100, 5, 10, true, true);
+		TestResults results = generateTestValues(100, 5, 10, true, true, tempFolder);
 		validateResults(results, true);
 	}
 
@@ -80,7 +80,7 @@ public class OutputDataTest {
 	 */
 	@Test
 	public void fillDaysNonCont() throws IOException {
-		TestResults results = generateTestValues(100, 5, 10, false, true);
+		TestResults results = generateTestValues(100, 5, 10, false, true, tempFolder);
 		validateResults(results, true);
 	}
 
@@ -92,7 +92,7 @@ public class OutputDataTest {
 	 */
 	@Test
 	public void shortCrossDate() throws IOException {
-		TestMappings mappings = generateTestMappings(2, 3);
+		TestMappings mappings = generateTestMappings(2, 3, tempFolder);
 		List<TurkeyInfo> turkeys = mappings.turkeys;
 		Map<String, List<String>> zones = mappings.zones;
 		FileInputStreamHandler turkeysIn = mappings.turkeysIn;
@@ -263,7 +263,7 @@ public class OutputDataTest {
 	 *                 measurement should be assumed to be the same as the
 	 *                 first/last measurement.
 	 */
-	public void validateResults(TestResults result, boolean fillDays) {
+	public static void validateResults(TestResults result, boolean fillDays) {
 		assertNotNull("The results to validate are null.", result);
 
 		Map<String, Map<String, Map<String, Long>>> antennaTimes = result.antennaTimes;
@@ -362,14 +362,17 @@ public class OutputDataTest {
 	/**
 	 * Generates and writes to two files mapping files for turkeys and zones.
 	 * 
-	 * @param turkeys The number of turkeys to generate.
-	 * @param zones   The number of zones to generate.
+	 * @param turkeys    The number of turkeys to generate.
+	 * @param zones      The number of zones to generate.
+	 * @param tempFolder The {@link TempFileStreamHandler} object to use to create
+	 *                   the required temporary files.
 	 * @return An object containing the sets of mappings and
 	 *         {@link FileInputStreamHandler FileInputStreamHandlers} to read them.
 	 * @throws IOException If reading/writing/creating one of the temporary files
 	 *                     fails.
 	 */
-	private TestMappings generateTestMappings(int turkeys, int zones) throws IOException {
+	public static TestMappings generateTestMappings(int turkeys, int zones, TempFileStreamHandler tempFolder)
+			throws IOException {
 		Pair<FileInputStreamHandler, FileOutputStreamHandler> turkeysPair = tempFolder.newTempIOFile("turkeys.csv");
 		FileOutputStreamHandler turkeysOut = turkeysPair.getValue();
 		FileInputStreamHandler turkeysIn = turkeysPair.getKey();
@@ -402,13 +405,15 @@ public class OutputDataTest {
 	 * @param fillDays   Whether the time before the first and after the last record
 	 *                   on a day should be assumed to be spent in the first/last
 	 *                   zone.
+	 * @param tempFolder The {@link TempFileStreamHandler} object to use to create
+	 *                   the required temporary files.
 	 * @return An object containing both the generated "ideal" results, as well as
 	 *         the parsed output file.
 	 * @throws IOException If reading/writing/creating a temporary file failed.
 	 */
-	private TestResults generateTestValues(int turkeys, int zones, int days, boolean continuous, boolean fillDays)
-			throws IOException {
-		TestMappings mappings = generateTestMappings(turkeys, zones);
+	public static TestResults generateTestValues(int turkeys, int zones, int days, boolean continuous, boolean fillDays,
+			TempFileStreamHandler tempFolder) throws IOException {
+		TestMappings mappings = generateTestMappings(turkeys, zones, tempFolder);
 
 		Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder.newTempIOFile("antenna.csv");
 		FileOutputStreamHandler antennaOut = antennaPair.getValue();
@@ -445,7 +450,7 @@ public class OutputDataTest {
 	 * 
 	 * @author theodor
 	 */
-	private class TestMappings {
+	public static class TestMappings {
 
 		/**
 		 * A collection of turkeys generated for testing.
@@ -492,7 +497,7 @@ public class OutputDataTest {
 	 * 
 	 * @author theodor
 	 */
-	private class TestResults {
+	public static class TestResults {
 
 		/**
 		 * Generated times per zone per day per turkey.

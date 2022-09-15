@@ -128,9 +128,11 @@ public class FileInputStreamHandler implements IInputStreamHandler {
 			}
 		}
 
-		return String.format(getClass().getSimpleName() + "[input_file=\"%s\", closed=%s, done=%s, bytes_available=%s]",
+		return String.format(
+				getClass().getSimpleName()
+						+ "[input_file=\"%s\", closed=%s, done=%s, available=%s, bytes_available=%s]",
 				input_file.toString(), closed ? "true" : "false", done() ? "true" : "false",
-				bav == -1 ? "error" : Integer.toString(bav));
+				available() ? "true" : "false", bav == -1 ? "error" : Integer.toString(bav));
 	}
 
 	/**

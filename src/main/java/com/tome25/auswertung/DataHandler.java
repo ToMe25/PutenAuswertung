@@ -51,7 +51,18 @@ public class DataHandler {
 		Objects.requireNonNull(staysStream, "The stream handler to write stays to can't be null.");
 
 		Pair<Map<String, List<String>>, Map<String, String>> zones = CSVHandler.readMappingCSV(zonesStream);
+		if (zones == null) {
+			LogHandler.err_println("Failed to read zone mappings from the input file.");
+			LogHandler.print_debug_info("Zones Input Stream Handler: %s", zonesStream);
+			return;
+		}
+
 		Pair<Map<String, List<String>>, Map<String, String>> turkeys = CSVHandler.readMappingCSV(turkeyStream);
+		if (turkeys == null) {
+			LogHandler.err_println("Failed to read turkey mappings from the input file.");
+			LogHandler.print_debug_info("Turkey Input Stream Handler: %s", turkeyStream);
+			return;
+		}
 
 		Map<String, TurkeyInfo> turkeyInfos = new TreeMap<>(IntOrStringComparator.INSTANCE);
 		String lastDate = null;
@@ -71,6 +82,12 @@ public class DataHandler {
 		Calendar startTime = null;
 		while (!antennaStream.done()) {
 			AntennaRecord record = CSVHandler.readAntennaRecord(antennaStream, tokenOrder);
+			if (record == null) {
+				LogHandler.err_println("Reading an antenna record from the input file failed.", true);
+				LogHandler.print_debug_info("Antenna Input Stream Handler: %s", antennaStream);
+				continue;
+			}
+
 			String turkeyId = record.transponder;
 			if (turkeys.getValue().containsKey(record.transponder)) {
 				turkeyId = turkeys.getValue().get(record.transponder);

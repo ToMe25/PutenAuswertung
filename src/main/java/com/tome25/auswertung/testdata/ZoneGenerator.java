@@ -87,13 +87,30 @@ public class ZoneGenerator {
 	 * @throws IllegalArgumentException If {@code number} is less than 1.
 	 */
 	public static Map<String, List<String>> generateZones(int number) throws IllegalArgumentException {
+		return generateZones(number, DEFAULT_MAX_ANTENNAS);
+	}
+
+	/**
+	 * Generates a list of {@code number} zones with the name "{@code Zone i}" where
+	 * i is in incrementing number.
+	 * 
+	 * @param number      The number of zones to generate.
+	 * @param maxAntennas The max number of antennas per zone.
+	 * @return A map containing all the generated zones.
+	 * @throws IllegalArgumentException If {@code number} is less than 1.
+	 */
+	public static Map<String, List<String>> generateZones(int number, int maxAntennas) throws IllegalArgumentException {
 		if (number < 1) {
 			throw new IllegalArgumentException("Cannot generate less than one zone.");
 		}
 
+		if (maxAntennas < 1) {
+			throw new IllegalArgumentException("maxAntennas cannot be <= 0.");
+		}
+
 		Map<String, List<String>> zones = new LinkedHashMap<String, List<String>>();
 		for (int i = 1; i <= number; i++) {
-			Pair<String, List<String>> zone = generateZone("Zone " + i);
+			Pair<String, List<String>> zone = generateZone("Zone " + i, maxAntennas);
 			zones.put(zone.getKey(), zone.getValue());
 		}
 

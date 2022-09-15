@@ -52,7 +52,8 @@ public class CSVHandler {
 	 * the first one.
 	 * 
 	 * @param input The stream handler containing the data to be read.
-	 * @return A pair containing the two maps described above.
+	 * @return A pair containing the two maps described above. Or {@code null} if
+	 *         there was no valid data in the input.
 	 * @throws NullPointerException if input is null.
 	 */
 	public static Pair<Map<String, List<String>>, Map<String, String>> readMappingCSV(IInputStreamHandler input)
@@ -160,7 +161,11 @@ public class CSVHandler {
 					true);
 		}
 
-		return new Pair<>(first, second);
+		if (first.isEmpty() && second.isEmpty()) {
+			return null;
+		} else {
+			return new Pair<>(first, second);
+		}
 	}
 
 	/**
@@ -424,6 +429,7 @@ public class CSVHandler {
 
 		if (result == null) {
 			LogHandler.err_println("Failed to read an antenna record from the input file.", true);
+			LogHandler.print_debug_info("Input Stream Handler: %s", input.toString());
 		}
 
 		return result;

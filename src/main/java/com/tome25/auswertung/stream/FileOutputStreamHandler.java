@@ -129,7 +129,12 @@ public class FileOutputStreamHandler implements IOutputStreamHandler {
 		}
 
 		try {
-			stream.write((line + System.lineSeparator()).getBytes("UTF-8"));
+			if (line == null || line.isEmpty()) {
+				stream.write(System.lineSeparator().getBytes("UTF-8"));
+			} else {
+				stream.write((line + System.lineSeparator()).getBytes("UTF-8"));
+			}
+
 			if (autoFlush) {
 				stream.flush();
 			}

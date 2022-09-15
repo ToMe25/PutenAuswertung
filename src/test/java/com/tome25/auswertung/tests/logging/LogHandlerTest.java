@@ -6,6 +6,7 @@ import static org.junit.Assert.assertFalse;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -218,6 +219,17 @@ public class LogHandlerTest {
 				logReader.readLine());
 		assertFalse("The log file contained more than one line after writing one error line.", logReader.ready());
 		logReader.close();
+	}
+
+	/**
+	 * Test adding a {@code null} log file to the log handler.
+	 * 
+	 * @throws NullPointerException  Always.
+	 * @throws FileNotFoundException Idealy never.
+	 */
+	@Test(expected = NullPointerException.class)
+	public void addNullLogFile() throws NullPointerException, FileNotFoundException {
+		LogHandler.addLogFile(null, true, true);
 	}
 
 }
