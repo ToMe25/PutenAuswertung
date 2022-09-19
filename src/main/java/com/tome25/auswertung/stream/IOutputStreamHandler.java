@@ -64,7 +64,7 @@ public interface IOutputStreamHandler extends Closeable {
 
 	/**
 	 * Checks whether this output stream handler prints temporary output.<br/>
-	 * Trying to print temporary input if this returns <code>false</code> is
+	 * Trying to print temporary input if this returns {@code false} is
 	 * required to be ignored, may however cause a log message.
 	 * 
 	 * @return Whether or not this output handler writes temporary output.

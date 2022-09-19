@@ -171,6 +171,14 @@ public class TimeUtilsTest {
 	}
 
 	/**
+	 * Makes sure that parsing a null date throws a {@link NullPointerException}.
+	 */
+	@Test(expected = NullPointerException.class)
+	public void nullStringToCal() throws NullPointerException {
+		TimeUtils.parseDate(null);
+	}
+
+	/**
 	 * Makes sure that parsing a date without a year fails.
 	 * 
 	 * @throws IllegalArgumentException Always.
@@ -179,13 +187,35 @@ public class TimeUtilsTest {
 	public void noYearStringToCal() throws IllegalArgumentException {
 		TimeUtils.parseDate("12.11");
 	}
-
+	
 	/**
-	 * Makes sure that parsing a null date throws a {@link NullPointerException}.
+	 * Tests parsing of a String with an empty month.
+	 * 
+	 * @throws IllegalArgumentException Always.
 	 */
-	@Test(expected = NullPointerException.class)
-	public void nullStringToCal() throws NullPointerException {
-		TimeUtils.parseDate(null);
+	@Test(expected = IllegalArgumentException.class)
+	public void emptyMonthStringToCal() throws IllegalArgumentException {
+		TimeUtils.parseDate("12..2022");
+	}
+	
+	/**
+	 * Tests parsing a date with a day that is higher that the last day of that month.
+	 * 
+	 * @throws IllegalArgumentException Always.
+	 */
+	@Test(expected = IllegalArgumentException.class)
+	public void tooLargeDayStringToCal() throws IllegalArgumentException {
+		TimeUtils.parseDate("29.02.2021");
+	}
+	
+	/**
+	 * Tests parsing a date string with a month that is above 12.
+	 * 
+	 * @throws IllegalArgumentException Always.
+	 */
+	@Test(expected = IllegalArgumentException.class)
+	public void tooLargeMonthStringToCal() throws IllegalArgumentException {
+		TimeUtils.parseDate("12.312.2022");
 	}
 
 	/**

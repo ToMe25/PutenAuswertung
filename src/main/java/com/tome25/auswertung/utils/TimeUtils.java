@@ -105,9 +105,28 @@ public class TimeUtils {
 			throw new IllegalArgumentException("Date string \"" + date + "\" does not match required format.");
 		}
 
+		if (dateSplit[0].isEmpty() || dateSplit[1].isEmpty() || dateSplit[2].isEmpty()) {
+			throw new IllegalArgumentException("Date string \"" + date + "\" has an empty day, month, or year.");
+		}
+
 		Calendar c = new GregorianCalendar();
 		c.setTimeInMillis(time);
-		c.set(Integer.parseInt(dateSplit[2]), Integer.parseInt(dateSplit[1]) - 1, Integer.parseInt(dateSplit[0]));
+		c.set(Calendar.YEAR, Integer.parseInt(dateSplit[2]));
+
+		int month = Integer.parseInt(dateSplit[1]) - 1;
+		if (month > c.getActualMaximum(Calendar.MONTH)) {
+			throw new IllegalArgumentException("The month of date \"" + date + "\" is too large.");
+		} else {
+			c.set(Calendar.MONTH, month);
+		}
+
+		int day = Integer.parseInt(dateSplit[0]);
+		if (day > c.getActualMaximum(Calendar.DATE)) {
+			throw new IllegalArgumentException("The day of date \"" + date + "\" is too large.");
+		} else {
+			c.set(Calendar.DATE, day);
+		}
+
 		c.add(Calendar.DATE, time / (24 * 3600000));
 
 		return c;
@@ -131,7 +150,7 @@ public class TimeUtils {
 	 * Returns the string representation of the given time in milliseconds.<br/>
 	 * The format is "HH:MM:SS.2".
 	 * 
-	 * @param time The time in miliseconds to convert.
+	 * @param time The time in milliseconds to convert.
 	 * @return The string representation of the given time.
 	 * @throws IllegalArgumentException If {@code time} is less than 0.
 	 */

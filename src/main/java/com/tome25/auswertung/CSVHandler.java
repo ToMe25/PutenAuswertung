@@ -447,7 +447,7 @@ public class CSVHandler {
 
 		String result = StringUtils.join(DEFAULT_SEPARATOR, "Tier", "Datum", "Bereichswechsel");
 		for (String zone : zones) {
-			result += DEFAULT_SEPARATOR + "Aufenthalt in zone " + zone;
+			result += DEFAULT_SEPARATOR + "Aufenthalt in Zone " + zone;
 		}
 
 		return result;
@@ -623,7 +623,7 @@ public class CSVHandler {
 				Map<String, Long> zoneTimes = new LinkedHashMap<String, Long>();
 				for (int i = 3; i < tokens.length; i++) {
 					time = tokens[i];
-					// "Aufenthalt in zone " = 19 chars.
+					// "Aufenthalt in Zone " = 19 chars.
 					zoneTimes.put(headers[i].substring(19), TimeUtils.parseTime(time));
 				}
 

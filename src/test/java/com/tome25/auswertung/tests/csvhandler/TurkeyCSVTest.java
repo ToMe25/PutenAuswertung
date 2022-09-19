@@ -26,11 +26,11 @@ public class TurkeyCSVTest {
 	@Test
 	public void turkeyHeader() {
 		assertEquals("The turkey csv header did not match.",
-				"Tier;Datum;Bereichswechsel;Aufenthalt in zone Zone 1;Aufenthalt in zone Zone 2",
+				"Tier;Datum;Bereichswechsel;Aufenthalt in Zone Zone 1;Aufenthalt in Zone Zone 2",
 				CSVHandler.turkeyCsvHeader(Arrays.asList(new String[] { "Zone 1", "Zone 2" })));
 
 		assertEquals("The turkey csv header did not match.",
-				"Tier;Datum;Bereichswechsel;Aufenthalt in zone Z1;Aufenthalt in zone Zone 2;Aufenthalt in zone #3",
+				"Tier;Datum;Bereichswechsel;Aufenthalt in Zone Z1;Aufenthalt in Zone Zone 2;Aufenthalt in Zone #3",
 				CSVHandler.turkeyCsvHeader(Arrays.asList(new String[] { "Z1", "Zone 2", "#3" })));
 	}
 
