@@ -20,5 +20,10 @@ Es erzeugt Aufenthaltszeiten pro Bereich pro Tag, und eine Liste der Aufenthalte
     * [Zeit](formats.md#zeit)
     * [Datum](formats.md#datum)
  * [Funktion](function.md)
+    * [Zuordnungs-Dateien lesen](function.md#zuordnungs-dateien-lesen)
+    * [Antennen Daten lesen](function.md#antennen-daten-lesen)
+    * [Antennen Aufzeichnung verarbeiten](function.md#antennen-aufzeichnung-verarbeiten)
+       * [Wenn eine Aufzeichnung ein anderes Datum hat](function.md#wenn-eine-aufzeichnung-ein-anderes-datum-hat)
+    * [Zeiten schreiben](function.md#zeiten-schreiben)
 
 **Achtung:** Diese Dokumentation wird als Archiv verbreitet, damit Links in dieser Funktionieren muss dieses höchst wahrscheinlich entpackt werden.

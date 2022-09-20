@@ -206,7 +206,7 @@ public class TurkeyInfo {
 		} else if (fillDays()) {
 			addTime(time, newZone, TimeUtils.getMsOfDay(time));
 
-			if (newRec && stayOut != null) {
+			if (newRec && stayOut != null && lastStay.getExitCal() == null) {
 				// FIXME probably produces 1ms offsets
 				Calendar cal = (Calendar) currentTime.clone();
 				cal.set(Calendar.HOUR_OF_DAY, 23);
@@ -235,7 +235,7 @@ public class TurkeyInfo {
 			int recordTime = (int) (timeMs - startTime.getTimeInMillis());
 			addTime(time, newZone, recordTime);
 
-			if (newRec && stayOut != null) {
+			if (newRec && stayOut != null && lastStay.getExitCal() == null) {
 				if (!currentZone.equals(lastStay.getZone()) && lastZoneChange < currentTime.getTimeInMillis()) {
 					Calendar lastCal = new GregorianCalendar();
 					lastCal.setTimeInMillis(lastZoneChange);

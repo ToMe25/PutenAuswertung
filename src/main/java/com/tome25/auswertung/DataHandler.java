@@ -113,19 +113,27 @@ public class DataHandler {
 					printDayOutput(totalsStream, turkeyInfos.values(), lastDate, zones.getKey().keySet(), false);
 				}
 
-				if (!fillDays && lastDate != null && !TimeUtils.isNextDay(lastDate, record.date)) {
+				if (lastDate != null && !TimeUtils.isNextDay(lastDate, record.date)) {
 					startTime = record.cal;
 					for (TurkeyInfo ti : turkeyInfos.values()) {
-						ti.changeZone(ti.getCurrentZone(), lastTimes.get(lastDate));
-						ti.setStartTime(startTime);
+						if (!fillDays) {
+							ti.changeZone(ti.getCurrentZone(), lastTimes.get(lastDate));
+							ti.setStartTime(startTime);
+						}
+						ti.endDay(ti.getCurrentDate());
+						ti.printCurrentStay(false);
 					}
+
+					for (String date : dates) {
+						printDayOutput(totalsStream, turkeyInfos.values(), date, zones.getKey().keySet(), true);
+					}
+					dates.clear();
 				}
 
 				lastDate = record.date;
 				dates.add(lastDate);
-			}
-
-			if (!lastTimes.containsKey(record.date) || record.cal.after(lastTimes.get(record.date))) {
+				lastTimes.put(record.date, record.cal);
+			} else if (record.cal.after(lastTimes.get(record.date))) {
 				lastTimes.put(record.date, record.cal);
 			} else if (!record.cal.equals(lastTimes.get(record.date))) {
 				LogHandler.err_println("New antenna record is before the last one. Skipping line.");
