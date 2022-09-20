@@ -14,8 +14,8 @@
     <menu name="Inhalt">
       <item name="Übersicht" href="index.html" />
       <item name="Nutzung" href="usage.html" />
-      <item name="Inputs" href="input.html" />
-      <item name="Ergebnisse" href="output.html" />
+      <item name="Input-Dateien" href="input.html" />
+      <item name="Ergebnis-Dateien" href="output.html" />
       <item name="Formate" href="formats.html" />
       <item name="Funktion" href="function.html" />
     </menu>

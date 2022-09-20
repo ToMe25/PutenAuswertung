@@ -4,19 +4,19 @@ Es ist allerdings für die einfachsten Anwendungsfälle auch möglich es per Dop
 
 Normalerweise wird das Programm mit `java -jar PutenAuswertung.jar` ausgeführt.
 
-Das Programm per Doppelklick zu starten, startet es so als wären keine Argumente beim starten übergeben worden, also genau so wie der Befehl oben.
+Das Programm per Doppelklick zu starten, startet es so als wären keine [Argumente](#argumente) beim starten übergeben worden, also genau so wie der Befehl oben.
 
-Die [Input Dateien](input.md) müssen in dem Verzeichnis in dem das Programm ausgeführt wird vorhanden sein.  
-Wenn diese nicht existieren wird dieses programm eine [Fehlermeldung](#status-meldungen "Status Meldungen") schreiben, und keine Datenverarbeitung vornehmen.
+Die [Input Dateien](input.md) müssen sich in dem Verzeichnis befinden, in dem das Programm ausgeführt wird.  
+Wenn mindestens eine dieser Dateien nicht existiert, schreibt dieses Programm eine [Fehlermeldung](#status-meldungen "Status-Meldungen"), und beendet sich ohne eine Analyse zu starten.
 
-**Info:** Wenn das Programm per Doppelklick gestartet wurde sollte **IMMER** die [Log Datei](#status-meldungen "Status Meldungen") auf Fehlermeldungen überprüft werden.  
+**Info:** Wenn das Programm per Doppelklick gestartet wurde sollte **IMMER** die [Log Datei](#status-meldungen "Status-Meldungen") auf Fehlermeldungen überprüft werden.  
 Bei der Ausführung in einem Terminal ist dies nicht notwendig, da dieses die Fehlermeldungen anzeigt.
 
 ## Argumente
-Dieses Programm soll über Programm Argumente Konfiguriert werden, dies ist allerdings noch nicht implementiert.  
-Information über diese Argumente wird in der Dokumentation(hier oder in einer separaten Datei), und mit `java -jar PutenAuswertung.jar --help` verfügbar sein.
+Dieses Programm soll über Programm-Argumente Konfiguriert werden, dies ist allerdings noch nicht implementiert.  
+Informationen über diese Argumente werden in der Dokumentation(hier oder in einer separaten Datei), und mit `java -jar PutenAuswertung.jar --help` verfügbar sein.
 
-## Status Meldungen
+## Status-Meldungen
 Dieses Programm schreibt Statusmeldungen sowohl in das Terminal in dem es ausgeführt wird, als auch in eine Datei namens `PutenAuswertung.log` in dem Verzeichnis in dem es ausgeführt wird.  
 Diese Datei könnte zum Beispiel so aussehen wenn es keine Probleme gab:
 
