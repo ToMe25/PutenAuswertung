@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/DECORATION/1.8.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/DECORATION/1.8.0 https://maven.apache.org/xsd/decoration-1.8.0.xsd">
+  <skin>
+    <groupId>org.apache.maven.skins</groupId>
+    <artifactId>maven-fluido-skin</artifactId>
+    <version>1.11.1</version>
+  </skin>
+  <version position="right" />
+  <bannerLeft>
+    <name>Puten Auswertung</name>
+  </bannerLeft>
+  <body>
+    <menu name="Inhalt">
+      <item name="Übersicht" href="index.html" />
+      <item name="Nutzung" href="usage.html" />
+      <item name="Inputs" href="input.html" />
+      <item name="Ergebnisse" href="output.html" />
+      <item name="Formate" href="formats.html" />
+      <item name="Funktion" href="function.html" />
+    </menu>
+  </body>
+</project>
