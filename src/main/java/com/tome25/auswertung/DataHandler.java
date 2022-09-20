@@ -54,13 +54,15 @@ public class DataHandler {
 		if (zones == null) {
 			LogHandler.err_println("Failed to read zone mappings from the input file.");
 			LogHandler.print_debug_info("Zones Input Stream Handler: %s", zonesStream);
-			return;
 		}
 
 		Pair<Map<String, List<String>>, Map<String, String>> turkeys = CSVHandler.readMappingCSV(turkeyStream);
 		if (turkeys == null) {
 			LogHandler.err_println("Failed to read turkey mappings from the input file.");
 			LogHandler.print_debug_info("Turkey Input Stream Handler: %s", turkeyStream);
+		}
+
+		if (zones == null || turkeys == null) {
 			return;
 		}
 

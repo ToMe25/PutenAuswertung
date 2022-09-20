@@ -86,40 +86,47 @@ public class PutenAuswertung {
 		}
 
 		if (antennaFile == null) {
-			LogHandler.err_println(
-					"No antenna records input file found. This program looks for a file called \"AntennenDaten.csv\" in the directory you are executing this command in.");
-			return;
+			LogHandler.err_println("No antenna records input file found. This program looks for a file called \""
+					+ DEFAULT_INPUT_FILE[0] + "\" in the directory you are executing this command in.");
 		} else {
 			LogHandler.out_println(
-					String.format("Reading antenna records input file \"%s\".", antennaFile.getAbsolutePath()));
+					String.format("Using antenna records input file \"%s\".", antennaFile.getAbsolutePath()));
 		}
 
 		File turkeyFile = new File(DEFAULT_PUTEN_FILE);
 		if (!turkeyFile.exists() || !turkeyFile.isFile()) {
 			turkeyFile = new File(DEFAULT_PUTEN_FILE.toLowerCase());
 			if (!turkeyFile.exists() || !turkeyFile.isFile()) {
-				LogHandler.err_println(String.format(
-						"No turkey transponder mappings file found. This program expects a file called \"%s\" in the directory you are executing this command in.",
-						DEFAULT_PUTEN_FILE));
-				return;
+				turkeyFile = null;
+				LogHandler
+						.err_println("No turkey transponder mappings file found. This program expects a file called \""
+								+ DEFAULT_PUTEN_FILE + "\" in the directory you are executing this command in.");
 			}
 		}
 
-		LogHandler
-				.out_println(String.format("Reading turkey mappings input file \"%s\".", turkeyFile.getAbsolutePath()));
+		if (turkeyFile != null) {
+			LogHandler.out_println(
+					String.format("Using turkey mappings input file \"%s\".", turkeyFile.getAbsolutePath()));
+		}
 
 		File zoneFile = new File(DEFAULT_BEREICHE_FILE);
 		if (!zoneFile.exists() || !zoneFile.isFile()) {
 			zoneFile = new File(DEFAULT_BEREICHE_FILE.toLowerCase());
 			if (!zoneFile.exists() || !zoneFile.isFile()) {
-				LogHandler.err_println(String.format(
-						"No zone mappings file found. This program expects a file called \"%s\" in the directory you are executing this command in.",
-						DEFAULT_BEREICHE_FILE));
-				return;
+				zoneFile = null;
+				LogHandler.err_println("No zone mappings file found. This program expects a file called \""
+						+ DEFAULT_BEREICHE_FILE + "\" in the directory you are executing this command in.");
 			}
 		}
 
-		LogHandler.out_println(String.format("Reading zone mappings input file \"%s\".", zoneFile.getAbsolutePath()));
+		if (zoneFile != null) {
+			LogHandler
+					.out_println(String.format("Using zone mappings input file \"%s\".", zoneFile.getAbsolutePath()));
+		}
+
+		if (antennaFile == null || turkeyFile == null || zoneFile == null) {
+			return;
+		}
 
 		IInputStreamHandler antennaHandler = null;
 		try {
