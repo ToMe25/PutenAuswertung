@@ -132,6 +132,12 @@
         <directory>docs/markdown</directory>
         <targetPath>docs/markdown</targetPath>
       </resource>
+      <resource>
+        <directory>${project.basedir}</directory>
+        <includes>
+          <include>README*</include>
+        </includes>
+      </resource>
     </resources>
 
     <plugins>
