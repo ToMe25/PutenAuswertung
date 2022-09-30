@@ -118,6 +118,28 @@ public class StringUtils {
 	/**
 	 * Creates a string from all the given tokens separated by separator.
 	 * 
+	 * @param separator The separator to put between tokens.
+	 * @param tokens    The tokens to convert to a single String.
+	 * @return The string created by joining the tokens together.
+	 */
+	public static String join(char separator, CharSequence... tokens) {
+		return join(separator, (Object[]) tokens);
+	}
+
+	/**
+	 * Creates a string from all the given tokens separated by separator.
+	 * 
+	 * @param separator The separator to put between tokens.
+	 * @param tokens    The tokens to convert to a single String.
+	 * @return The string created by joining the tokens together.
+	 */
+	public static String join(CharSequence separator, CharSequence... tokens) {
+		return join(separator, (Object[]) tokens);
+	}
+
+	/**
+	 * Creates a string from all the given tokens separated by separator.
+	 * 
 	 * @param separator The separator to put between tokens. If {@code null} the
 	 *                  tokens are joined without a separator.
 	 * @param tokens    The tokens to convert to a single String.

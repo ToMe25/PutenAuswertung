@@ -136,7 +136,7 @@ public class PutenAuswertung {
 			LogHandler.print_exception(e, "init antenna record file input stream handler",
 					"Antenna record file: \"%s\", Turkey mapping file: \"%s\", Zone mapping file: \"%s\", Arguments: [%s]",
 					antennaFile.getAbsolutePath(), turkeyFile.getAbsolutePath(), zoneFile.getAbsolutePath(),
-					StringUtils.join(", ", (Object[]) args));
+					StringUtils.join(", ", args));
 		}
 
 		IInputStreamHandler turkeyHandler = null;
@@ -147,7 +147,7 @@ public class PutenAuswertung {
 			LogHandler.print_exception(e, "init turkey mappings file input stream handler",
 					"Antenna record file: \"%s\", Turkey mapping file: \"%s\", Zone mapping file: \"%s\", Arguments: [%s]",
 					antennaFile.getAbsolutePath(), turkeyFile.getAbsolutePath(), zoneFile.getAbsolutePath(),
-					StringUtils.join(", ", (Object[]) args));
+					StringUtils.join(", ", args));
 		}
 
 		IInputStreamHandler zoneHandler = null;
@@ -158,7 +158,7 @@ public class PutenAuswertung {
 			LogHandler.print_exception(e, "init zone mappings file input stream handler",
 					"Antenna record file: \"%s\", Turkey mapping file: \"%s\", Zone mapping file: \"%s\", Arguments: [%s]",
 					antennaFile.getAbsolutePath(), turkeyFile.getAbsolutePath(), zoneFile.getAbsolutePath(),
-					StringUtils.join(", ", (Object[]) args));
+					StringUtils.join(", ", args));
 		}
 
 		IOutputStreamHandler totalHandler = null;
