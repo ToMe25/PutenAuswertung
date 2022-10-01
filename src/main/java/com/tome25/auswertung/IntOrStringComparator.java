@@ -18,6 +18,13 @@ public class IntOrStringComparator implements Comparator<String> {
 	 */
 	public static final IntOrStringComparator INSTANCE = new IntOrStringComparator();
 
+	/**
+	 * Creates a new IntOrStringComparator.<br/>
+	 * Private since there should be no need to create another one.
+	 */
+	private IntOrStringComparator() {
+	}
+
 	@Override
 	public int compare(String o1, String o2) {
 		if (StringUtils.isInteger(o1) && !StringUtils.isInteger(o2)) {

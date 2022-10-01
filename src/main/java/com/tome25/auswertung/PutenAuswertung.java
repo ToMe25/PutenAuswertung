@@ -54,6 +54,11 @@ public class PutenAuswertung {
 	 */
 	private static final String DEFAULT_LOG_FILE = "PutenAuswertung.log";
 
+	/**
+	 * The method initially called by the JVM on program startup.
+	 * 
+	 * @param args The arguments given on program startup.
+	 */
 	public static void main(String... args) {
 		File logFile = new File(DEFAULT_LOG_FILE);
 		try {
@@ -64,6 +69,9 @@ public class PutenAuswertung {
 			LogHandler.err_println("Failed to open log file.");
 			LogHandler.print_exception(e, "open log file", "Log file: \"%s\"", logFile.getAbsolutePath());
 		}
+
+		Arguments argHandler = new Arguments(args);
+		LogHandler.setDebug(argHandler.debug);
 
 		File antennaFile = null;
 		for (String in : DEFAULT_INPUT_FILE) {
@@ -120,8 +128,7 @@ public class PutenAuswertung {
 		}
 
 		if (zoneFile != null) {
-			LogHandler
-					.out_println(String.format("Using zone mappings input file \"%s\".", zoneFile.getAbsolutePath()));
+			LogHandler.out_println(String.format("Using zone mappings input file \"%s\".", zoneFile.getAbsolutePath()));
 		}
 
 		if (antennaFile == null || turkeyFile == null || zoneFile == null) {
