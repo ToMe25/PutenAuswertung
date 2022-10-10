@@ -14,7 +14,7 @@ import java.util.TreeMap;
 
 import org.junit.Test;
 
-import com.tome25.auswertung.IntOrStringComparator;
+import com.tome25.auswertung.utils.IntOrStringComparator;
 import com.tome25.auswertung.utils.MapUtils;
 
 /**

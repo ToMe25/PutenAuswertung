@@ -15,6 +15,7 @@ import java.util.regex.Pattern;
 import com.tome25.auswertung.stream.FileInputStreamHandler;
 import com.tome25.auswertung.stream.IInputStreamHandler;
 import com.tome25.auswertung.stream.IOutputStreamHandler;
+import com.tome25.auswertung.utils.IntOrStringComparator;
 import com.tome25.auswertung.utils.Pair;
 import com.tome25.auswertung.utils.StringUtils;
 import com.tome25.auswertung.utils.TimeUtils;
