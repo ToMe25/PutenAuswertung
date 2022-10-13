@@ -3,6 +3,7 @@ package com.tome25.auswertung;
 import java.io.File;
 import java.io.FileNotFoundException;
 
+import com.tome25.auswertung.args.Arguments;
 import com.tome25.auswertung.stream.FileInputStreamHandler;
 import com.tome25.auswertung.stream.FileOutputStreamHandler;
 import com.tome25.auswertung.stream.IInputStreamHandler;

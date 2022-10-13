@@ -1,12 +1,12 @@
-package com.tome25.auswertung;
+package com.tome25.auswertung.args;
 
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Objects;
 
+import com.tome25.auswertung.LogHandler;
+import com.tome25.auswertung.args.Argument.ArgumentValue;
 import com.tome25.auswertung.utils.MapUtils;
 import com.tome25.auswertung.utils.Pair;
 import com.tome25.auswertung.utils.StringUtils;
@@ -25,111 +25,6 @@ public class Arguments {
 	public boolean debug = false;
 
 	/**
-	 * An enum used to specify whether an argument gets a value when given.
-	 * 
-	 * @author theodor
-	 */
-	private enum ArgumentValue {
-		NONE, OPTIONAL, REQUIRED;
-	}
-
-	/**
-	 * The enum specifying the possible arguments that this program can handle.
-	 * 
-	 * @author theodor
-	 */
-	private enum Argument {
-		DEBUG('d', ArgumentValue.NONE, (short) 7, "debug") {
-			@Override
-			public void onReceived(Arguments inst, String val) {
-				inst.debug = true;
-			}
-
-			@Override
-			public String[] getDescription() {
-				return new String[] { "Enables additional log output about issues and the current program state.",
-						"Usefull for debugging issues, but likely not useful for the average user." };
-			}
-		};
-
-		/**
-		 * Creates a new Argument instance.
-		 * 
-		 * @param shortArg The single character argument, aka the short arg, to be given
-		 *                 for this argument.
-		 * @param value    Whether this argument handles a value, as well as whether
-		 *                 this value is optional.<br/>
-		 *                 Range: 0 - 10.
-		 * @param priority The priority with which this argument is handled.<br/>
-		 *                 Higher means its handled earlier.
-		 * @param longArgs The text arguments, aka long args, for this argument.
-		 * @throws IllegalArgumentException If {@code priority} isn't in the valid
-		 *                                  range, or shortArg isn't a valid character.
-		 * @throws NullPointerException     If {@code value} is {@code null}.
-		 */
-		private Argument(char shortArg, ArgumentValue value, short priority, String... longArgs)
-				throws IllegalArgumentException, NullPointerException {
-			if (priority < 0 || priority > 10) {
-				throw new IllegalArgumentException("Argument priority outside range 0 - 10 received.");
-			}
-
-			if (!Character.isLetterOrDigit(shortArg)) {
-				throw new IllegalArgumentException("Received a non alpha-numeric short arg.");
-			}
-
-			this.shortArg = shortArg;
-			this.longArgs = longArgs == null ? new String[0] : longArgs;
-			this.prio = priority;
-			this.val = Objects.requireNonNull(value, "The value requirement can't be null.");
-		}
-
-		/**
-		 * The single char argument, aka short arg, for this argument.
-		 */
-		public final char shortArg;
-
-		/**
-		 * The possible string arguments, aka long args, for this argument.
-		 */
-		public final String[] longArgs;
-
-		/**
-		 * The priority of this argument. Higher means its processed earlier.<br/>
-		 * Arguments with the same priority are processed in the order they are
-		 * specified in.
-		 */
-		public final short prio;
-
-		/**
-		 * Whether this argument can optionally handle a value, requires one, or doesn't
-		 * handle one at all.
-		 */
-		public final ArgumentValue val;
-
-		/**
-		 * The method handling everything that needs to be done if this argument is
-		 * found.
-		 * 
-		 * @param val  The value for this argument, or {@code null} if it doesn't have
-		 *             one.<br/>
-		 *             Also {@code null} if this arg has an optional value, and none was
-		 *             specified.
-		 * @param inst The {@link Arguments} instance to use.<br/>
-		 *             Potentially changed by this method.
-		 */
-		public abstract void onReceived(Arguments inst, String val);
-
-		/**
-		 * Gets the description for this argument.<br/>
-		 * Each string is handled as a separate line.<br/>
-		 * Might be line wrapped in the future.
-		 * 
-		 * @return The description for this argument.
-		 */
-		public abstract String[] getDescription();
-	}
-
-	/**
 	 * Creates a new Arguments object parsing the string arguments given to the main
 	 * method.<br/>
 	 * Whether all args are separate strings, or one long string doesn't
@@ -141,8 +36,13 @@ public class Arguments {
 	public Arguments(String... mainArgs) {
 		String args = StringUtils.join(' ', mainArgs);
 		Map<Argument, String> arguments = parseArgs(args);
+		boolean dbg = arguments.containsKey(Argument.DEBUG) || arguments.containsKey(Argument.VERBOSE);
 		for (Argument arg : arguments.keySet()) {
 			arg.onReceived(this, arguments.get(arg));
+
+			if (dbg) {
+				LogHandler.out_println("Received argument " + arg.name().toLowerCase() + ".", true);
+			}
 		}
 
 	}
@@ -179,7 +79,8 @@ public class Arguments {
 	 *                               </ul>
 	 */
 	public static Map<Argument, String> parseArgs(String args) throws IllegalStateException {
-		final Pair<Map<Byte, Argument>, Map<String, Byte>> argsMaps = getArgsMap();
+		//TODO replace exceptions with custom exception.
+		final Pair<Map<Character, Argument>, Map<String, Character>> argsMaps = getArgsMap();
 
 		boolean shortArgs = false;
 		boolean longArg = false;
@@ -188,20 +89,22 @@ public class Arguments {
 		boolean escaped = false;
 
 		Argument currentArg = null;
-		byte quote = 0;
+		char quote = 0;
 		StringBuilder current = new StringBuilder();
 
 		Map<Argument, String> arguments = new LinkedHashMap<Argument, String>();
 
-		for (byte b : args.getBytes()) {
-			switch (b) {
+		char[] chars = args.toCharArray();
+		for (int i = 0; i < chars.length; i++) {
+			char c = chars[i];
+			switch (c) {
 			case '-':
 				if (value || longArg) {
 					if (escaped) {
 						current.append('\\');
 						escaped = false;
 					}
-					current.append((char) b);
+					current.append(c);
 				} else if (shortArgs) {
 					shortArgs = false;
 					longArg = true;
@@ -212,7 +115,7 @@ public class Arguments {
 						} else {
 							if (arguments.containsKey(currentArg)) {
 								throw new IllegalStateException(
-										"Received duplicate argument " + currentArg.shortArg + '.');
+										"Received duplicate argument " + currentArg.name().toLowerCase() + '.');
 							}
 
 							arguments.put(currentArg, null);
@@ -224,28 +127,29 @@ public class Arguments {
 				break;
 			case '"':
 			case '\'':
-				if (quoted && quote == b && !escaped) {
+				if (quoted && quote == c && !escaped) {
 					quoted = false;
 				} else if (quoted) {
 					escaped = false;
-					current.append((char) b);
+					current.append(c);
 				} else {
 					quoted = true;
-					quote = b;
+					quote = c;
 				}
 				break;
 			case '\\':
 				if (escaped) {
-					current.append((char) b);
+					current.append(c);
 					escaped = false;
 				} else {
 					escaped = true;
 				}
 				break;
 			case ' ':
+				// TODO handle all spaces as potentially escaped
 				if (value) {
 					if (escaped || quoted) {
-						current.append((char) b);
+						current.append(c);
 						escaped = false;
 					} else if (current.length() > 0) {
 						if (currentArg == null) {
@@ -253,19 +157,21 @@ public class Arguments {
 						}
 
 						if (currentArg.val == ArgumentValue.NONE) {
-							throw new IllegalStateException("Received value \"" + current.toString()
-									+ "\" for argument " + currentArg.shortArg + " which doesn't take a value.");
+							throw new IllegalStateException(
+									"Received value \"" + current.toString() + "\" for argument "
+											+ currentArg.name().toLowerCase() + " which doesn't take a value.");
 						}
 
 						if (arguments.containsKey(currentArg)) {
-							throw new IllegalStateException("Received duplicate argument " + currentArg.shortArg + '.');
+							throw new IllegalStateException(
+									"Received duplicate argument " + currentArg.name().toLowerCase() + '.');
 						}
 
 						arguments.put(currentArg, current.toString());
 						currentArg = null;
 					}
 				} else if (longArg) {
-					Byte shortArg = argsMaps.getValue().get(current.toString());
+					Character shortArg = argsMaps.getValue().get(current.toString());
 					if (shortArg == null) {
 						throw new IllegalStateException("Received unknown argument \"" + current.toString() + "\".");
 					}
@@ -282,27 +188,29 @@ public class Arguments {
 						current.append('\\');
 						escaped = false;
 					}
-					current.append((char) b);
+					current.append(c);
 				} else if (shortArgs) {
 					if (currentArg != null && currentArg.val == ArgumentValue.REQUIRED) {
-						throw new IllegalStateException("Argument " + currentArg.shortArg + " requires a value.");
+						throw new IllegalStateException(
+								"Argument " + currentArg.name().toLowerCase() + " requires a value.");
 					}
 
-					if (!argsMaps.getKey().containsKey(b)) {
-						throw new IllegalStateException("Received unknown argument " + (char) b + '.');
+					if (!argsMaps.getKey().containsKey(c)) {
+						throw new IllegalStateException("Received unknown argument " + c + '.');
 					}
 
 					if (currentArg != null) {
 						if (arguments.containsKey(currentArg)) {
-							throw new IllegalStateException("Received duplicate argument " + currentArg.shortArg + '.');
+							throw new IllegalStateException(
+									"Received duplicate argument " + currentArg.name().toLowerCase() + '.');
 						}
 
 						arguments.put(currentArg, null);
 					}
-					currentArg = argsMaps.getKey().get(b);
+					currentArg = argsMaps.getKey().get(c);
 				} else {
 					value = true;
-					current.append((char) b);
+					current.append(c);
 				}
 				break;
 			}
@@ -324,17 +232,17 @@ public class Arguments {
 
 			if (currentArg.val == ArgumentValue.NONE) {
 				throw new IllegalStateException("Received value \"" + current.toString() + "\" for argument "
-						+ currentArg.shortArg + " which doesn't take a value.");
+						+ currentArg.name().toLowerCase() + " which doesn't take a value.");
 			}
 
 			if (arguments.containsKey(currentArg)) {
-				throw new IllegalStateException("Received duplicate argument " + currentArg.shortArg + '.');
+				throw new IllegalStateException("Received duplicate argument " + currentArg.name().toLowerCase() + '.');
 			}
 
 			arguments.put(currentArg, current.toString());
 			currentArg = null;
 		} else if (longArg) {
-			Byte shortArg = argsMaps.getValue().get(current.toString());
+			Character shortArg = argsMaps.getValue().get(current.toString());
 			if (shortArg == null) {
 				throw new IllegalStateException("Received unknown argument \"" + current.toString() + "\".");
 			}
@@ -346,11 +254,11 @@ public class Arguments {
 
 		if (currentArg != null) {
 			if (currentArg.val == ArgumentValue.REQUIRED) {
-				throw new IllegalStateException("Argument " + currentArg.shortArg + " requires a value.");
+				throw new IllegalStateException("Argument " + currentArg.name().toLowerCase() + " requires a value.");
 			}
 
 			if (arguments.containsKey(currentArg)) {
-				throw new IllegalStateException("Received duplicate argument " + currentArg.shortArg + '.');
+				throw new IllegalStateException("Received duplicate argument " + currentArg.name().toLowerCase() + '.');
 			}
 
 			arguments.put(currentArg, null);
@@ -367,54 +275,28 @@ public class Arguments {
 	 * @throws IllegalStateException If there are two {@link Argument Arguments}
 	 *                               with the same short arg or long arg.
 	 */
-	private static Pair<Map<Byte, Argument>, Map<String, Byte>> getArgsMap() throws IllegalStateException {
-		HashMap<Byte, Argument> shortArgToArgument = new HashMap<Byte, Argument>(
+	private static Pair<Map<Character, Argument>, Map<String, Character>> getArgsMap() throws IllegalStateException {
+		HashMap<Character, Argument> shortArgToArgument = new HashMap<Character, Argument>(
 				(int) Math.ceil(Argument.values().length / 0.75));
-		HashMap<String, Byte> longArgToShortArg = new HashMap<String, Byte>();
+		HashMap<String, Character> longArgToShortArg = new HashMap<String, Character>();
 
 		for (Argument arg : Argument.values()) {
-			if (shortArgToArgument.containsKey((byte) arg.shortArg)) {
+			if (shortArgToArgument.containsKey(arg.shortArg)) {
 				throw new IllegalStateException(
 						"There are multiple arguments with the short arg " + arg.shortArg + '.');
 			}
 
-			shortArgToArgument.put((byte) arg.shortArg, arg);
+			shortArgToArgument.put(arg.shortArg, arg);
 			for (String longArg : arg.longArgs) {
 				if (longArgToShortArg.containsKey(longArg)) {
 					throw new IllegalStateException("Duplicate long arg \"" + longArg + "\".");
 				}
 
-				longArgToShortArg.put(longArg, (byte) arg.shortArg);
+				longArgToShortArg.put(longArg, arg.shortArg);
 			}
 		}
 
-		return new Pair<Map<Byte, Argument>, Map<String, Byte>>(shortArgToArgument, longArgToShortArg);
-	}
-
-	/**
-	 * A {@link Comparator} comparing {@link Argument Arguments} by their priority.
-	 * 
-	 * @author theodor
-	 */
-	private static class ArgumentPriorityComparator implements Comparator<Argument> {
-
-		/**
-		 * The only instance of this comparator to be used.
-		 */
-		public static final ArgumentPriorityComparator INSTANCE = new ArgumentPriorityComparator();
-
-		/**
-		 * The only constructor to create a new instance.<br/>
-		 * Private to prevent other instances being created..
-		 */
-		private ArgumentPriorityComparator() {
-		}
-
-		@Override
-		public int compare(Argument a1, Argument a2) {
-			return Short.compare(a1.prio, a2.prio);
-		}
-
+		return new Pair<Map<Character, Argument>, Map<String, Character>>(shortArgToArgument, longArgToShortArg);
 	}
 
 }
