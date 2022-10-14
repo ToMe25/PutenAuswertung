@@ -25,6 +25,11 @@ public class Arguments {
 	public boolean debug = false;
 
 	/**
+	 * Whether an argument disabling all system output was given.
+	 */
+	public boolean silent = false;
+
+	/**
 	 * Creates a new Arguments object parsing the string arguments given to the main
 	 * method.<br/>
 	 * Whether all args are separate strings, or one long string doesn't
@@ -37,14 +42,18 @@ public class Arguments {
 		String args = StringUtils.join(' ', mainArgs);
 		Map<Argument, String> arguments = parseArgs(args);
 		boolean dbg = arguments.containsKey(Argument.DEBUG) || arguments.containsKey(Argument.VERBOSE);
+		LogHandler.setDebug(dbg);
+		LogHandler.setSilent(arguments.containsKey(Argument.SILENT));
 		for (Argument arg : arguments.keySet()) {
-			arg.onReceived(this, arguments.get(arg));
-
 			if (dbg) {
 				LogHandler.out_println("Received argument " + arg.name().toLowerCase() + ".", true);
 			}
+			arg.onReceived(this, arguments.get(arg));
 		}
 
+		// In case another argument later implicitly sets one of them.
+		LogHandler.setDebug(debug);
+		LogHandler.setSilent(silent);
 	}
 
 	/**
@@ -79,7 +88,7 @@ public class Arguments {
 	 *                               </ul>
 	 */
 	public static Map<Argument, String> parseArgs(String args) throws IllegalStateException {
-		//TODO replace exceptions with custom exception.
+		// TODO replace exceptions with custom exception.
 		final Pair<Map<Character, Argument>, Map<String, Character>> argsMaps = getArgsMap();
 
 		boolean shortArgs = false;
@@ -146,12 +155,28 @@ public class Arguments {
 				}
 				break;
 			case ' ':
-				// TODO handle all spaces as potentially escaped
 				if (value) {
 					if (escaped || quoted) {
 						current.append(c);
 						escaped = false;
+						break;
 					} else if (current.length() > 0) {
+						boolean nextArg = true;
+						for (int j = i + 1; j < chars.length; j++) {
+							if (chars[j] == '-') {
+								break;
+							} else if (!Character.isWhitespace(chars[j])) {
+								nextArg = false;
+								break;
+							}
+						}
+
+						if (!nextArg) {
+							current.append(c);
+							escaped = false;
+							break;
+						}
+
 						if (currentArg == null) {
 							throw new IllegalStateException("Parsed value \"" + current.toString() + "\" without key.");
 						}
@@ -168,7 +193,9 @@ public class Arguments {
 						}
 
 						arguments.put(currentArg, current.toString());
+						current = new StringBuilder();
 						currentArg = null;
+						value = false;
 					}
 				} else if (longArg) {
 					Character shortArg = argsMaps.getValue().get(current.toString());

@@ -72,7 +72,6 @@ public class PutenAuswertung {
 		}
 
 		Arguments argHandler = new Arguments(args);
-		LogHandler.setDebug(argHandler.debug);
 
 		File antennaFile = null;
 		for (String in : DEFAULT_INPUT_FILE) {
