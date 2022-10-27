@@ -58,6 +58,7 @@ public enum Argument {
 	HELP('h', (short) 6, "help") {
 		@Override
 		public void onReceived(Arguments inst, String val) {
+			// TODO disable log file unless explicitly specified
 			HELP.printHelp();
 			System.exit(0);
 		}

@@ -56,11 +56,23 @@ public class PutenAuswertung {
 	private static final String DEFAULT_LOG_FILE = "PutenAuswertung.log";
 
 	/**
-	 * The method initially called by the JVM on program startup.
+	 * The method initially called by the JVM on program startup.<br/>
+	 * A wrapper calling {@link #run} and exiting with its returned int.
 	 * 
 	 * @param args The arguments given on program startup.
 	 */
 	public static void main(String... args) {
+		System.exit(run(args));
+	}
+
+	/**
+	 * The main method handling reading command line args, opening files, and
+	 * initializing data parsing.
+	 * 
+	 * @param args The arguments for this program.
+	 * @return The exit code of this program.
+	 */
+	public static int run(String... args) {
 		File logFile = new File(DEFAULT_LOG_FILE);
 		try {
 			LogHandler.addLogFile(logFile, true, true);
@@ -71,7 +83,14 @@ public class PutenAuswertung {
 			LogHandler.print_exception(e, "open log file", "Log file: \"%s\"", logFile.getAbsolutePath());
 		}
 
-		Arguments argHandler = new Arguments(args);
+		Arguments argHandler = null;
+		try {
+			argHandler = new Arguments(args);
+		} catch (IllegalStateException e) {
+			LogHandler.err_println(e.getMessage());
+			LogHandler.print_exception(e, "parse commandline args", "Arguments: [%s]", StringUtils.join(", ", args));
+			return 1;
+		}
 
 		File antennaFile = null;
 		for (String in : DEFAULT_INPUT_FILE) {
@@ -132,7 +151,7 @@ public class PutenAuswertung {
 		}
 
 		if (antennaFile == null || turkeyFile == null || zoneFile == null) {
-			return;
+			return 2;
 		}
 
 		IInputStreamHandler antennaHandler = null;
@@ -184,11 +203,12 @@ public class PutenAuswertung {
 
 		if (antennaHandler == null || turkeyHandler == null || zoneHandler == null || totalHandler == null
 				|| staysHandler == null) {
-			return;
+			return 2;
 		}
 
 		DataHandler.handleStreams(antennaHandler, turkeyHandler, zoneHandler, totalHandler, staysHandler, false);
 
 		LogHandler.out_println("Finished data analysis. Exiting.");
+		return 0;
 	}
 }

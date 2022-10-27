@@ -37,8 +37,10 @@ public class Arguments {
 	 * All strings are concatenated separated by spaces before parsing.
 	 * 
 	 * @param mainArgs The arguments given to the main method.
+	 * @throws IllegalStateException If parsing the arguments string(the
+	 *                               {@code mainArgs} separated by spaces) fails.
 	 */
-	public Arguments(String... mainArgs) {
+	public Arguments(String... mainArgs) throws IllegalStateException {
 		String args = StringUtils.join(' ', mainArgs);
 		Map<Argument, String> arguments = parseArgs(args);
 		boolean dbg = arguments.containsKey(Argument.DEBUG) || arguments.containsKey(Argument.VERBOSE);
@@ -109,10 +111,7 @@ public class Arguments {
 			switch (c) {
 			case '-':
 				if (value || longArg) {
-					if (escaped) {
-						current.append('\\');
-						escaped = false;
-					}
+					escaped = false;
 					current.append(c);
 				} else if (shortArgs) {
 					shortArgs = false;
@@ -124,7 +123,7 @@ public class Arguments {
 						} else {
 							if (arguments.containsKey(currentArg)) {
 								throw new IllegalStateException(
-										"Received duplicate argument " + currentArg.name().toLowerCase() + '.');
+										"Duplicate " + currentArg.name().toLowerCase() + " argument received.");
 							}
 
 							arguments.put(currentArg, null);
@@ -138,7 +137,7 @@ public class Arguments {
 			case '\'':
 				if (quoted && quote == c && !escaped) {
 					quoted = false;
-				} else if (quoted) {
+				} else if (quoted || escaped) {
 					escaped = false;
 					current.append(c);
 				} else {
@@ -147,7 +146,7 @@ public class Arguments {
 				}
 				break;
 			case '\\':
-				if (escaped) {
+				if (quoted || escaped) {
 					current.append(c);
 					escaped = false;
 				} else {
@@ -156,14 +155,20 @@ public class Arguments {
 				break;
 			case ' ':
 				if (value) {
-					if (escaped || quoted) {
+					if (escaped) {
 						current.append(c);
 						escaped = false;
 						break;
+					} else if (quoted) {
+						if (current.length() > 0 || chars[i - 1] == '"' || chars[i - 1] == '\'') {
+							current.append(c);
+							break;
+						}
 					} else if (current.length() > 0) {
 						boolean nextArg = true;
 						for (int j = i + 1; j < chars.length; j++) {
 							if (chars[j] == '-') {
+								nextArg = true;
 								break;
 							} else if (!Character.isWhitespace(chars[j])) {
 								nextArg = false;
@@ -173,12 +178,11 @@ public class Arguments {
 
 						if (!nextArg) {
 							current.append(c);
-							escaped = false;
 							break;
 						}
 
 						if (currentArg == null) {
-							throw new IllegalStateException("Parsed value \"" + current.toString() + "\" without key.");
+							throw new IllegalStateException("Received value \"" + current.toString() + "\" without key.");
 						}
 
 						if (currentArg.val == ArgumentValue.NONE) {
@@ -189,7 +193,7 @@ public class Arguments {
 
 						if (arguments.containsKey(currentArg)) {
 							throw new IllegalStateException(
-									"Received duplicate argument " + currentArg.name().toLowerCase() + '.');
+									"Duplicate " + currentArg.name().toLowerCase() + " argument received.");
 						}
 
 						arguments.put(currentArg, current.toString());
@@ -197,6 +201,10 @@ public class Arguments {
 						currentArg = null;
 						value = false;
 					}
+				} else if (escaped) {
+					throw new IllegalStateException("The space separating the \""
+							+ (longArg ? current.toString() : currentArg.name().toLowerCase())
+							+ "\" argument from its value is escaped.");
 				} else if (longArg) {
 					Character shortArg = argsMaps.getValue().get(current.toString());
 					if (shortArg == null) {
@@ -207,6 +215,24 @@ public class Arguments {
 					longArg = false;
 				} else {
 					shortArgs = false;
+				}
+
+				if (!value) {
+					boolean nextArg = true;
+					for (int j = i + 1; j < chars.length; j++) {
+						if (chars[j] == '-') {
+							nextArg = true;
+							break;
+						} else if (!Character.isWhitespace(chars[j]) && chars[j] != '"' && chars[j] != '\''
+								&& chars[j] != '\\') {
+							nextArg = false;
+							break;
+						}
+					}
+
+					if (!nextArg) {
+						value = true;
+					}
 				}
 				break;
 			default:
@@ -229,7 +255,7 @@ public class Arguments {
 					if (currentArg != null) {
 						if (arguments.containsKey(currentArg)) {
 							throw new IllegalStateException(
-									"Received duplicate argument " + currentArg.name().toLowerCase() + '.');
+									"Duplicate " + currentArg.name().toLowerCase() + " argument received.");
 						}
 
 						arguments.put(currentArg, null);
@@ -247,14 +273,14 @@ public class Arguments {
 			throw new IllegalStateException("Unterminated " + (char) quote + " in arguments.");
 		}
 
-		if (value) {
+		if (value && current.length() > 0) {
 			if (escaped) {
 				current.append('\\');
 				escaped = false;
 			}
 
 			if (currentArg == null) {
-				throw new IllegalStateException("Parsed value \"" + current.toString() + "\" without key.");
+				throw new IllegalStateException("Received value \"" + current.toString() + "\" without key.");
 			}
 
 			if (currentArg.val == ArgumentValue.NONE) {
@@ -263,7 +289,7 @@ public class Arguments {
 			}
 
 			if (arguments.containsKey(currentArg)) {
-				throw new IllegalStateException("Received duplicate argument " + currentArg.name().toLowerCase() + '.');
+				throw new IllegalStateException("Duplicate " + currentArg.name().toLowerCase() + " argument received.");
 			}
 
 			arguments.put(currentArg, current.toString());
@@ -285,7 +311,7 @@ public class Arguments {
 			}
 
 			if (arguments.containsKey(currentArg)) {
-				throw new IllegalStateException("Received duplicate argument " + currentArg.name().toLowerCase() + '.');
+				throw new IllegalStateException("Duplicate " + currentArg.name().toLowerCase() + " argument received.");
 			}
 
 			arguments.put(currentArg, null);
