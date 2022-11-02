@@ -70,7 +70,28 @@ public class ArgumentsTest {
 		assertEquals("The parsed arguments did not match expectations.", expected, args);
 	}
 
-	// TODO add tests for short args with required values.
+	/**
+	 * Test parsing a short arg requiring a value without a value.
+	 *
+	 * @throws IllegalStateException Always.
+	 */
+	@Test
+	public void shortArgRequiredNoValue() throws IllegalStateException {
+		exception.expect(IllegalStateException.class);
+		exception.expectMessage("Argument antennadata requires a value.");
+		Arguments.parseArgs("-a");
+	}
+
+	/**
+	 * Test parsing a short arg requiring a value.
+	 */
+	@Test
+	public void shortArgRequiredValue() {
+		Map<Argument, String> args = Arguments.parseArgs("-a test");
+		Map<Argument, String> expected = new HashMap<Argument, String>();
+		expected.put(Argument.ANTENNADATA, "test");
+		assertEquals("The parsed arguments did not match expectations.", expected, args);
+	}
 
 	/**
 	 * Test parsing a single long arg without a value from a string.
@@ -118,7 +139,28 @@ public class ArgumentsTest {
 		assertEquals("The parsed arguments did not match expectations.", expected, args);
 	}
 
-	// TODO add tests for required values.
+	/**
+	 * Test parsing a long arg that requires a value without one.
+	 * 
+	 * @throws IllegalStateException Always.
+	 */
+	@Test
+	public void longArgRequiredNoValue() throws IllegalStateException {
+		exception.expect(IllegalStateException.class);
+		exception.expectMessage("Argument turkeys requires a value.");
+		Arguments.parseArgs("--turkeys");
+	}
+
+	/**
+	 * Test parsing a single long arg with a required values.
+	 */
+	@Test
+	public void longArgRequiredValue() {
+		Map<Argument, String> args = Arguments.parseArgs("--turkeys Test");
+		Map<Argument, String> expected = new HashMap<Argument, String>();
+		expected.put(Argument.TURKEYS, "Test");
+		assertEquals("The parsed arguments did not match expectations.", expected, args);
+	}
 
 	/**
 	 * Test parsing multiple short args without values after a single hyphen.
@@ -146,7 +188,31 @@ public class ArgumentsTest {
 		assertEquals("The parsed arguments did not match expectations.", expected, args);
 	}
 
-	// TODO add test with a required value in the middle
+	/**
+	 * Test parsing a compound short arg with a short arg that requires a value in
+	 * the middle.
+	 * 
+	 * @throws IllegalStateException Always.
+	 */
+	@Test
+	public void compoundShortArgRequiredValueMiddle() throws IllegalStateException {
+		exception.expect(IllegalStateException.class);
+		exception.expectMessage("Argument zones requires a value.");
+		Arguments.parseArgs("-dzh");
+	}
+
+	/**
+	 * Test parsing multiple short args with one missing a required value at the
+	 * end.
+	 * 
+	 * @throws IllegalArgumentException Always.
+	 */
+	@Test
+	public void compoundShortArgRequiredValueEnd() throws IllegalArgumentException {
+		exception.expect(IllegalStateException.class);
+		exception.expectMessage("Argument zones requires a value.");
+		Arguments.parseArgs("-dvz");
+	}
 
 	/**
 	 * Test parsing multiple short args as separate arguments.
@@ -293,6 +359,18 @@ public class ArgumentsTest {
 	}
 
 	/**
+	 * Test parsing a value starting with an escaped space.
+	 */
+	@Test
+	public void spaceBeginningValueEscaped() {
+		Map<Argument, String> args = Arguments.parseArgs("-h -D \\ whatever");
+		Map<Argument, String> expected = new HashMap<Argument, String>();
+		expected.put(Argument.HELP, null);
+		expected.put(Argument.DOCS, " whatever");
+		assertEquals("The parsed arguments did not match expectations.", expected, args);
+	}
+
+	/**
 	 * Test parsing a value ending with an escaped space.
 	 */
 	@Test
@@ -307,7 +385,7 @@ public class ArgumentsTest {
 	 * Test parsing a single escaped space as a value.
 	 */
 	@Test
-	public void spaceAsValueEscaped() {
+	public void spaceAsEndValueEscaped() {
 		Map<Argument, String> args = Arguments.parseArgs("--docs \\ ");
 		Map<Argument, String> expected = new HashMap<Argument, String>();
 		expected.put(Argument.DOCS, " ");
@@ -315,14 +393,15 @@ public class ArgumentsTest {
 	}
 
 	/**
-	 * Test parsing a value starting with an escaped space.
+	 * Test parsing a single escaped space as a value with another argument after
+	 * it.
 	 */
 	@Test
-	public void spaceBeginningValueEscaped() {
-		Map<Argument, String> args = Arguments.parseArgs("-h -D \\ whatever");
+	public void spaceAsMiddleValueEscaped() {
+		Map<Argument, String> args = Arguments.parseArgs("--docs \\  -v");
 		Map<Argument, String> expected = new HashMap<Argument, String>();
-		expected.put(Argument.HELP, null);
-		expected.put(Argument.DOCS, " whatever");
+		expected.put(Argument.DOCS, " ");
+		expected.put(Argument.VERBOSE, null);
 		assertEquals("The parsed arguments did not match expectations.", expected, args);
 	}
 
@@ -501,10 +580,23 @@ public class ArgumentsTest {
 	 * Test parsing a single quoted space as a value.
 	 */
 	@Test
-	public void spaceAsValueQuoted() {
+	public void spaceAsEndValueQuoted() {
 		Map<Argument, String> args = Arguments.parseArgs("--docs \" \"");
 		Map<Argument, String> expected = new HashMap<Argument, String>();
 		expected.put(Argument.DOCS, " ");
+		assertEquals("The parsed arguments did not match expectations.", expected, args);
+	}
+
+	/**
+	 * Test parsing a quoted value containing a single space as a value with another
+	 * arg after it.
+	 */
+	@Test
+	public void spaceAsMiddleValueQuoted() {
+		Map<Argument, String> args = Arguments.parseArgs("--docs ' ' -d");
+		Map<Argument, String> expected = new HashMap<Argument, String>();
+		expected.put(Argument.DOCS, " ");
+		expected.put(Argument.DEBUG, null);
 		assertEquals("The parsed arguments did not match expectations.", expected, args);
 	}
 
@@ -540,6 +632,28 @@ public class ArgumentsTest {
 		Map<Argument, String> args = Arguments.parseArgs("-D 'test -test'");
 		Map<Argument, String> expected = new HashMap<Argument, String>();
 		expected.put(Argument.DOCS, "test -test");
+		assertEquals("The parsed arguments did not match expectations.", expected, args);
+	}
+
+	/**
+	 * Test an argument starting with an escaped hyphen.
+	 */
+	@Test
+	public void argumentValueHyphenStartEscaped() {
+		Map<Argument, String> args = Arguments.parseArgs("-D \\-test");
+		Map<Argument, String> expected = new HashMap<Argument, String>();
+		expected.put(Argument.DOCS, "-test");
+		assertEquals("The parsed arguments did not match expectations.", expected, args);
+	}
+
+	/**
+	 * Test an argument after an argument requiring a value being parsed as a value.
+	 */
+	@Test
+	public void argumentValueRequiredHyphenStart() {
+		Map<Argument, String> args = Arguments.parseArgs("-t --debug");
+		Map<Argument, String> expected = new HashMap<Argument, String>();
+		expected.put(Argument.TURKEYS, "--debug");
 		assertEquals("The parsed arguments did not match expectations.", expected, args);
 	}
 
@@ -585,6 +699,42 @@ public class ArgumentsTest {
 		Map<Argument, String> args = Arguments.parseArgs("-D something\\");
 		Map<Argument, String> expected = new HashMap<Argument, String>();
 		expected.put(Argument.DOCS, "something\\");
+		assertEquals("The parsed arguments did not match expectations.", expected, args);
+	}
+
+	/**
+	 * Test the last argument having an explicit empty value.
+	 */
+	@Test
+	public void emptyValueEnd() {
+		Map<Argument, String> args = Arguments.parseArgs("--docs \"\"");
+		Map<Argument, String> expected = new HashMap<Argument, String>();
+		expected.put(Argument.DOCS, "");
+		assertEquals("The parsed arguments did not match expectations.", expected, args);
+	}
+
+	/**
+	 * Test parsing an empty pair of quotes to pass an empty value.
+	 */
+	@Test
+	public void emptyValueMiddle() {
+		Map<Argument, String> args = Arguments.parseArgs("--docs '' -v");
+		Map<Argument, String> expected = new HashMap<Argument, String>();
+		expected.put(Argument.DOCS, "");
+		expected.put(Argument.VERBOSE, null);
+		assertEquals("The parsed arguments did not match expectations.", expected, args);
+	}
+
+	/**
+	 * Test an argument requiring a value with another arg after it accepting an
+	 * empty value.
+	 */
+	@Test
+	public void emptyRequiredValue() {
+		Map<Argument, String> args = Arguments.parseArgs("-t \"\" -v");
+		Map<Argument, String> expected = new HashMap<Argument, String>();
+		expected.put(Argument.TURKEYS, "");
+		expected.put(Argument.VERBOSE, null);
 		assertEquals("The parsed arguments did not match expectations.", expected, args);
 	}
 

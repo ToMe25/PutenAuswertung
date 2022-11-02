@@ -162,6 +162,7 @@ public class Arguments {
 					if (currentArg != null) {
 						if (currentArg.val == ArgumentValue.REQUIRED) {
 							value = true;
+							current.append(c);
 						} else {
 							if (arguments.containsKey(currentArg)) {
 								throw new IllegalStateException(
@@ -206,7 +207,7 @@ public class Arguments {
 							current.append(c);
 							break;
 						}
-					} else if (current.length() > 0) {
+					} else if (current.length() > 0 || chars[i - 1] == '"' || chars[i - 1] == '\'') {
 						boolean nextArg = true;
 						for (int j = i + 1; j < chars.length; j++) {
 							if (chars[j] == '-') {
@@ -262,13 +263,20 @@ public class Arguments {
 
 				if (!value) {
 					boolean nextArg = true;
+					char firstQuote = 0;
 					for (int j = i + 1; j < chars.length; j++) {
 						if (chars[j] == '-') {
 							nextArg = true;
 							break;
 						} else if (!Character.isWhitespace(chars[j])) {
 							nextArg = false;
-							if (chars[j] != '"' && chars[j] != '\'' && chars[j] != '\\') {
+							if (chars[j] == '"' || chars[j] == '\'') {
+								if (firstQuote == 0) {
+									firstQuote = chars[j];
+								} else if (chars[j] == firstQuote) {
+									break;
+								}
+							} else {
 								break;
 							}
 						}
@@ -317,7 +325,8 @@ public class Arguments {
 			throw new IllegalStateException("Unterminated " + (char) quote + " in arguments.");
 		}
 
-		if (value && current.length() > 0) {
+		if (value && (current.length() > 0
+				|| (chars.length > 1 && (chars[chars.length - 2] == '"' || chars[chars.length - 2] == '\'')))) {
 			if (escaped) {
 				current.append('\\');
 				escaped = false;

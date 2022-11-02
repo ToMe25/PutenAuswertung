@@ -253,7 +253,8 @@ public enum Argument {
 	 *             one.<br/>
 	 *             Also {@code null} if this arg has an optional value, and none was
 	 *             specified.<br/>
-	 *             This value cannot be empty, it can, however, contain only spaces.
+	 *             This is only an empty string if it was explicitly specified as
+	 *             such, by passing an empty pair of quotes.
 	 * @throws IllegalArgumentException If {@code val} does not match the
 	 *                                  requirements for this argument.
 	 */
