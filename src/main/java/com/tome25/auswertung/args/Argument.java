@@ -72,7 +72,14 @@ public enum Argument {
 		@Override
 		public void onReceived(Arguments inst, String val) {
 			File target = new File("PutenAuswertung-docs");
-			if (val != null && !val.isEmpty()) {
+
+			if (val.trim().isEmpty()) {
+				val = null;
+				LogHandler
+						.err_println("Docs target directory only contained whitespace characters. Using current dir.");
+			}
+
+			if (val != null) {
 				target = new File(new File(val), "PutenAuswertung-docs");
 			}
 
@@ -93,6 +100,51 @@ public enum Argument {
 			return new String[] { "Extracts this programs documentation from the jar, then exits.",
 					"Puts the documentation in the specified directory, if any.",
 					"If none is specified, puts it in the current directory." };
+		}
+	},
+	ANTENNADATA('a', ArgumentValue.REQUIRED, "FILE", (short) 5, "antenna-data") {// TODO add "antennadata" long arg
+		@Override
+		public void onReceived(Arguments inst, String val) throws IllegalArgumentException {
+			if (val == null || val.trim().isEmpty()) {
+				throw new IllegalArgumentException("Antenna Data input file name was empty.");
+			}
+
+			inst.antennaDataInput = val;
+		}
+
+		@Override
+		public String[] getDescription() {
+			return new String[] { "Sets the file this program should read antenna data records from." };
+		}
+	},
+	TURKEYS('t', ArgumentValue.REQUIRED, "FILE", (short) 5, "turkeys") {
+		@Override
+		public void onReceived(Arguments inst, String val) throws IllegalArgumentException {
+			if (val == null || val.trim().isEmpty()) {
+				throw new IllegalArgumentException("Turkeys input file name was empty.");
+			}
+
+			inst.turkeysInput = val;
+		}
+
+		@Override
+		public String[] getDescription() {
+			return new String[] { "Sets the file to read the turkey to transponder mappings from." };
+		}
+	},
+	ZONES('z', ArgumentValue.REQUIRED, "FILE", (short) 5, "zones") {// TODO add "areas" long arg
+		@Override
+		public void onReceived(Arguments inst, String val) throws IllegalArgumentException {
+			if (val == null || val.trim().isEmpty()) {
+				throw new IllegalArgumentException("Zones input file name was empty.");
+			}
+
+			inst.zonesInput = val;
+		}
+
+		@Override
+		public String[] getDescription() {
+			return new String[] { "Sets the file to read zone to antenna mappings from." };
 		}
 	};
 
@@ -195,14 +247,17 @@ public enum Argument {
 	 * The method handling everything that needs to be done if this argument is
 	 * found.
 	 * 
+	 * @param inst The {@link Arguments} instance to use.<br/>
+	 *             Potentially changed by this method.
 	 * @param val  The value for this argument, or {@code null} if it doesn't have
 	 *             one.<br/>
 	 *             Also {@code null} if this arg has an optional value, and none was
-	 *             specified.
-	 * @param inst The {@link Arguments} instance to use.<br/>
-	 *             Potentially changed by this method.
+	 *             specified.<br/>
+	 *             This value cannot be empty, it can, however, contain only spaces.
+	 * @throws IllegalArgumentException If {@code val} does not match the
+	 *                                  requirements for this argument.
 	 */
-	public abstract void onReceived(Arguments inst, String val);
+	public abstract void onReceived(Arguments inst, String val) throws IllegalArgumentException;
 
 	/**
 	 * Gets the description for this argument.<br/>

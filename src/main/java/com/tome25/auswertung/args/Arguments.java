@@ -2,6 +2,7 @@ package com.tome25.auswertung.args;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -30,6 +31,32 @@ public class Arguments {
 	public boolean silent = false;
 
 	/**
+	 * The specified antenna data input file.<br/>
+	 * Or {@code null} if not specified.
+	 */
+	public String antennaDataInput = null;
+
+	/**
+	 * The specified turkeys input file.<br/>
+	 * Or {@code null} if not specified.
+	 */
+	public String turkeysInput = null;
+
+	/**
+	 * The specified zones input file.<br/>
+	 * Or {@code null} if not specified.
+	 */
+	public String zonesInput = null;
+
+	/**
+	 * A set containing all the specified arguments, in case one argument needs to
+	 * check whether another argument was specified.<br/>
+	 * This is populated before the arguments {@link Argument#onReceived onReceived}
+	 * is called.
+	 */
+	protected final HashSet<Argument> arguments;
+
+	/**
 	 * Creates a new Arguments object parsing the string arguments given to the main
 	 * method.<br/>
 	 * Whether all args are separate strings, or one long string doesn't
@@ -46,16 +73,31 @@ public class Arguments {
 		boolean dbg = arguments.containsKey(Argument.DEBUG) || arguments.containsKey(Argument.VERBOSE);
 		LogHandler.setDebug(dbg);
 		LogHandler.setSilent(arguments.containsKey(Argument.SILENT));
+
+		this.arguments = new HashSet<Argument>(arguments.keySet());
+		boolean error = false;
 		for (Argument arg : arguments.keySet()) {
 			if (dbg) {
 				LogHandler.out_println("Received argument " + arg.name().toLowerCase() + ".", true);
 			}
-			arg.onReceived(this, arguments.get(arg));
+
+			try {
+				arg.onReceived(this, arguments.get(arg));
+			} catch (IllegalArgumentException e) {
+				error = true;
+				LogHandler.err_println(e.getMessage());
+				LogHandler.print_exception(e, "handle " + arg.name().toLowerCase() + " argument",
+						"Value: \"%s\", Arguments String: %s", arguments.get(arg), args);
+			}
 		}
 
 		// In case another argument later implicitly sets one of them.
 		LogHandler.setDebug(debug);
 		LogHandler.setSilent(silent);
+
+		if (error) {
+			throw new IllegalStateException("Handling one or more arguments failed.");
+		}
 	}
 
 	/**
@@ -182,7 +224,8 @@ public class Arguments {
 						}
 
 						if (currentArg == null) {
-							throw new IllegalStateException("Received value \"" + current.toString() + "\" without key.");
+							throw new IllegalStateException(
+									"Received value \"" + current.toString() + "\" without key.");
 						}
 
 						if (currentArg.val == ArgumentValue.NONE) {
@@ -223,10 +266,11 @@ public class Arguments {
 						if (chars[j] == '-') {
 							nextArg = true;
 							break;
-						} else if (!Character.isWhitespace(chars[j]) && chars[j] != '"' && chars[j] != '\''
-								&& chars[j] != '\\') {
+						} else if (!Character.isWhitespace(chars[j])) {
 							nextArg = false;
-							break;
+							if (chars[j] != '"' && chars[j] != '\'' && chars[j] != '\\') {
+								break;
+							}
 						}
 					}
 

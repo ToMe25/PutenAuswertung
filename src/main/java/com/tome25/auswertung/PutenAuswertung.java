@@ -2,6 +2,7 @@ package com.tome25.auswertung;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 
 import com.tome25.auswertung.args.Arguments;
 import com.tome25.auswertung.stream.FileInputStreamHandler;
@@ -93,61 +94,126 @@ public class PutenAuswertung {
 		}
 
 		File antennaFile = null;
-		for (String in : DEFAULT_INPUT_FILE) {
-			antennaFile = new File(in);
-			if (antennaFile.exists() && antennaFile.isFile()) {
-				break;
+		if (argHandler.antennaDataInput != null) {
+			antennaFile = new File(argHandler.antennaDataInput);
+
+			if (!antennaFile.exists() || !antennaFile.isFile()) {
+				antennaFile = null;
+				LogHandler.err_println("The antenna data input file \"" + argHandler.antennaDataInput
+						+ "\" doesn't exist or isn't a file.");
 			}
-
-			antennaFile = new File(in.charAt(0) + in.substring(1).toLowerCase());
-			if (antennaFile.exists() && antennaFile.isFile()) {
-				break;
-			}
-
-			antennaFile = new File(in.toLowerCase());
-			if (antennaFile.exists() && antennaFile.isFile()) {
-				break;
-			}
-
-			antennaFile = null;
-		}
-
-		if (antennaFile == null) {
-			LogHandler.err_println("No antenna records input file found. This program looks for a file called \""
-					+ DEFAULT_INPUT_FILE[0] + "\" in the directory you are executing this command in.");
 		} else {
-			LogHandler.out_println(
-					String.format("Using antenna records input file \"%s\".", antennaFile.getAbsolutePath()));
+			for (String in : DEFAULT_INPUT_FILE) {
+				antennaFile = new File(in);
+				if (antennaFile.exists() && antennaFile.isFile()) {
+					break;
+				}
+
+				antennaFile = new File(in.charAt(0) + in.substring(1).toLowerCase());
+				if (antennaFile.exists() && antennaFile.isFile()) {
+					break;
+				}
+
+				antennaFile = new File(in.toLowerCase());
+				if (antennaFile.exists() && antennaFile.isFile()) {
+					break;
+				}
+
+				antennaFile = null;
+			}
+
+			if (antennaFile == null) {
+				LogHandler.err_println("No antenna records input file found. This program looks for a file called \""
+						+ DEFAULT_INPUT_FILE[0] + "\" in the directory you are executing this command in.");
+			}
 		}
 
-		File turkeyFile = new File(DEFAULT_PUTEN_FILE);
-		if (!turkeyFile.exists() || !turkeyFile.isFile()) {
-			turkeyFile = new File(DEFAULT_PUTEN_FILE.toLowerCase());
+		if (antennaFile != null) {
+			try {
+				LogHandler.out_println(
+						String.format("Using antenna records input file \"%s\".", antennaFile.getCanonicalPath()));
+			} catch (IOException e) {
+				LogHandler.err_println("An error occurred while getting a files canonical path.");
+				LogHandler.print_exception(e, "get canonical path", "File: %s", antennaFile);
+			}
+		}
+
+		File turkeyFile = null;
+		if (argHandler.turkeysInput != null) {
+			turkeyFile = new File(argHandler.turkeysInput);
+
 			if (!turkeyFile.exists() || !turkeyFile.isFile()) {
 				turkeyFile = null;
-				LogHandler
-						.err_println("No turkey transponder mappings file found. This program expects a file called \""
-								+ DEFAULT_PUTEN_FILE + "\" in the directory you are executing this command in.");
+				LogHandler.err_println(
+						"The turkey input file \"" + argHandler.turkeysInput + "\" doesn't exist or isn't a file.");
+			}
+		} else {
+			turkeyFile = new File(DEFAULT_PUTEN_FILE);
+			if (!turkeyFile.exists() || !turkeyFile.isFile()) {
+				turkeyFile = new File(DEFAULT_PUTEN_FILE.toLowerCase());
+				if (!turkeyFile.exists() || !turkeyFile.isFile()) {
+					turkeyFile = null;
+					LogHandler.err_println(
+							"No turkey transponder mappings file found. This program expects a file called \""
+									+ DEFAULT_PUTEN_FILE + "\" in the directory you are executing this command in.");
+				}
 			}
 		}
 
 		if (turkeyFile != null) {
-			LogHandler.out_println(
-					String.format("Using turkey mappings input file \"%s\".", turkeyFile.getAbsolutePath()));
+			try {
+				LogHandler.out_println(
+						String.format("Using turkey mappings input file \"%s\".", turkeyFile.getCanonicalPath()));
+			} catch (IOException e) {
+				LogHandler.err_println("An error occurred while getting a files canonical path.");
+				LogHandler.print_exception(e, "get canonical path", "File: %s", turkeyFile);
+			}
 		}
 
-		File zoneFile = new File(DEFAULT_BEREICHE_FILE);
-		if (!zoneFile.exists() || !zoneFile.isFile()) {
-			zoneFile = new File(DEFAULT_BEREICHE_FILE.toLowerCase());
+		File zoneFile = null;
+		if (argHandler.zonesInput != null) {
+			zoneFile = new File(argHandler.zonesInput);
+
 			if (!zoneFile.exists() || !zoneFile.isFile()) {
 				zoneFile = null;
-				LogHandler.err_println("No zone mappings file found. This program expects a file called \""
-						+ DEFAULT_BEREICHE_FILE + "\" in the directory you are executing this command in.");
+				LogHandler.err_println(
+						"The zone input file \"" + argHandler.zonesInput + "\" doesn't exist or isn't a file.");
+			}
+		} else {
+			zoneFile = new File(DEFAULT_BEREICHE_FILE);
+			if (!zoneFile.exists() || !zoneFile.isFile()) {
+				zoneFile = new File(DEFAULT_BEREICHE_FILE.toLowerCase());
+				if (!zoneFile.exists() || !zoneFile.isFile()) {
+					zoneFile = null;
+					LogHandler.err_println("No zone mappings file found. This program expects a file called \""
+							+ DEFAULT_BEREICHE_FILE + "\" in the directory you are executing this command in.");
+				}
 			}
 		}
 
 		if (zoneFile != null) {
-			LogHandler.out_println(String.format("Using zone mappings input file \"%s\".", zoneFile.getAbsolutePath()));
+			try {
+				LogHandler.out_println(
+						String.format("Using zone mappings input file \"%s\".", zoneFile.getCanonicalPath()));
+			} catch (IOException e) {
+				LogHandler.err_println("An error occurred while getting a files canonical path.");
+				LogHandler.print_exception(e, "get canonical path", "File: %s", zoneFile);
+			}
+		}
+
+		if (antennaFile != null && !antennaFile.canRead()) {
+			LogHandler.err_println("The antenna records input file cannot be read.");
+			antennaFile = null;
+		}
+
+		if (turkeyFile != null && !turkeyFile.canRead()) {
+			LogHandler.err_println("The turkey mappings input file cannot be read.");
+			turkeyFile = null;
+		}
+
+		if (zoneFile != null && !zoneFile.canRead()) {
+			LogHandler.err_println("The zone mappings input file cannot be read.");
+			zoneFile = null;
 		}
 
 		if (antennaFile == null || turkeyFile == null || zoneFile == null) {

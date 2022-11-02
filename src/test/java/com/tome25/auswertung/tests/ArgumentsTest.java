@@ -304,6 +304,17 @@ public class ArgumentsTest {
 	}
 
 	/**
+	 * Test parsing a single escaped space as a value.
+	 */
+	@Test
+	public void spaceAsValueEscaped() {
+		Map<Argument, String> args = Arguments.parseArgs("--docs \\ ");
+		Map<Argument, String> expected = new HashMap<Argument, String>();
+		expected.put(Argument.DOCS, " ");
+		assertEquals("The parsed arguments did not match expectations.", expected, args);
+	}
+
+	/**
 	 * Test parsing a value starting with an escaped space.
 	 */
 	@Test
@@ -483,6 +494,17 @@ public class ArgumentsTest {
 		Map<Argument, String> args = Arguments.parseArgs("-D 'test  '");
 		Map<Argument, String> expected = new HashMap<Argument, String>();
 		expected.put(Argument.DOCS, "test  ");
+		assertEquals("The parsed arguments did not match expectations.", expected, args);
+	}
+
+	/**
+	 * Test parsing a single quoted space as a value.
+	 */
+	@Test
+	public void spaceAsValueQuoted() {
+		Map<Argument, String> args = Arguments.parseArgs("--docs \" \"");
+		Map<Argument, String> expected = new HashMap<Argument, String>();
+		expected.put(Argument.DOCS, " ");
 		assertEquals("The parsed arguments did not match expectations.", expected, args);
 	}
 
