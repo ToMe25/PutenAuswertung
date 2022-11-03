@@ -49,6 +49,18 @@ public class Arguments {
 	public String zonesInput = null;
 
 	/**
+	 * The specified totals output file.<br/>
+	 * Or {@code null} if not specified.
+	 */
+	public String totalsOutput = null;
+
+	/**
+	 * The specified stays output file.<br/>
+	 * Or {@code null} if not specified.
+	 */
+	public String staysOutput = null;
+
+	/**
 	 * A set containing all the specified arguments, in case one argument needs to
 	 * check whether another argument was specified.<br/>
 	 * This is populated before the arguments {@link Argument#onReceived onReceived}

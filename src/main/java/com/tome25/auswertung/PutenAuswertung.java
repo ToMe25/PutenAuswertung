@@ -220,6 +220,120 @@ public class PutenAuswertung {
 			return 2;
 		}
 
+		File totalFile = null;
+		if (argHandler.totalsOutput != null) {
+			totalFile = new File(argHandler.totalsOutput);
+		} else {
+			totalFile = new File(DEFAULT_TOTALS_FILE);
+		}
+
+		if (totalFile.exists() && !totalFile.isFile()) {
+			totalFile = null;
+			LogHandler.err_println(
+					"The totals output file \"" + argHandler.totalsOutput + "\" exists, but isn't a file.");
+		} else {
+			try {
+				LogHandler.out_println("Writing totals to file \"" + totalFile.getCanonicalPath() + "\".");
+			} catch (IOException e) {
+				LogHandler.err_println("An error occurred while getting a files canonical path.");
+				LogHandler.print_exception(e, "get canonical path", "File: %s", totalFile);
+			}
+		}
+
+		File stayFile = null;
+		if (argHandler.staysOutput != null) {
+			stayFile = new File(argHandler.staysOutput);
+		} else {
+			stayFile = new File(DEFAULT_STAYS_FILE);
+		}
+
+		if (stayFile.exists() && !stayFile.isFile()) {
+			stayFile = null;
+			LogHandler.err_println(
+					"The zone stays output file \"" + argHandler.staysOutput + "\" exists, but isn't a file.");
+		} else {
+			try {
+				LogHandler.out_println("Writing zone stays to file \"" + stayFile.getCanonicalPath() + "\".");
+			} catch (IOException e) {
+				LogHandler.err_println("An error occurred while getting a files canonical path.");
+				LogHandler.print_exception(e, "get canonical path", "File: %s", stayFile);
+			}
+		}
+
+		if (totalFile != null && !totalFile.exists()) {
+			File parent = totalFile.getAbsoluteFile().getParentFile();
+			try {
+				if (parent.exists() && !parent.isDirectory()) {
+					LogHandler.err_println(
+							"The directory in which the total output file should be created exists, but isn't a directory.");
+					LogHandler.print_debug_info("Totals File: %s, Parent Dir: %s", totalFile, parent);
+					totalFile = null;
+				}
+
+				if (totalFile != null && !parent.exists()) {
+					if (parent.mkdirs()) {
+						LogHandler.out_println("Created output directory \"" + parent.getCanonicalPath() + "\".", true);
+					} else {
+						LogHandler.err_println("Failed to create the directory to put the totals file into.");
+						LogHandler.print_debug_info("Totals File: %s, Parent Dir: %s", totalFile, parent);
+						totalFile = null;
+					}
+				}
+
+				if (totalFile != null) {
+					totalFile.createNewFile();
+				}
+			} catch (IOException e) {
+				LogHandler.err_println("Failed to create totals output file \"" + totalFile.getAbsolutePath() + "\".");
+				LogHandler.print_exception(e, "create output file", "File: %s", totalFile);
+				totalFile = null;
+			}
+		}
+
+		if (stayFile != null && !stayFile.exists()) {
+			File parent = stayFile.getAbsoluteFile().getParentFile();
+			try {
+				if (parent.exists() && !parent.isDirectory()) {
+					LogHandler.err_println(
+							"The directory in which the stays output file should be created exists, but isn't a directory.");
+					LogHandler.print_debug_info("Stays File: %s, Parent Dir: %s", stayFile, parent);
+					stayFile = null;
+				}
+
+				if (stayFile != null && !parent.exists()) {
+					if (parent.mkdirs()) {
+						LogHandler.out_println("Created output directory \"" + parent.getCanonicalPath() + "\".", true);
+					} else {
+						LogHandler.err_println("Failed to create the directory to put the stays file into.");
+						LogHandler.print_debug_info("Stays File: %s, Parent Dir: %s", stayFile, parent);
+						stayFile = null;
+					}
+				}
+
+				if (stayFile != null) {
+					stayFile.createNewFile();
+				}
+			} catch (IOException e) {
+				LogHandler.err_println("Failed to create stays output file \"" + stayFile.getAbsolutePath() + "\".");
+				LogHandler.print_exception(e, "create output file", "File: %s", stayFile);
+				stayFile = null;
+			}
+		}
+
+		if (totalFile != null && !totalFile.canWrite()) {
+			LogHandler.err_println("Cannot write to the totals output file.");
+			totalFile = null;
+		}
+
+		if (stayFile != null && !stayFile.canWrite()) {
+			LogHandler.err_println("Cannot write to the zone stays output file.");
+			stayFile = null;
+		}
+
+		if (totalFile == null || stayFile == null) {
+			return 3;
+		}
+
 		IInputStreamHandler antennaHandler = null;
 		try {
 			antennaHandler = new FileInputStreamHandler(antennaFile);
@@ -255,21 +369,25 @@ public class PutenAuswertung {
 
 		IOutputStreamHandler totalHandler = null;
 		try {
-			totalHandler = new FileOutputStreamHandler(new File(DEFAULT_TOTALS_FILE), false, true);
+			totalHandler = new FileOutputStreamHandler(totalFile, false, true);
 		} catch (FileNotFoundException e) {
 			LogHandler.err_println("Faild to open file output stream for generated totals data.");
+			LogHandler.print_exception(e, "init totals output stream handler", "Totals file: \"%s\"",
+					totalFile.getAbsolutePath());
 		}
 
 		IOutputStreamHandler staysHandler = null;
 		try {
-			staysHandler = new FileOutputStreamHandler(new File(DEFAULT_STAYS_FILE), false, true);
+			staysHandler = new FileOutputStreamHandler(stayFile, false, true);
 		} catch (FileNotFoundException e) {
-			LogHandler.err_println("Faild to open file output stream for generated stays data.");
+			LogHandler.err_println("Faild to open file output stream for generated zone stays data.");
+			LogHandler.print_exception(e, "init stays output stream handler", "Stays file: \"%s\"",
+					stayFile.getAbsolutePath());
 		}
 
 		if (antennaHandler == null || turkeyHandler == null || zoneHandler == null || totalHandler == null
 				|| staysHandler == null) {
-			return 2;
+			return 4;
 		}
 
 		DataHandler.handleStreams(antennaHandler, turkeyHandler, zoneHandler, totalHandler, staysHandler, false);

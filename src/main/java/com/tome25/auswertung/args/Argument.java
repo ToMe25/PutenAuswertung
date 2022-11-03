@@ -146,6 +146,36 @@ public enum Argument {
 		public String[] getDescription() {
 			return new String[] { "Sets the file to read zone to antenna mappings from." };
 		}
+	},
+	TOTALS('T', ArgumentValue.REQUIRED, "FILE", (short) 5, "totals") {
+		@Override
+		public void onReceived(Arguments inst, String val) throws IllegalArgumentException {
+			if (val == null || val.trim().isEmpty()) {
+				throw new IllegalArgumentException("Totals output file name was empty.");
+			}
+
+			inst.totalsOutput = val;
+		}
+
+		@Override
+		public String[] getDescription() {
+			return new String[] { "Sets the file to write the total zone times to." };
+		}
+	},
+	STAYS('S', ArgumentValue.REQUIRED, "FILE", (short) 5, "stays") {
+		@Override
+		public void onReceived(Arguments inst, String val) throws IllegalArgumentException {
+			if (val == null || val.trim().isEmpty()) {
+				throw new IllegalArgumentException("Stays output file name was empty.");
+			}
+
+			inst.staysOutput = val;
+		}
+
+		@Override
+		public String[] getDescription() {
+			return new String[] { "Sets the file to write the individual zone stays to." };
+		}
 	};
 
 	/**
