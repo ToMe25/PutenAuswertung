@@ -1,5 +1,7 @@
 package com.tome25.auswertung.args;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -7,6 +9,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import com.tome25.auswertung.LogHandler;
+import com.tome25.auswertung.PutenAuswertung;
 import com.tome25.auswertung.args.Argument.ArgumentValue;
 import com.tome25.auswertung.utils.MapUtils;
 import com.tome25.auswertung.utils.Pair;
@@ -61,6 +64,12 @@ public class Arguments {
 	public String staysOutput = null;
 
 	/**
+	 * The specified file to write logging messages to.<br/>
+	 * {@code null} if no log file should be created.
+	 */
+	public File logFile = new File(PutenAuswertung.DEFAULT_LOG_FILE);
+
+	/**
 	 * A set containing all the specified arguments, in case one argument needs to
 	 * check whether another argument was specified.<br/>
 	 * This is populated before the arguments {@link Argument#onReceived onReceived}
@@ -85,6 +94,23 @@ public class Arguments {
 		boolean dbg = arguments.containsKey(Argument.DEBUG) || arguments.containsKey(Argument.VERBOSE);
 		LogHandler.setDebug(dbg);
 		LogHandler.setSilent(arguments.containsKey(Argument.SILENT));
+
+		if (arguments.containsKey(Argument.LOGFILE)) {
+			LogHandler.removeLogFile(logFile, true, true);
+			if (logFile.length() == 0) {
+				logFile.delete();
+			}
+
+			String val = arguments.get(Argument.LOGFILE);
+			if (val != null && !val.trim().isEmpty()) {
+				try {
+					LogHandler.addLogFile(new File(val), true, true);
+				} catch (FileNotFoundException e) {
+					LogHandler.err_println("Failed to open log file \"" + new File(val).getAbsolutePath() + "\".");
+					LogHandler.print_exception(e, "add log file", "Log File: %s", val);
+				}
+			}
+		}
 
 		this.arguments = new HashSet<Argument>(arguments.keySet());
 		boolean error = false;

@@ -54,7 +54,7 @@ public class PutenAuswertung {
 	/**
 	 * The default file to write the system log to.
 	 */
-	private static final String DEFAULT_LOG_FILE = "PutenAuswertung.log";
+	public static final String DEFAULT_LOG_FILE = "PutenAuswertung.log";
 
 	/**
 	 * The method initially called by the JVM on program startup.<br/>
@@ -74,14 +74,14 @@ public class PutenAuswertung {
 	 * @return The exit code of this program.
 	 */
 	public static int run(String... args) {
-		File logFile = new File(DEFAULT_LOG_FILE);
+		File logFile = new File(DEFAULT_LOG_FILE);// TODO don't open log file before reading args, unless errors occur.
 		try {
 			LogHandler.addLogFile(logFile, true, true);
 			LogHandler.overrideSysErr();
 			LogHandler.overrideSysOut();
 		} catch (FileNotFoundException e) {
 			LogHandler.err_println("Failed to open log file.");
-			LogHandler.print_exception(e, "open log file", "Log file: \"%s\"", logFile.getAbsolutePath());
+			LogHandler.print_exception(e, "add log file", "Log file: \"%s\"", logFile.getAbsolutePath());
 		}
 
 		Arguments argHandler = null;

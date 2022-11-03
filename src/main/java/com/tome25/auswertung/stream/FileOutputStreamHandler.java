@@ -58,12 +58,9 @@ public class FileOutputStreamHandler implements IOutputStreamHandler {
 	 *                               than a regular file, does not exist but cannot
 	 *                               be created, or cannot be opened for any other
 	 *                               reason
-	 * @throws SecurityException     if a security manager exists and its
-	 *                               {@code checkWrite} method denies write access
-	 *                               to the file.
 	 * @throws NullPointerException  if the given output file is {@code null}.
 	 */
-	public FileOutputStreamHandler(File output) throws FileNotFoundException, SecurityException, NullPointerException {
+	public FileOutputStreamHandler(File output) throws FileNotFoundException, NullPointerException {
 		this(output, false);
 	}
 
@@ -77,13 +74,9 @@ public class FileOutputStreamHandler implements IOutputStreamHandler {
 	 *                               than a regular file, does not exist but cannot
 	 *                               be created, or cannot be opened for any other
 	 *                               reason
-	 * @throws SecurityException     if a security manager exists and its
-	 *                               {@code checkWrite} method denies write access
-	 *                               to the file.
 	 * @throws NullPointerException  if the given output file is {@code null}.
 	 */
-	public FileOutputStreamHandler(File output, boolean writeTemp)
-			throws FileNotFoundException, SecurityException, NullPointerException {
+	public FileOutputStreamHandler(File output, boolean writeTemp) throws FileNotFoundException, NullPointerException {
 		this(output, writeTemp, false);
 	}
 
@@ -101,13 +94,10 @@ public class FileOutputStreamHandler implements IOutputStreamHandler {
 	 *                               than a regular file, does not exist but cannot
 	 *                               be created, or cannot be opened for any other
 	 *                               reason
-	 * @throws SecurityException     if a security manager exists and its
-	 *                               {@code checkWrite} method denies write access
-	 *                               to the file.
 	 * @throws NullPointerException  if the given output file is {@code null}.
 	 */
 	public FileOutputStreamHandler(File output, boolean writeTemp, boolean autoFlush)
-			throws FileNotFoundException, SecurityException, NullPointerException {
+			throws FileNotFoundException, NullPointerException {
 		Objects.requireNonNull(output, "The file to write to can't be null.");
 
 		output_file = output;

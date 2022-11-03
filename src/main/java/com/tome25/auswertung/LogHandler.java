@@ -4,10 +4,13 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
+import java.util.HashMap;
 import java.util.IllegalFormatException;
+import java.util.Map;
 import java.util.Objects;
 
 import com.tome25.auswertung.stream.MultiOutputStream;
+import com.tome25.auswertung.utils.Pair;
 
 /**
  * The class responsible for handling the printing of status and debug info.
@@ -60,6 +63,14 @@ public class LogHandler {
 	 * The system error stream from before the LogHandler overrode it.
 	 */
 	private static PrintStream oldErr = null;
+
+	/**
+	 * A map containing the registered log files.<br/>
+	 * The structure is {@code file -> stream, err, out}.<br/>
+	 * {@code err} and {@code out} representing whether this file is currently being
+	 * written to by error/output.
+	 */
+	private static Map<File, Pair<FileOutputStream, Pair<Boolean, Boolean>>> logFiles = new HashMap<File, Pair<FileOutputStream, Pair<Boolean, Boolean>>>();
 
 	/**
 	 * Writes the given string to the system output if not in silent mode.<br/>
@@ -215,6 +226,17 @@ public class LogHandler {
 	public static void setOutput(PrintStream out) {
 		output = out;
 		LogHandler.out = null;
+
+		for (File logFile : logFiles.keySet()) {
+			Pair<Boolean, Boolean> used = logFiles.get(logFile).getValue();
+			if (used.getValue()) {// log file is used for output
+				if (!used.getKey()) {// log file isn't used for error
+					logFiles.remove(logFile);
+				} else {
+					used.setValue(false);
+				}
+			}
+		}
 	}
 
 	/**
@@ -238,6 +260,17 @@ public class LogHandler {
 	public static void setError(PrintStream err) {
 		error = err;
 		LogHandler.err = null;
+
+		for (File logFile : logFiles.keySet()) {
+			Pair<Boolean, Boolean> used = logFiles.get(logFile).getValue();
+			if (used.getKey()) {// log file is used for error
+				if (!used.getValue()) {// log file isn't used for output
+					logFiles.remove(logFile);
+				} else {
+					logFiles.get(logFile).setValue(new Pair<Boolean, Boolean>(false, true));
+				}
+			}
+		}
 	}
 
 	/**
@@ -286,18 +319,24 @@ public class LogHandler {
 	 * @throws FileNotFoundException if the file exists but is a directory rather
 	 *                               than a regular file, does not exist but cannot
 	 *                               be created, or cannot be opened for any other
-	 *                               reason
-	 * @throws SecurityException     if a security manager exists and its
-	 *                               {@code checkWrite} method denies write access
-	 *                               to the file.
+	 *                               reason.
 	 * @throws NullPointerException  If {@code log} is {@code null}.
+	 * @see #removeLogFile(File, boolean, boolean)
 	 */
 	public static void addLogFile(File log, boolean out, boolean err)
-			throws FileNotFoundException, SecurityException, NullPointerException {
+			throws FileNotFoundException, NullPointerException {
 		Objects.requireNonNull(log, "The log file to add can't be null.");
 
 		if (!out && !err) {
 			return;
+		}
+
+		if (!log.exists()) {
+			if (!log.getAbsoluteFile().getParentFile().exists()) {
+				if (!log.getAbsoluteFile().getParentFile().mkdirs()) {
+					throw new FileNotFoundException("Failed to create parent directory.");
+				}
+			}
 		}
 
 		FileOutputStream fiout = new FileOutputStream(log);
@@ -318,6 +357,48 @@ public class LogHandler {
 			} else {
 				LogHandler.out.addStream(fiout);
 			}
+		}
+
+		logFiles.put(log,
+				new Pair<FileOutputStream, Pair<Boolean, Boolean>>(fiout, new Pair<Boolean, Boolean>(err, out)));
+	}
+
+	/**
+	 * Removes the given log file from the list of log files to write to.<br/>
+	 * Only works if it was set using {@link #addLogFile} and {@link #setOutput} for
+	 * output or {@link #setError} for error wasn't called since then.
+	 * 
+	 * @param log The file to no longer log to.
+	 * @param out Whether to remove the file from system output log, if possible.
+	 * @param err Whether to remove the file from system error log, if possible.
+	 * @throws NullPointerException If {@code log} is {@code null}.
+	 * @see #addLogFile(File, boolean, boolean)
+	 */
+	public static void removeLogFile(File log, boolean out, boolean err) throws NullPointerException {
+		Objects.requireNonNull(log, "The log file to remove can't be null.");
+
+		if (!out && !err) {
+			return;
+		}
+
+		FileOutputStream logOut = logFiles.get(log).getKey();
+
+		if (err) {
+			if (LogHandler.err != null) {
+				LogHandler.err.removeStream(logOut);
+			}
+			logFiles.get(log).setValue(new Pair<Boolean, Boolean>(false, logFiles.get(log).getValue().getValue()));
+		}
+
+		if (out) {
+			if (LogHandler.out != null) {
+				LogHandler.out.removeStream(logOut);
+			}
+			logFiles.get(log).getValue().setValue(false);
+		}
+
+		if ((out && err) || (!logFiles.get(log).getValue().getKey() && !logFiles.get(log).getValue().getValue())) {
+			logFiles.remove(log);
 		}
 	}
 

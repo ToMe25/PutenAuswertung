@@ -50,7 +50,7 @@ public class MultiOutputStream extends OutputStream {
 			this.streams = new ArrayList<OutputStream>();
 		}
 
-		this.streams = Arrays.asList(streams);
+		this.streams = new ArrayList<OutputStream>(Arrays.asList(streams));
 	}
 
 	/**

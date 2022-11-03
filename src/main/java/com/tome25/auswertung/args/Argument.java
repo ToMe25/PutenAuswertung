@@ -58,8 +58,15 @@ public enum Argument {
 	HELP('h', (short) 6, "help") {
 		@Override
 		public void onReceived(Arguments inst, String val) {
-			// TODO disable log file unless explicitly specified
+			if (!inst.arguments.contains(LOGFILE)) {
+				LogHandler.resetSysOut();
+			}
+
 			HELP.printHelp();
+
+			if (inst.logFile.length() == 0) {
+				inst.logFile.delete();
+			}
 			System.exit(0);
 		}
 
@@ -175,6 +182,23 @@ public enum Argument {
 		@Override
 		public String[] getDescription() {
 			return new String[] { "Sets the file to write the individual zone stays to." };
+		}
+	},
+	LOGFILE('l', ArgumentValue.OPTIONAL, "FILE", (short) 6, "log-file") {// TODO split into error and output one
+		@Override
+		public void onReceived(Arguments inst, String val) throws IllegalArgumentException {
+			if (val == null || val.trim().isEmpty()) {
+				inst.logFile = null;
+				LogHandler.out_println("Log file disabled. No logging/error information will be written to a file.");
+			} else {
+				inst.logFile = new File(val);
+			}
+		}
+
+		@Override
+		public String[] getDescription() {
+			return new String[] { "Sets the file to write the logging messages to.",
+					"Use without a value to disable creating a log file entirely." };
 		}
 	};
 
