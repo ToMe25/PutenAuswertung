@@ -80,7 +80,7 @@ public enum Argument {
 		public void onReceived(Arguments inst, String val) {
 			File target = new File("PutenAuswertung-docs");
 
-			if (val.trim().isEmpty()) {
+			if (val != null && val.trim().isEmpty()) {
 				val = null;
 				LogHandler
 						.err_println("Docs target directory only contained whitespace characters. Using current dir.");

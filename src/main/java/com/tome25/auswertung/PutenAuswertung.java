@@ -93,6 +93,8 @@ public class PutenAuswertung {
 			return 1;
 		}
 
+		LogHandler.out_println("Debug argument received, printing additional status/error messages.", true);
+
 		File antennaFile = null;
 		if (argHandler.antennaDataInput != null) {
 			antennaFile = new File(argHandler.antennaDataInput);
