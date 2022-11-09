@@ -1,9 +1,9 @@
 # Input-Dateien
 Dieses Programm nutzt drei(3) Input-Dateien.  
 Diese enthalten die notwendigen Daten für die Auswertung.  
-Weitere Konfiguration wird später mittels [Programm-Argumenten](usage.md#argumente) möglich sein.
+Weitere Konfiguration ist mittels [Programm-Argumenten](arguments.md) möglich.
 
-Die drei Input Dateien sind:
+Die drei Input-Dateien sind:
  * [Puten.csv](#puten-csv)
  * [Bereiche.csv](#bereiche-csv)
  * [AntennenDaten.csv](#antennendaten-csv)
@@ -12,8 +12,8 @@ Die ersten zwei dieser Dateien werden in dieser Dokumentation "Zuordnungs-Dateie
 Dies ist da diese Zuordnungen von Ids zu anderen Ids enthalten.  
 Diese werden an einigen Stellen gleich behandelt.
 
-## Allgemeines
-Hier ein Paar Informationen die für alle Input Dateien gelten.
+## Allgemein
+Hier ein Paar Informationen die für alle Input-Dateien gelten.
 
  1. Jeder der Buchstaben des Namens muss entweder der groß/klein Schreibung von oben entsprechen, oder klein geschrieben sein.
  2. Das Dateiformat muss [CSV](formats.md#csv) sein.

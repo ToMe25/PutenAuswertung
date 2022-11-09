@@ -42,7 +42,7 @@ Danach wird die Anzahl der Bereichswechsel aktualisiert.
 **Falls die Pute noch nicht aufgezeichnet wurde**, wird eine neue interne Repräsentation für diese Pute erzeugt.  
 Diese wird so behandelt, als ob sie sich seit dem Anfang der Aufzeichnungen im ersten Bereich in dem sie Aufgezeichnet wurde aufgehalten hätte.  
 Egal ob dies mehr als fünf Minuten sind.  
-Der Anfang der Aufzeichnungen kann je nach [Konfiguration](usage.md#argumente) der Zeitpunkt der ersten Aufzeichnung der ersten Pute, oder der Anfang des Tages der ersten Aufzeichnung dieser Pute sein.
+Der Anfang der Aufzeichnungen kann je nach [Konfiguration](arguments.md) der Zeitpunkt der ersten Aufzeichnung der ersten Pute, oder der Anfang des Tages der ersten Aufzeichnung dieser Pute sein.
 
 ### Wenn eine Aufzeichnung ein anderes Datum hat
 Was in diesem Fall passiert hängt davon ab ob das neue Datum der nächste Tag nach dem letzten Datum ist oder nicht.

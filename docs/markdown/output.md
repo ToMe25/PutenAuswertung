@@ -1,6 +1,6 @@
 # Ergebnis-Dateien
 Dieses Programm schreibt die Ergebnisse der Verarbeitung der [Inputdaten](input.md) in zwei Ergebnis-Dateien.  
-Die Namen und Positionen dieser wird später mittels [Programm-Argumenten](usage.md#argumente) zu ändern sein.
+Die Namen und Positionen dieser können mittels [Programm-Argumenten](arguments.md) geändert werden.
 
 Ergebnis-Dateien:
  * [PutenAuswertungZeiten.csv](#putenauswertungzeiten-csv)
@@ -13,7 +13,6 @@ Wie auch die [Input-Dateien](input.md) sind die Ergebnis-Dateien im [CSV Format]
 
 **Achtung:** Das Programm überschreibt momentan die Ergebnis-Dateien ohne Nachfrage.
 
-
 ## PutenAuswertungZeiten.csv
 Die `PutenAuswertungZeiten.csv` Datei enthält die Zeiten die eine Pute an einem Tag in einem Bereich verbracht hat.  
 Sie hat die folgenden Spalten in dieser Reihenfolge:
@@ -23,7 +22,7 @@ Sie hat die folgenden Spalten in dieser Reihenfolge:
  4. Aufenthalt in Zone X: Eine Spalte pro Zone für die Zeit die diese Pute an diesem Tag in dem Bereich verbracht hat.
 
 Die Datei `PutenAuswertungZeiten.csv` enthält eine Zeile pro Pute aus den [Input-Dateien](input.md) pro Tag an dem sie als Existent gewertet wurde.  
-Je nach [Konfiguration](usage.md#argumente) können Puten auch an Tagen an denen sie nicht Registriert wurden als existent gewertet werden.
+Je nach [Konfiguration](arguments.md) können Puten auch an Tagen an denen sie nicht Registriert wurden als existent gewertet werden.
 
 Die Datei enthält außerdem eine Zeile pro Pute für die Summe der Zeiten für alle Tage.  
 Diese Zeilen haben `total` als Datum.
