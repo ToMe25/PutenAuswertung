@@ -12,6 +12,7 @@ Es erzeugt Aufenthaltszeiten pro Bereich pro Tag, und eine Liste der Aufenthalte
     * [Nutzung](arguments.md#nutzung)
        * [Kurze Argumente](arguments.md#kurze-argumente)
        * [Werte](arguments.md#werte)
+          * [Leerzeichen](arguments.md#leerzeichen)
     * [Argument Erklärung](arguments.md#argument-erklaerung)
     * [Skripte](arguments.md#skripte)
        * [Windows](arguments.md#windows)

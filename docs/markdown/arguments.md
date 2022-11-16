@@ -5,6 +5,7 @@ Die Konfiguration dieses Programms erfolgt über Argumente die bei der Ausführu
  * [Nutzung](#nutzung)
     * [Kurze Argumente](#kurze-argumente)
     * [Werte](#werte)
+       * [Leerzeichen](#leerzeichen)
  * [Argument Erklärung](#argument-erklaerung)
  * [Skripte](#skripte)
     * [Windows](#windows)
@@ -121,6 +122,66 @@ Options:
  -S, --stays <FILE>         Sets the file to write the individual zone stays to.
  -l, --log-file [FILE]      Sets the file to write the logging messages to.
                             Use without a value to disable creating a log file entirely.
+```
+
+#### Leerzeichen
+Da Leerzeichen als Trennzeichen zwischen Argumenten und Werten verwendet werden, können diese unintuitives verhalten verursachen.  
+Dieses Programm versucht automatisch zu erkennen ob ein Leerzeichen teil eines Argumentes, oder ein Trennzeichen ist.  
+Dies ist allerdings nicht immer Fehlerfrei möglich.
+
+Ein Teil dieses Problems ist dadurch verursacht wie Terminals Leerzeichen in Argumenten behandeln.  
+Dies ist sowohl auf Linux als auch modernem Windows der Fall.
+
+Das Problem ist das Terminals den Befehl bei jedem Leerzeichen trennen, und dann dem Programm alle nicht leeren Segmente als Argumente übergeben.  
+Dies bedeutet das aus Sicht des Programms 
+
+```
+java -jar PutenAuswertung.jar -D Some Dir
+```
+
+und
+
+```
+java -jar PutenAuswertung.jar -D Some  Dir
+```
+
+identisch sind.  
+In beiden fällen bekommt das Programm `-D`, `Some` und `Dir` als Argumente.  
+Das Programm nimmt dann an das `Some` und `Dir` ein Wert sind, und verwendet das Verzeichnis `Some Dir`.
+
+Das Programm könnte auch, zum Beispiel, 10 Leerzeichen nicht von einem einzelnen unterscheiden.
+
+Die Lösung für dieses Problem ist den Wert in Anführungszeichen zu setzen.  
+Beispiel:
+
+```
+java -jar PutenAuswertung.jar -D "Some  Dir"
+```
+Dies teilt dem Terminal mit das diese Leerzeichen nicht zum trennen des Wertes verwendet werden sollen.
+
+Eine Alternative ist es vor die Leerzeichen je einen Backslash zu machen.  
+Auch diese teilt dem Terminal mit den Wert hier nicht zu trennen.
+Beispiel:
+
+```
+java -jar PutenAuswertung.jar -D Some\ \ Dir
+```
+
+Sowohl diese Anführungszeichen als auch einfache Backslashes werden dann vom Terminal entfernt.  
+Das heißt das folgende würde nicht funktionieren:
+
+```
+java -jar PutenAuswertung.jar -D Some\ -Dir
+```
+
+Da der Backslash vom Terminal entfernt wird, erkennt das Programm nicht das das `-Dir` noch Teil des Wertes ist, und versucht dies als separates Argument zu verarbeiten.
+
+Der einfachste Weg dies zu vermeiden ist zwei Backslashes vor entweder das Leerzeichen direkt vor dem Bindestrich, oder vor den Bindestrich zu setzen.  
+In diesem Fall entfernt das Terminal einen Backslash, und das Programm interpretiert den anderen als Markierung das hier keine Argument-Trennung vorliegt.  
+Beispiel:
+
+```
+java -jar PutenAuswertung.jar -D Some \\-Dir
 ```
 
 ## Skripte
