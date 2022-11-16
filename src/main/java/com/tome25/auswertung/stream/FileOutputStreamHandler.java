@@ -10,8 +10,8 @@ import java.util.Collection;
 import java.util.Objects;
 
 import com.tome25.auswertung.CSVHandler;
-import com.tome25.auswertung.LogHandler;
 import com.tome25.auswertung.TurkeyInfo;
+import com.tome25.auswertung.log.LogHandler;
 
 /**
  * The class responsible for handling data output to a

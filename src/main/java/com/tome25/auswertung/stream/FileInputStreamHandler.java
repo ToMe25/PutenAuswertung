@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Objects;
 
-import com.tome25.auswertung.LogHandler;
+import com.tome25.auswertung.log.LogHandler;
 
 /**
  * This class handles reading the content of a file line by line.

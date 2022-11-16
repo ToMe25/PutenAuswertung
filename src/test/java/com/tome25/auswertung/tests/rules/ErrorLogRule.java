@@ -14,7 +14,7 @@ import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
-import com.tome25.auswertung.LogHandler;
+import com.tome25.auswertung.log.LogHandler;
 import com.tome25.auswertung.stream.MultiOutputStream;
 
 /**

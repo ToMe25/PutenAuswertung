@@ -11,7 +11,7 @@ import java.util.List;
 
 import org.junit.rules.TemporaryFolder;
 
-import com.tome25.auswertung.LogHandler;
+import com.tome25.auswertung.log.LogHandler;
 import com.tome25.auswertung.stream.FileInputStreamHandler;
 import com.tome25.auswertung.stream.FileOutputStreamHandler;
 import com.tome25.auswertung.utils.Pair;

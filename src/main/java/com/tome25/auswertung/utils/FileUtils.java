@@ -15,7 +15,7 @@ import java.util.Stack;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
-import com.tome25.auswertung.LogHandler;
+import com.tome25.auswertung.log.LogHandler;
 
 /**
  * A class containing utilities related to file handling.

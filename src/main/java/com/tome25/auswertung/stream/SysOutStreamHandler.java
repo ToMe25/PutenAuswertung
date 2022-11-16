@@ -3,8 +3,8 @@ package com.tome25.auswertung.stream;
 import java.util.Collection;
 
 import com.tome25.auswertung.CSVHandler;
-import com.tome25.auswertung.LogHandler;
 import com.tome25.auswertung.TurkeyInfo;
+import com.tome25.auswertung.log.LogHandler;
 
 /**
  * Handles writing generated data to the system output stream.<br/>

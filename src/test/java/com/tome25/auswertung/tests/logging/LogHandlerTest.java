@@ -16,7 +16,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import com.tome25.auswertung.LogHandler;
+import com.tome25.auswertung.log.LogHandler;
 
 /**
  * A class containing unit tests related to this projects {@link LogHandler}.

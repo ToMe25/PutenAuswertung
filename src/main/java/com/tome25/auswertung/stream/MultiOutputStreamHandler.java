@@ -4,8 +4,8 @@ import java.io.IOException;
 import java.util.Collection;
 
 import com.tome25.auswertung.CSVHandler;
-import com.tome25.auswertung.LogHandler;
 import com.tome25.auswertung.TurkeyInfo;
+import com.tome25.auswertung.log.LogHandler;
 import com.tome25.auswertung.utils.StringUtils;
 
 /**

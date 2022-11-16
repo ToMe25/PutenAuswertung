@@ -1,8 +1,9 @@
-package com.tome25.auswertung;
+package com.tome25.auswertung.log;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.IllegalFormatException;
@@ -65,12 +66,133 @@ public class LogHandler {
 	private static PrintStream oldErr = null;
 
 	/**
+	 * The thread used as a {@link Runtime#addShutdownHook ShutdownHook} to write
+	 * the log cache to disk in case of crashes.
+	 */
+	private static Thread shThread = null;
+
+	/**
+	 * The {@link Runtime#addShutdownHook ShutdownHook} writing the log cache
+	 * contents to the disk if the program crashes.
+	 */
+	private static LogCacheShutdownHook cacheShutdownHook = null;
+
+	/**
 	 * A map containing the registered log files.<br/>
 	 * The structure is {@code file -> stream, err, out}.<br/>
 	 * {@code err} and {@code out} representing whether this file is currently being
 	 * written to by error/output.
 	 */
 	private static Map<File, Pair<FileOutputStream, Pair<Boolean, Boolean>>> logFiles = new HashMap<File, Pair<FileOutputStream, Pair<Boolean, Boolean>>>();
+
+	/**
+	 * Initializes a log cache that is automatically written to the log file if the
+	 * program crashes.
+	 * 
+	 * Overrides the default system output streams with a {@link MultiOutputStream}
+	 * writing to the default output streams, and a log cache.<br/>
+	 * And adds a {@link Runtime#addShutdownHook ShutdownHook} to write said cache
+	 * to the default log file if the program crashes before a different log file is
+	 * specified.
+	 * 
+	 * @param defaultLogFile The default log file to write to in case of a crash.
+	 */
+	public static void initLogCache(String defaultLogFile) {
+		File logFile = new File(defaultLogFile);
+		cacheShutdownHook = new LogCacheShutdownHook(logFile);
+		shThread = new Thread(cacheShutdownHook);
+
+		// Remove all previous syserr/sysout overrides
+		resetSysErr();
+		resetSysOut();
+
+		// override syserr/sysout to write to the actual program output streams and the
+		// cache
+		System.setErr(
+				new PrintStream(new MultiOutputStream(cacheShutdownHook.getCacheStream(), (oldErr = System.err))));
+		System.setOut(
+				new PrintStream(new MultiOutputStream(cacheShutdownHook.getCacheStream(), (oldOut = System.out))));
+
+		// Write the cache to disk if the program crashes
+		Runtime.getRuntime().addShutdownHook(shThread);
+
+		// Make the LogHandler write to the current system streams
+		setError(null);
+		setOutput(null);
+	}
+
+	/**
+	 * Disables the log cache, removes its shutdown hook, adds the new log files,
+	 * and writes the log cache content to the new output log file.
+	 * 
+	 * @param newOutFile The file to write {@link System#out} messages to.
+	 * @param newErrFile The file to write {@link System#err} messages to.
+	 */
+	public static void removeLogCache(File newOutFile, File newErrFile) {
+		if (cacheShutdownHook == null) {
+			err_println("Failed to remove log cache, since it wasn't enabled.");
+			print_debug_info("Cache Hook: %s, shThread: %s, oldErr: %s, oldOut: %s", cacheShutdownHook, shThread,
+					oldErr, oldOut);
+			return;
+		}
+
+		if (oldErr == null || oldOut == null) {
+			err_println("Coudn't write to original outptu streams, since they aren't stored.");
+			print_debug_info("Cache Hook: %s, shThread: %s, oldErr: %s, oldOut: %s", cacheShutdownHook, shThread,
+					oldErr, oldOut);
+		}
+
+		// Make the log handler only write to actual program output streams
+		setError(oldErr);
+		setOutput(oldOut);
+
+		// Add the new log files
+		if (newErrFile != null) {
+			try {
+				addLogFile(newErrFile, false, true);
+			} catch (FileNotFoundException e) {
+				err_println("Failed to open error log file. Error log will not be written to a file.");
+				print_exception(e, "add log file", "Log file: \"%s\"", newErrFile.getAbsolutePath());
+			}
+		}
+
+		if (newOutFile != null) {
+			try {
+				addLogFile(newOutFile, true, false);
+			} catch (FileNotFoundException e) {
+				err_println("Failed to open output log file. System output will nut be written to a file.");
+				print_exception(e, "add log file", "Log file: \"%s\"", newOutFile.getAbsolutePath());
+			}
+		}
+
+		// Write cache to new out file
+		if (newOutFile != null) {
+			try {
+				FileOutputStream logFileStream = logFiles.get(newOutFile).getKey();
+				logFileStream.write(cacheShutdownHook.getCacheStream().toByteArray());
+			} catch (IOException e) {
+				err_println("Failed to write cached log messages to new log file.");
+				print_exception(e, "write cache to disk", "Log file: \"%s\"", newOutFile.getAbsolutePath());
+			}
+		}
+
+		// Disable shutdown hook
+		Runtime.getRuntime().removeShutdownHook(shThread);
+
+		// Override system streams
+		overrideSysErr();
+		overrideSysOut();
+
+		// Remove and close shutdown hook and its cache stream
+		try {
+			cacheShutdownHook.getCacheStream().close();
+		} catch (IOException e) {
+			err_println("Failed to close log cache.", true);
+			print_exception(e, "close log cache stream", null);
+		}
+		cacheShutdownHook = null;
+		shThread = null;
+	}
 
 	/**
 	 * Writes the given string to the system output if not in silent mode.<br/>
@@ -339,9 +461,19 @@ public class LogHandler {
 			}
 		}
 
-		FileOutputStream fiout = new FileOutputStream(log);
+		FileOutputStream fiout = null;
+		boolean isErr = false;
+		boolean isOut = false;
 
-		if (err) {
+		if (logFiles.containsKey(log)) {
+			fiout = logFiles.get(log).getKey();
+			isErr = logFiles.get(log).getValue().getKey();
+			isOut = logFiles.get(log).getValue().getValue();
+		} else {
+			fiout = new FileOutputStream(log);
+		}
+
+		if (err && !isErr) {
 			if (LogHandler.err == null) {
 				LogHandler.err = new MultiOutputStream(error == null ? System.err : error, fiout);
 				error = new PrintStream(LogHandler.err);
@@ -350,7 +482,7 @@ public class LogHandler {
 			}
 		}
 
-		if (out) {
+		if (out && !isOut) {
 			if (LogHandler.out == null) {
 				LogHandler.out = new MultiOutputStream(output == null ? System.out : output, fiout);
 				output = new PrintStream(LogHandler.out);
@@ -359,8 +491,12 @@ public class LogHandler {
 			}
 		}
 
-		logFiles.put(log,
-				new Pair<FileOutputStream, Pair<Boolean, Boolean>>(fiout, new Pair<Boolean, Boolean>(err, out)));
+		if (logFiles.containsKey(log)) {
+			logFiles.get(log).setValue(new Pair<Boolean, Boolean>(err || isErr, out || isOut));
+		} else {
+			logFiles.put(log,
+					new Pair<FileOutputStream, Pair<Boolean, Boolean>>(fiout, new Pair<Boolean, Boolean>(err, out)));
+		}
 	}
 
 	/**

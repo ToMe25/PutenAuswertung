@@ -91,7 +91,6 @@ Die Tabelle in diesem Abschnitt beschreibt die Funktion aller Argumente.
 |               |                  | Wenn kein Wert übergeben wird, wird keine Logdatei geschrieben.                                               |  
 |               |                  | Wenn dieses Argument nicht verwendet wird, wird die Datei `PutenAuswertung.log` verwendet.                    |  
 |               |                  | **Achtung:** Die Logdatei wird ohne nachfrage überschrieben.                                                  |  
-|               |                  | **Achtung:** Wenn dieses Argument verwendet wird, wird die `PutenAuswertung.log` Datei gelöscht.              |  
 
 Hier das Ergebnis von `--help`:
 

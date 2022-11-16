@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.jar.Manifest;
 
-import com.tome25.auswertung.LogHandler;
+import com.tome25.auswertung.log.LogHandler;
 import com.tome25.auswertung.utils.FileUtils;
 
 /**

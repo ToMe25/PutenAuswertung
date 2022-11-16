@@ -9,9 +9,9 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import com.tome25.auswertung.LogHandler;
 import com.tome25.auswertung.args.Argument;
 import com.tome25.auswertung.args.Arguments;
+import com.tome25.auswertung.log.LogHandler;
 
 /**
  * A class containing tests verifying the functionality of the command line

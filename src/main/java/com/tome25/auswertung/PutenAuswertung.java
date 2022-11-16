@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import com.tome25.auswertung.args.Arguments;
+import com.tome25.auswertung.log.LogHandler;
 import com.tome25.auswertung.stream.FileInputStreamHandler;
 import com.tome25.auswertung.stream.FileOutputStreamHandler;
 import com.tome25.auswertung.stream.IInputStreamHandler;
@@ -74,15 +75,7 @@ public class PutenAuswertung {
 	 * @return The exit code of this program.
 	 */
 	public static int run(String... args) {
-		File logFile = new File(DEFAULT_LOG_FILE);// TODO don't open log file before reading args, unless errors occur.
-		try {
-			LogHandler.addLogFile(logFile, true, true);
-			LogHandler.overrideSysErr();
-			LogHandler.overrideSysOut();
-		} catch (FileNotFoundException e) {
-			LogHandler.err_println("Failed to open log file.");
-			LogHandler.print_exception(e, "add log file", "Log file: \"%s\"", logFile.getAbsolutePath());
-		}
+		LogHandler.initLogCache(DEFAULT_LOG_FILE);
 
 		Arguments argHandler = null;
 		try {
@@ -94,6 +87,8 @@ public class PutenAuswertung {
 		}
 
 		LogHandler.out_println("Debug argument received, printing additional status/error messages.", true);
+
+		LogHandler.removeLogCache(argHandler.logFile, argHandler.logFile);
 
 		File antennaFile = null;
 		if (argHandler.antennaDataInput != null) {
