@@ -55,6 +55,7 @@
           <configuration>
             <archive>
               <manifest>
+                <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                 <mainClass>com.tome25.auswertung.PutenAuswertung</mainClass>
               </manifest>
             </archive>

@@ -59,12 +59,15 @@ Die Tabelle in diesem Abschnitt beschreibt die Funktion aller Argumente.
 |               |                  | Hilfreich um Programmfehler zu beheben, wahrscheinlich nicht hilfreich für Anwender.                          |  
 |               |                  | `--debug` und `--verbose` verursachen identisches verhalten.                                                  |  
 | -h            | `--help`         | Schreibt einen Hilfetext in die Konsole und beendet das Programm.                                             |  
-|               |                  | Schreibt nur eine log Datei, wenn diese explizit angegeben wurde.                                             |  
+|               |                  | Schreibt nur eine Logdatei, wenn diese explizit angegeben wurde.                                              |  
 |               |                  | Schreibt den Hilfetext sogar wenn `--silent` ist angegeben.                                                   |  
 |               |                  | Der Hilfetext den dieses Argument generiert kann unter dieser Tabelle gefunden werden.                        |  
+| -V            | `--version`      | Schreibt die Version des Programms in die Konsole und beendet das Programm.                                   |  
+|               |                  | Erzeugt nur eine Logdatei wenn diese explizit definiert wurde.                                                |  
+|               |                  | Funktioniert selbst wenn `--silent` angegeben ist.                                                            |  
 | -s            | `--silent`       | Deaktiviert alle [Programm-Statusmeldungen], inklusive Fehlermeldungen.                                       |  
 |               |                  | Dies betrifft sowohl das Terminal als auch die Logdatei.                                                      |  
-|               |                  | Die einzige momentan nicht betroffenen Programm-Meldung ist der `--help` Hilfetext.                           |  
+|               |                  | Der `--help` Hilfetext und die `--version` Versions-Informationen sind hiervon unbetroffen.                   |  
 | -D            | `--docs`         | Extrahiert diese Dokumentation von der Jar-Datei dieses Programms.                                            |  
 |               |                  | Diese wird dann in einen Ordner mit dem Namen `PutenAuswertung-docs` im aktuellen Verzeichnis geschrieben.    |  
 |               |                  | Kann als Optionalen Wert ein Verzeichnis übergeben.                                                           |  

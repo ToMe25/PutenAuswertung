@@ -52,27 +52,44 @@ public enum Argument {
 		public String[] getDescription() {
 			return new String[] { "Disables all log output from this program.",
 					"This includes both the standard out/err(shown in your terminal) as well as log files.",
-					"The only thing currently not included in this is the help text from --help." };
+					"The help text and version info still get written." };
 		}
 	},
 	HELP('h', (short) 6, "help") {
 		@Override
 		public void onReceived(Arguments inst, String val) {
-			if (!inst.arguments.contains(LOGFILE)) {
-				LogHandler.resetSysOut();
+			if (inst.arguments.contains(LOGFILE)) {
+				LogHandler.removeLogCache(inst.logFile, inst.logFile);
+			} else {
+				LogHandler.removeLogCache(null, null);
 			}
 
 			HELP.printHelp();
-
-			if (inst.logFile.length() == 0) {
-				inst.logFile.delete();
-			}
 			System.exit(0);
 		}
 
 		@Override
 		public String[] getDescription() {
 			return new String[] { "Prints this help text and exits.", "Gets written even with --silent." };
+		}
+	},
+	VERSION('V', (short) 6, "version") {
+		@Override
+		public void onReceived(Arguments inst, String val) throws IllegalArgumentException {
+			if (inst.arguments.contains(LOGFILE)) {
+				LogHandler.removeLogCache(inst.logFile, inst.logFile);
+			} else {
+				LogHandler.removeLogCache(null, null);
+			}
+
+			VERSION.printVersion();
+			System.exit(0);
+		}
+
+		@Override
+		public String[] getDescription() {
+			return new String[] { "Prints version info about this program and exits.",
+					"Gets written even with --silent." };
 		}
 	},
 	DOCS('D', ArgumentValue.OPTIONAL, "DIRECTORY", (short) 6, "docs") {
@@ -477,5 +494,30 @@ public enum Argument {
 				}
 			}
 		}
+	}
+
+	/**
+	 * Prints the version text for this program to the log.
+	 */
+	private void printVersion() {
+		String classPath = System.getProperty("java.class.path");
+		if (classPath == null || classPath.trim().isEmpty()) {
+			classPath = "PutenAuswertung.jar";
+		}
+
+		while (classPath.endsWith(File.separator)) {
+			classPath = classPath.substring(0, classPath.length() - 1);
+		}
+
+		classPath = classPath.substring(classPath.lastIndexOf(File.separatorChar) + 1);
+
+		String version = this.getClass().getPackage().getImplementationVersion();
+		if (version == null || version.trim().isEmpty()) {
+			version = "UNKNOWN";
+		}
+
+		System.out.print(classPath);
+		System.out.print(' ');
+		System.out.println(version);
 	}
 }
