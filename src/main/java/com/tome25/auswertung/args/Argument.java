@@ -500,23 +500,30 @@ public enum Argument {
 	 * Prints the version text for this program to the log.
 	 */
 	private void printVersion() {
-		String classPath = System.getProperty("java.class.path");
-		if (classPath == null || classPath.trim().isEmpty()) {
-			classPath = "PutenAuswertung.jar";
-		}
+		String name = this.getClass().getPackage().getImplementationTitle();
+		if (name == null || name.trim().isEmpty()) {
+			name = System.getProperty("java.class.path");
+			if (name == null) {
+				name = "";
+			}
 
-		while (classPath.endsWith(File.separator)) {
-			classPath = classPath.substring(0, classPath.length() - 1);
-		}
+			while (name.endsWith(File.separator)) {
+				name = name.substring(0, name.length() - 1);
+			}
 
-		classPath = classPath.substring(classPath.lastIndexOf(File.separatorChar) + 1);
+			name = name.substring(name.lastIndexOf(File.separatorChar) + 1);
+
+			if (name.trim().isEmpty()) {
+				name = "PutenAuswertung";
+			}
+		}
 
 		String version = this.getClass().getPackage().getImplementationVersion();
 		if (version == null || version.trim().isEmpty()) {
 			version = "UNKNOWN";
 		}
 
-		System.out.print(classPath);
+		System.out.print(name);
 		System.out.print(' ');
 		System.out.println(version);
 	}
