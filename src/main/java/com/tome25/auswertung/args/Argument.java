@@ -126,7 +126,7 @@ public enum Argument {
 					"If none is specified, puts it in the current directory." };
 		}
 	},
-	ANTENNADATA('a', ArgumentValue.REQUIRED, "FILE", (short) 5, "antenna-data") {// TODO add "antennadata" long arg
+	ANTENNADATA('a', ArgumentValue.REQUIRED, "FILE", (short) 5, "antenna-data", "antennadata") {
 		@Override
 		public void onReceived(Arguments inst, String val) throws IllegalArgumentException {
 			if (val == null || val.trim().isEmpty()) {
@@ -156,7 +156,7 @@ public enum Argument {
 			return new String[] { "Sets the file to read the turkey to transponder mappings from." };
 		}
 	},
-	ZONES('z', ArgumentValue.REQUIRED, "FILE", (short) 5, "zones") {// TODO add "areas" long arg
+	ZONES('z', ArgumentValue.REQUIRED, "FILE", (short) 5, "zones", "areas") {
 		@Override
 		public void onReceived(Arguments inst, String val) throws IllegalArgumentException {
 			if (val == null || val.trim().isEmpty()) {
@@ -201,7 +201,8 @@ public enum Argument {
 			return new String[] { "Sets the file to write the individual zone stays to." };
 		}
 	},
-	LOGFILE('l', ArgumentValue.OPTIONAL, "FILE", (short) 6, "log-file") {// TODO split into error and output one
+	LOGFILE('l', ArgumentValue.OPTIONAL, "FILE", (short) 6, "log-file", "logfile") {// TODO split into error and output
+																					// one
 		@Override
 		public void onReceived(Arguments inst, String val) throws IllegalArgumentException {
 			if (val == null || val.trim().isEmpty()) {
@@ -358,6 +359,29 @@ public enum Argument {
 		 * The argument requires a value.
 		 */
 		REQUIRED;
+
+		/**
+		 * Generates the display string for the given value name and this value type.
+		 * 
+		 * @param valueName The name for the display string.
+		 * @return The generated display string.
+		 * @throws NullPointerException If {@code valueName} is {@code null} and this
+		 *                              isn't {@link #NONE}.
+		 */
+		public String getDisplayString(String valueName) throws NullPointerException {
+			if (this == NONE) {
+				return "";
+			}
+
+			Objects.requireNonNull(valueName, "The value name can't be null if the type isn't NONE.");
+
+			StringBuilder displayString = new StringBuilder();
+			displayString.append(this == OPTIONAL ? '[' : '<');
+			displayString.append(valueName);
+			displayString.append(this == OPTIONAL ? ']' : '>');
+
+			return displayString.toString();
+		}
 	}
 
 	/**
@@ -443,29 +467,36 @@ public enum Argument {
 			argStr.append(" -");
 			argStr.append(arg.shortArg);
 
-			// FIXME can't handle multiple longargs yet.
 			if (arg.longArgs.length > 0) {
 				argStr.append(", --");
 				argStr.append(arg.longArgs[0]);
+				if (arg.longArgs.length > 1) {
+					argStr.append(',');
+				}
 			}
 
 			if (arg.val != ArgumentValue.NONE) {
 				argStr.append(' ');
-				if (arg.val == ArgumentValue.OPTIONAL) {
-					argStr.append('[');
-				} else {
-					argStr.append('<');
-				}
-				argStr.append(arg.valName);
-				if (arg.val == ArgumentValue.OPTIONAL) {
-					argStr.append(']');
-				} else {
-					argStr.append('>');
+				argStr.append(arg.val.getDisplayString(arg.valName));
+			}
+
+			int argLen = argStr.length();
+			int mlal = 0;
+			for (int i = 0; i < arg.longArgs.length; i++) {
+				String longArg = arg.longArgs[i];
+				if (longArg.length() > mlal) {
+					if (mlal > 0) {
+						argLen += longArg.length() - mlal;
+						if (i == arg.longArgs.length - 1) {
+							argLen -= 1;
+						}
+					}
+					mlal = longArg.length();
 				}
 			}
 
-			if (argStr.length() > maxLen) {
-				maxLen = argStr.length();
+			if (argLen > maxLen) {
+				maxLen = argLen;
 			}
 			argStrs.put(arg, argStr);
 		}
@@ -488,9 +519,35 @@ public enum Argument {
 			System.out.print(argStr.toString());
 			if (arg.getDescription().length > 0) {
 				System.out.println(arg.getDescription()[0]);
-				for (int i = 1; i < arg.getDescription().length; i++) {
-					System.out.print(indent.toString());
-					System.out.println(arg.getDescription()[i]);
+				for (int i = 1; i < arg.getDescription().length || i < arg.longArgs.length; i++) {
+					if (i < arg.longArgs.length) {
+						StringBuilder line = new StringBuilder();
+						line.append("     --");
+						line.append(arg.longArgs[i]);
+						if (i + 1 < arg.longArgs.length) {
+							line.append(',');
+						}
+
+						if (arg.val != ArgumentValue.NONE) {
+							line.append(' ');
+							line.append(arg.val.getDisplayString(arg.valName));
+						}
+
+						if (i < arg.getDescription().length) {
+							for (int j = line.length(); j < maxLen; j++) {
+								line.append(' ');
+							}
+							System.out.print(line.toString());
+						} else {
+							System.out.println(line.toString());
+						}
+					} else {
+						System.out.print(indent.toString());
+					}
+
+					if (i < arg.getDescription().length) {
+						System.out.println(arg.getDescription()[i]);
+					}
 				}
 			}
 		}

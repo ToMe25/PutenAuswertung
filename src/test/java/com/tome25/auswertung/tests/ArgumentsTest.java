@@ -775,15 +775,39 @@ public class ArgumentsTest {
 	}
 
 	/**
+	 * Test a short arg existing twice.
+	 * 
+	 * @throws IllegalStateException Always.
+	 */
+	@Test
+	public void duplicateShortArg() throws IllegalStateException {
+		exception.expect(IllegalStateException.class);
+		exception.expectMessage("Duplicate debug argument received.");
+		Arguments.parseArgs("-dvd");
+	}
+
+	/**
 	 * Test an argument existing in both its long arg an short arg form.
 	 * 
 	 * @throws IllegalStateException Always.
 	 */
 	@Test
-	public void duplicateArgument() throws IllegalStateException {
+	public void duplicateMixedArgument() throws IllegalStateException {
 		exception.expect(IllegalStateException.class);
 		exception.expectMessage("Duplicate help argument received.");
 		Arguments.parseArgs("-h --help");
+	}
+
+	/**
+	 * Test an using two different long args for the same argument.
+	 * 
+	 * @throws IllegalStateException Always.
+	 */
+	@Test
+	public void duplicateDifferentLongArg() throws IllegalStateException {
+		exception.expect(IllegalStateException.class);
+		exception.expectMessage("Duplicate zones argument received.");
+		Arguments.parseArgs("--zones Zones.csv --areas Zones.csv");
 	}
 
 	/**
