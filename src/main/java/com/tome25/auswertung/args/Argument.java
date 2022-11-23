@@ -218,6 +218,19 @@ public enum Argument {
 			return new String[] { "Sets the file to write the logging messages to.",
 					"Use without a value to disable creating a log file entirely." };
 		}
+	},
+	FILLDAYS('f', (short) 5, "fill-days", "filldays") {
+		@Override
+		public void onReceived(Arguments inst, String val) {
+			inst.fillDays = true;
+		}
+
+		@Override
+		public String[] getDescription() {
+			return new String[] { "Makes the program pad the recording time to full days.",
+					"This means it will assume that all turkeys were in the zone they were first recorded in until their first record.",
+					"And that they all were in their last recorded zone until the end of each day." };
+		}
 	};
 
 	/**

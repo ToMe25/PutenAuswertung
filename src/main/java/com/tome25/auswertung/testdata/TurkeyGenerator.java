@@ -3,9 +3,11 @@ package com.tome25.auswertung.testdata;
 import static com.tome25.auswertung.testdata.AntennaDataGenerator.RANDOM;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 import com.tome25.auswertung.TurkeyInfo;
+import com.tome25.auswertung.args.Arguments;
 
 /**
  * A class for generating random {@link TurkeyInfo} objects, for example for
@@ -31,6 +33,11 @@ public class TurkeyGenerator {
 	 * The default max number of transponders per turkey.
 	 */
 	private static final int DEFAULT_MAX_TRANSPONDERS = 10;
+
+	/**
+	 * An empty {@link Arguments} object for internal use.
+	 */
+	private static final Arguments EMPTY_ARGS = Arguments.empty();
 
 	/**
 	 * Generates a {@link TurkeyInfo} object with a random id and a random number of
@@ -65,12 +72,49 @@ public class TurkeyGenerator {
 	 * @return A {@link TurkeyInfo} object representing a not yet recorded turkey.
 	 */
 	public static TurkeyInfo generateTurkey(String id, int maxTransponders) {
+		return generateTurkey(id, maxTransponders, EMPTY_ARGS);
+	}
+
+	/**
+	 * Generates a {@link TurkeyInfo} object with a random number of at most
+	 * {@code maxTransponders} random transponders, and the given turkey id.
+	 * 
+	 * @param id              The id of the new turkey.
+	 * @param maxTransponders The max number of transponders to give to the new
+	 *                        {@link TurkeyInfo}.
+	 * @param args            The arguments to be used by the new
+	 *                        {@link TurkeyInfo}.
+	 * @return A {@link TurkeyInfo} object representing a not yet recorded turkey.
+	 */
+	public static TurkeyInfo generateTurkey(String id, int maxTransponders, Arguments args) {
+		return generateTurkey(id, maxTransponders, args, null, null);
+	}
+
+	/**
+	 * Generates a {@link TurkeyInfo} object with a random number of at most
+	 * {@code maxTransponders} random transponders, and the given turkey id.
+	 * 
+	 * @param id              The id of the new turkey.
+	 * @param maxTransponders The max number of transponders to give to the new
+	 *                        {@link TurkeyInfo}.
+	 * @param args            The arguments to be used by the new
+	 *                        {@link TurkeyInfo}.
+	 * @param initZone        The initial zone for the new turkey.
+	 * @param initTime        The time of the first record for the new turkey.
+	 * @return A {@link TurkeyInfo} object representing a not yet recorded turkey.
+	 */
+	public static TurkeyInfo generateTurkey(String id, int maxTransponders, Arguments args, String initZone,
+			Calendar initTime) {
 		if (id == null || id.trim().isEmpty()) {
 			id = Integer.toString(RANDOM.nextInt(MAX_TURKEY_ID));
 		}
 
 		if (maxTransponders < 1) {
 			maxTransponders = DEFAULT_MAX_TRANSPONDERS;
+		}
+
+		if (args == null) {
+			args = EMPTY_ARGS;
 		}
 
 		int nTrans = RANDOM.nextInt(maxTransponders);
@@ -82,7 +126,7 @@ public class TurkeyGenerator {
 			}
 		}
 
-		return new TurkeyInfo(id, transponders, null, null, null, null);
+		return new TurkeyInfo(id, transponders, null, initZone, initTime, null, args);
 	}
 
 	/**

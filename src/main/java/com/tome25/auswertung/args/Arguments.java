@@ -69,6 +69,14 @@ public class Arguments {
 	public File logFile = new File(PutenAuswertung.DEFAULT_LOG_FILE);
 
 	/**
+	 * Whether the time of day before the first and after the last recorded zone
+	 * stay each day should be assumed to be the same as the adjacent time
+	 * block.<br/>
+	 * If {@code false} that time is ignored entirely.
+	 */
+	public boolean fillDays = false;
+
+	/**
 	 * A set containing all the specified arguments, in case one argument needs to
 	 * check whether another argument was specified.<br/>
 	 * This is populated before the arguments {@link Argument#onReceived onReceived}
@@ -89,7 +97,12 @@ public class Arguments {
 	 */
 	public Arguments(String... mainArgs) throws IllegalStateException {
 		String args = StringUtils.join(' ', mainArgs);
-		Map<Argument, String> arguments = parseArgs(args);
+		Map<Argument, String> arguments = null;
+		if (!args.isEmpty()) {
+			arguments = parseArgs(args);
+		} else {
+			arguments = new HashMap<Argument, String>();
+		}
 		boolean dbg = arguments.containsKey(Argument.DEBUG) || arguments.containsKey(Argument.VERBOSE);
 		LogHandler.setDebug(dbg);
 		LogHandler.setSilent(arguments.containsKey(Argument.SILENT));
@@ -423,6 +436,48 @@ public class Arguments {
 		}
 
 		return new Pair<Map<Character, Argument>, Map<String, Character>>(shortArgToArgument, longArgToShortArg);
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("Arguments[debug=");
+		builder.append(debug);
+		builder.append(", silent=");
+		builder.append(silent);
+		builder.append(", antennaDataInput=");
+		builder.append(antennaDataInput);
+		builder.append(", turkeysInput=");
+		builder.append(turkeysInput);
+		builder.append(", zonesInput=");
+		builder.append(zonesInput);
+		builder.append(", totalsOutput=");
+		builder.append(totalsOutput);
+		builder.append(", staysOutput=");
+		builder.append(staysOutput);
+		builder.append(", logFile=");
+		builder.append(logFile);
+		builder.append(", fillDays=");
+		builder.append(fillDays);
+		builder.append(", arguments=");
+		builder.append(arguments);
+		builder.append("]");
+		return builder.toString();
+	}
+
+	/**
+	 * Generates an empty {@link Arguments} object, and undoes any global state
+	 * changes caused by parsing arguments.
+	 * 
+	 * @return A newly created empty {@link Arguments} instance.
+	 */
+	public static Arguments empty() {
+		boolean oldDbg = LogHandler.isDebug();
+		boolean oldSlt = LogHandler.isSilent();
+		Arguments args = new Arguments();
+		LogHandler.setDebug(oldDbg);
+		LogHandler.setSilent(oldSlt);
+		return args;
 	}
 
 }

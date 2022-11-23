@@ -50,51 +50,53 @@ Dieser muss allerdings vor allen weiteren Argumenten kommen.
 ## Argument Erklaerung
 Die Tabelle in diesem Abschnitt beschreibt die Funktion aller Argumente.
 
-|Kurzes Argument|Langes Argument    |Beschreibung                                                                                                   |  
-|---------------|-------------------|---------------------------------------------------------------------------------------------------------------|  
-| -d            | `--debug`         | Aktiviert erweiterte [Programm-Statusmeldungen].                                                              |  
-|               |                   | Hilfreich um Programmfehler zu beheben, wahrscheinlich nicht hilfreich für Anwender.                          |  
-|               |                   | `--debug` und `--verbose` verursachen identisches verhalten.                                                  |  
-| -v            | `--verbose`       | Aktiviert erweiterte [Programm-Statusmeldungen].                                                              |  
-|               |                   | Hilfreich um Programmfehler zu beheben, wahrscheinlich nicht hilfreich für Anwender.                          |  
-|               |                   | `--debug` und `--verbose` verursachen identisches verhalten.                                                  |  
-| -h            | `--help`          | Schreibt einen Hilfetext in die Konsole und beendet das Programm.                                             |  
-|               |                   | Schreibt nur eine Logdatei, wenn diese explizit angegeben wurde.                                              |  
-|               |                   | Schreibt den Hilfetext sogar wenn `--silent` ist angegeben.                                                   |  
-|               |                   | Der Hilfetext den dieses Argument generiert kann unter dieser Tabelle gefunden werden.                        |  
-| -V            | `--version`       | Schreibt die Version des Programms in die Konsole und beendet das Programm.                                   |  
-|               |                   | Erzeugt nur eine Logdatei wenn diese explizit definiert wurde.                                                |  
-|               |                   | Funktioniert selbst wenn `--silent` angegeben ist.                                                            |  
-| -s            | `--silent`        | Deaktiviert alle [Programm-Statusmeldungen], inklusive Fehlermeldungen.                                       |  
-|               |                   | Dies betrifft sowohl das Terminal als auch die Logdatei.                                                      |  
-|               |                   | Der `--help` Hilfetext und die `--version` Versions-Informationen sind hiervon unbetroffen.                   |  
-| -D            | `--docs`          | Extrahiert diese Dokumentation von der Jar-Datei dieses Programms.                                            |  
-|               |                   | Diese wird dann in einen Ordner mit dem Namen `PutenAuswertung-docs` im aktuellen Verzeichnis geschrieben.    |  
-|               |                   | Kann als Optionalen Wert ein Verzeichnis übergeben.                                                           |  
-|               |                   | Falls dieser angegeben wurde wird der `PutenAuswertung-docs` Order stattdessen in diesem erstellt.            |  
-|               |                   | **Info:** Falls eine der Dateien in diesem Order bereits existiert wird diese nicht überschrieben.            |  
-| -a            | `--antenna-data`, | Erwartet als Wert eine existierende Datei.                                                                    |  
-|               | `--antennadata`   | Das Programm liest dann die [Antennen-Daten](input.md#antennendaten-csv) aus dieser Datei.                    |  
-|               |                   | Wenn dieses Argument nicht angegeben wurde, wird die Datei mit Namen `AntennenDaten.csv` verwendet.           |  
-| -t            | `--turkeys`       | Erwartet eine existierende Datei als Wert.                                                                    |  
-|               |                   | Das Programm liest diese Datei dann als [Puten-Input-Datei](input.md#puten-csv) ein.                          |  
-|               |                   | Wenn dieses Argument nicht angegeben wurde liest das Programm die `Puten.csv` Datei im aktuellen Verzeichnis. |  
-| -z            | `--zones`,        | Erwartet eine existierende Datei als Wert.                                                                    |  
-|               | `--areas`         | Diese Datei wird dann als [Bereichs-Input-Datei](input.md#bereiche-csv) eingelesen.                           |  
-|               |                   | Wenn nicht angegeben, wird die Datei `Bereiche.csv` im aktuellen Verzeichnis stattdessen eingelesen.          |  
-| -T            | `--totals`        | Erwartet eine Datei als Wert.                                                                                 |  
-|               |                   | Setzt die Datei in welche das Programm die Zeit die eine Pute pro Tag in einem Bereich verbracht hat schreibt.|  
-|               |                   | Mehr Info über diese Ergebnisse [hier](output.md#putenauswertungzeiten-csv).                                  |  
-|               |                   | **Achtung:** Diese Datei wird ohne Nachfrage überschrieben.                                                   |  
-| -S            | `--stays`         | Erwartet eine Datei als Wert.                                                                                 |  
-|               |                   | Setzt die Datei in welche das Programm die individuellen Aufenthalte einer Pute in einem Bereich schreibt.    |  
-|               |                   | Mehr Informationen über diese Ergebnisse gibt es [hier](output.md#putenauswertungaufenthalte-csv).            |  
-|               |                   | **Achtung:** Diese Datei wird ohne Nachfrage überschrieben.                                                   |  
-| -l            | `--log-file`,     | Kann optional eine Datei als Wert verarbeiten.                                                                |  
-|               | `--logfile`       | Ändert in welche Datei das Programm seine [Statusmeldungen][Programm-Statusmeldungen] schreibt.               |  
-|               |                   | Wenn kein Wert übergeben wird, wird keine Logdatei geschrieben.                                               |  
-|               |                   | Wenn dieses Argument nicht verwendet wird, wird die Datei `PutenAuswertung.log` verwendet.                    |  
-|               |                   | **Achtung:** Die Logdatei wird ohne nachfrage überschrieben.                                                  |  
+|Kurzes Argument|Langes Argument    |Beschreibung                                                                                                    |  
+|---------------|-------------------|----------------------------------------------------------------------------------------------------------------|  
+| -d            | `--debug`         | Aktiviert erweiterte [Programm-Statusmeldungen].                                                               |  
+|               |                   | Hilfreich um Programmfehler zu beheben, wahrscheinlich nicht hilfreich für Anwender.                           |  
+|               |                   | `--debug` und `--verbose` verursachen identisches verhalten.                                                   |  
+| -v            | `--verbose`       | Aktiviert erweiterte [Programm-Statusmeldungen].                                                               |  
+|               |                   | Hilfreich um Programmfehler zu beheben, wahrscheinlich nicht hilfreich für Anwender.                           |  
+|               |                   | `--debug` und `--verbose` verursachen identisches verhalten.                                                   |  
+| -h            | `--help`          | Schreibt einen Hilfetext in die Konsole und beendet das Programm.                                              |  
+|               |                   | Schreibt nur eine Logdatei, wenn diese explizit angegeben wurde.                                               |  
+|               |                   | Schreibt den Hilfetext sogar wenn `--silent` ist angegeben.                                                    |  
+|               |                   | Der Hilfetext den dieses Argument generiert kann unter dieser Tabelle gefunden werden.                         |  
+| -V            | `--version`       | Schreibt die Version des Programms in die Konsole und beendet das Programm.                                    |  
+|               |                   | Erzeugt nur eine Logdatei wenn diese explizit definiert wurde.                                                 |  
+|               |                   | Funktioniert selbst wenn `--silent` angegeben ist.                                                             |  
+| -s            | `--silent`        | Deaktiviert alle [Programm-Statusmeldungen], inklusive Fehlermeldungen.                                        |  
+|               |                   | Dies betrifft sowohl das Terminal als auch die Logdatei.                                                       |  
+|               |                   | Der `--help` Hilfetext und die `--version` Versions-Informationen sind hiervon unbetroffen.                    |  
+| -D            | `--docs`          | Extrahiert diese Dokumentation von der Jar-Datei dieses Programms.                                             |  
+|               |                   | Diese wird dann in einen Ordner mit dem Namen `PutenAuswertung-docs` im aktuellen Verzeichnis geschrieben.     |  
+|               |                   | Kann als Optionalen Wert ein Verzeichnis übergeben.                                                            |  
+|               |                   | Falls dieser angegeben wurde wird der `PutenAuswertung-docs` Order stattdessen in diesem erstellt.             |  
+|               |                   | **Info:** Falls eine der Dateien in diesem Order bereits existiert wird diese nicht überschrieben.             |  
+| -a            | `--antenna-data`, | Erwartet als Wert eine existierende Datei.                                                                     |  
+|               | `--antennadata`   | Das Programm liest dann die [Antennen-Daten](input.md#antennendaten-csv) aus dieser Datei.                     |  
+|               |                   | Wenn dieses Argument nicht angegeben wurde, wird die Datei mit Namen `AntennenDaten.csv` verwendet.            |  
+| -t            | `--turkeys`       | Erwartet eine existierende Datei als Wert.                                                                     |  
+|               |                   | Das Programm liest diese Datei dann als [Puten-Input-Datei](input.md#puten-csv) ein.                           |  
+|               |                   | Wenn dieses Argument nicht angegeben wurde liest das Programm die `Puten.csv` Datei im aktuellen Verzeichnis.  |  
+| -z            | `--zones`,        | Erwartet eine existierende Datei als Wert.                                                                     |  
+|               | `--areas`         | Diese Datei wird dann als [Bereichs-Input-Datei](input.md#bereiche-csv) eingelesen.                            |  
+|               |                   | Wenn nicht angegeben, wird die Datei `Bereiche.csv` im aktuellen Verzeichnis stattdessen eingelesen.           |  
+| -T            | `--totals`        | Erwartet eine Datei als Wert.                                                                                  |  
+|               |                   | Setzt die Datei in welche das Programm die Zeit die eine Pute pro Tag in einem Bereich verbracht hat schreibt. |  
+|               |                   | Mehr Info über diese Ergebnisse [hier](output.md#putenauswertungzeiten-csv).                                   |  
+|               |                   | **Achtung:** Diese Datei wird ohne Nachfrage überschrieben.                                                    |  
+| -S            | `--stays`         | Erwartet eine Datei als Wert.                                                                                  |  
+|               |                   | Setzt die Datei in welche das Programm die individuellen Aufenthalte einer Pute in einem Bereich schreibt.     |  
+|               |                   | Mehr Informationen über diese Ergebnisse gibt es [hier](output.md#putenauswertungaufenthalte-csv).             |  
+|               |                   | **Achtung:** Diese Datei wird ohne Nachfrage überschrieben.                                                    |  
+| -l            | `--log-file`,     | Kann optional eine Datei als Wert verarbeiten.                                                                 |  
+|               | `--logfile`       | Ändert in welche Datei das Programm seine [Statusmeldungen][Programm-Statusmeldungen] schreibt.                |  
+|               |                   | Wenn kein Wert übergeben wird, wird keine Logdatei geschrieben.                                                |  
+|               |                   | Wenn dieses Argument nicht verwendet wird, wird die Datei `PutenAuswertung.log` verwendet.                     |  
+|               |                   | **Achtung:** Die Logdatei wird ohne nachfrage überschrieben.                                                   |  
+| -f            | `--fill-days`,    | Teilt dem Programm mit Puten sollen so behandelt werden als ob sie sich vor ihrer ersten und nach ihrer letzten|  
+|               | `--filldays`      | Aufzeichnung jeden Tag in dem Bereich aufgehalten in dem sie zuerste/zuletzt aufgezeichnet wurden.             |  
 
 Hier das Ergebnis von `--help`:
 
@@ -129,6 +131,9 @@ Options:
  -S, --stays <FILE>          Sets the file to write the individual zone stays to.
  -l, --log-file, [FILE]      Sets the file to write the logging messages to.
      --logfile [FILE]        Use without a value to disable creating a log file entirely.
+ -f, --fill-days,            Makes the program pad the recording time to full days.
+     --filldays              This means it will assume that all turkeys were in the zone they were first recorded in until their first record.
+                             And that they all were in their last recorded zone until the end of each day.
 ```
 
 #### Leerzeichen

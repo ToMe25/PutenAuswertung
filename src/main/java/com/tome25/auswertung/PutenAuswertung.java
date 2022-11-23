@@ -387,7 +387,7 @@ public class PutenAuswertung {
 			return 4;
 		}
 
-		DataHandler.handleStreams(antennaHandler, turkeyHandler, zoneHandler, totalHandler, staysHandler, false);
+		DataHandler.handleStreams(antennaHandler, turkeyHandler, zoneHandler, totalHandler, staysHandler, argHandler);
 
 		LogHandler.out_println("Finished data analysis. Exiting.");
 		return 0;

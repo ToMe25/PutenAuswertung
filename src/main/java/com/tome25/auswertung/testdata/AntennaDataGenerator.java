@@ -14,6 +14,7 @@ import java.util.Random;
 
 import com.tome25.auswertung.TurkeyInfo;
 import com.tome25.auswertung.ZoneStay;
+import com.tome25.auswertung.args.Arguments;
 import com.tome25.auswertung.stream.IOutputStreamHandler;
 import com.tome25.auswertung.utils.Pair;
 import com.tome25.auswertung.utils.TimeUtils;
@@ -42,20 +43,25 @@ public class AntennaDataGenerator {
 	 * @param turkeys    The turkeys to move in the example data.
 	 * @param zones      The zones for the turkeys to move in.
 	 * @param output     The output stream handler to write the data to.
+	 * @param args       The object containing the settings for the data to be
+	 *                   generated.
 	 * @param days       The number of days to generate example data for.
 	 * @param continuous Whether there should be days missing in the example data.
-	 * @param fillDays   Whether the time before the first and after the last
-	 *                   measurement each day should be expected to be spent in the
-	 *                   first/last zone.
 	 * @return The three maps described above.
-	 * @throws NullPointerException If one of the arguments is {@code null}.
+	 * @throws NullPointerException     If one of the arguments is {@code null}.
+	 * @throws IllegalArgumentException If days is less than 1.
 	 */
 	public static Pair<Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>>, Map<String, List<ZoneStay>>> generateAntennaData(
-			List<TurkeyInfo> turkeys, Map<String, List<String>> zones, IOutputStreamHandler output, int days,
-			boolean continuous, boolean fillDays) throws NullPointerException {
+			List<TurkeyInfo> turkeys, Map<String, List<String>> zones, IOutputStreamHandler output, Arguments args,
+			int days, boolean continuous) throws NullPointerException, IllegalArgumentException {
 		Objects.requireNonNull(turkeys, "The turkeys to generate input data for cannot be null.");
 		Objects.requireNonNull(zones, "The zones to use for the generated input can't be null.");
 		Objects.requireNonNull(output, "The output to write the file to can not be null.");
+		Objects.requireNonNull(args, "The arguments to use cannot be null.");
+
+		if (days < 1) {
+			throw new IllegalArgumentException("Can't generate less than one day of data.");
+		}
 
 		output.println("Transponder;Date;Time;Antenne");
 		// turkey -> date -> zone -> time
@@ -75,7 +81,7 @@ public class AntennaDataGenerator {
 		for (int day = 0; day < days; day++) {
 			String date = TimeUtils.encodeDate(cal);
 			Pair<Pair<Map<String, Map<String, Integer>>, Map<String, Integer>>, Map<String, List<ZoneStay>>> dayData = generateDayAntennaData(
-					turkeys, zones, date, output, lastZoneChange, currentZone, lastZone, lastRecord, fillDays);
+					turkeys, zones, date, output, lastZoneChange, currentZone, lastZone, lastRecord, args);
 			Map<String, Map<String, Integer>> dayTimes = dayData.getKey().getKey();
 			Map<String, Integer> dayChanges = dayData.getKey().getValue();
 			Map<String, List<ZoneStay>> dayStays = dayData.getValue();
@@ -114,7 +120,7 @@ public class AntennaDataGenerator {
 					}
 				}
 
-				if (!fillDays) {
+				if (!args.fillDays) {
 					String zone = currentZone.get(turkey);
 
 					int zoneTime = 0;
@@ -171,7 +177,7 @@ public class AntennaDataGenerator {
 					Calendar lastChangeCal = new GregorianCalendar();
 					lastChangeCal.setTimeInMillis(lastChange);
 					Calendar endCal = null;
-					if (fillDays) {
+					if (args.fillDays) {
 						endCal = TimeUtils.parseDate(date);
 						endCal.add(Calendar.DATE, 1);
 					} else {
@@ -179,7 +185,7 @@ public class AntennaDataGenerator {
 					}
 
 					ZoneStay lastStay = stays.get(turkey).get(stays.get(turkey).size() - 1);
-					
+
 					if (lastStay.getZone().equals(currentZone.get(turkey))) {
 						lastStay.setExitTime(endCal);
 					} else if (endCal.getTimeInMillis() > lastStay.getExitCal().getTimeInMillis()) {
@@ -236,19 +242,19 @@ public class AntennaDataGenerator {
 	 * @param lastRecord     The time stamp of the last record of each turkey.<br/>
 	 *                       Will be mutated to be used as day to day storage.<br/>
 	 *                       A new {@link HashMap} will be used if {@code null}.
-	 * @param fillDay        Whether the time before the first and after the last
-	 *                       record should be filled.
+	 * @param args           The arguments to use for the day to be generated.
 	 * @return The times each turkey spent in each zone.
 	 * @throws NullPointerException If one of the parameters is {@code null}.
 	 */
 	public static Pair<Pair<Map<String, Map<String, Integer>>, Map<String, Integer>>, Map<String, List<ZoneStay>>> generateDayAntennaData(
 			List<TurkeyInfo> turkeys, Map<String, List<String>> zones, String date, IOutputStreamHandler output,
 			Map<String, Long> lastZoneChange, Map<String, String> currentZone, Map<String, String> lastZone,
-			Map<String, Long> lastRecord, boolean fillDay) throws NullPointerException {
+			Map<String, Long> lastRecord, Arguments args) throws NullPointerException {
 		Objects.requireNonNull(turkeys, "The turkeys to generate input data for can't be null.");
 		Objects.requireNonNull(zones, "The zones to use for the generated input can't be null.");
 		Objects.requireNonNull(date, "The date to generate data for can't be null.");
 		Objects.requireNonNull(output, "The output to write the file to can't be null.");
+		Objects.requireNonNull(args, "The arguments to use cannot be null.");
 
 		if (lastZoneChange == null) {
 			lastZoneChange = new HashMap<String, Long>();
@@ -327,7 +333,7 @@ public class AntennaDataGenerator {
 				zoneTimes.put(turkeyName, new HashMap<String, Integer>());
 				stays.put(turkeyName, new ArrayList<ZoneStay>());
 
-				if (fillDay) {
+				if (args.fillDays) {
 					zoneTimes.get(turkeyName).put(zone, TimeUtils.getMsOfDay(changeCal));
 					stays.get(turkeyName).add(new ZoneStay(turkeyName, zone, TimeUtils.parseDate(date)));
 				} else {
@@ -407,7 +413,7 @@ public class AntennaDataGenerator {
 			lastTime = changeTime;
 		}
 
-		if (fillDay) {
+		if (args.fillDays) {
 			for (String turkey : zoneTimes.keySet()) {
 				int zoneTime = (int) (TimeUtils.parseDate(date).getTimeInMillis() + (24 * 3600000)
 						- lastZoneChange.get(turkey));

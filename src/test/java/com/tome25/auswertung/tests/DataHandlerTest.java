@@ -15,6 +15,7 @@ import com.tome25.auswertung.CSVHandler;
 import com.tome25.auswertung.DataHandler;
 import com.tome25.auswertung.TurkeyInfo;
 import com.tome25.auswertung.ZoneStay;
+import com.tome25.auswertung.args.Arguments;
 import com.tome25.auswertung.stream.FileInputStreamHandler;
 import com.tome25.auswertung.stream.FileOutputStreamHandler;
 import com.tome25.auswertung.testdata.AntennaDataGenerator;
@@ -60,10 +61,13 @@ public class DataHandlerTest {
 		List<TurkeyInfo> turkeys = TurkeyGenerator.generateTurkeys(5, 2);
 		Map<String, List<String>> zones = ZoneGenerator.generateZones(2, 2);
 		CSVHandler.writeZonesCSV(zones, zoneCSV.getValue());
-		AntennaDataGenerator.generateAntennaData(turkeys, zones, dataCSV.getValue(), 5, true, true);
+
+		Arguments args = Arguments.empty();
+		args.fillDays = true;
+		AntennaDataGenerator.generateAntennaData(turkeys, zones, dataCSV.getValue(), args, 5, true);
 
 		DataHandler.handleStreams(dataCSV.getKey(), turkeyCSV.getKey(), zoneCSV.getKey(), totalsCSV.getKey(),
-				staysCSV.getKey(), true);
+				staysCSV.getKey(), args);
 
 		assertFalse("The totals output file was not empty after reading an empty turkey mappings file.",
 				totalsCSV.getValue().ready());
@@ -92,10 +96,13 @@ public class DataHandlerTest {
 		List<TurkeyInfo> turkeys = TurkeyGenerator.generateTurkeys(5, 2);
 		CSVHandler.writeTurkeyCSV(turkeys, turkeyCSV.getValue());
 		Map<String, List<String>> zones = ZoneGenerator.generateZones(2, 2);
-		AntennaDataGenerator.generateAntennaData(turkeys, zones, dataCSV.getValue(), 5, true, true);
+
+		Arguments args = Arguments.empty();
+		args.fillDays = true;
+		AntennaDataGenerator.generateAntennaData(turkeys, zones, dataCSV.getValue(), args, 5, true);
 
 		DataHandler.handleStreams(dataCSV.getKey(), turkeyCSV.getKey(), zoneCSV.getKey(), totalsCSV.getKey(),
-				staysCSV.getKey(), true);
+				staysCSV.getKey(), args);
 
 		assertFalse("The totals output file was not empty after reading an empty zone mappings file.",
 				totalsCSV.getValue().ready());
@@ -116,8 +123,10 @@ public class DataHandlerTest {
 
 		Pair<FileInputStreamHandler, FileOutputStreamHandler> dataCSV = tempFolder
 				.newTempIOFile("empty_last_record_antennadata.csv");
+		Arguments args = Arguments.empty();
+		args.fillDays = true;
 		Pair<Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>>, Map<String, List<ZoneStay>>> antennaData = AntennaDataGenerator
-				.generateAntennaData(mappings.turkeys, mappings.zones, dataCSV.getValue(), 5, true, true);
+				.generateAntennaData(mappings.turkeys, mappings.zones, dataCSV.getValue(), args, 5, true);
 		dataCSV.getValue().println(null);
 
 		Pair<FileInputStreamHandler, FileOutputStreamHandler> totalsCSV = tempFolder
@@ -126,7 +135,7 @@ public class DataHandlerTest {
 				.newTempIOFile("empty_last_record_stays.csv");
 
 		DataHandler.handleStreams(dataCSV.getKey(), mappings.turkeysIn, mappings.zonesIn, totalsCSV.getValue(),
-				staysCSV.getValue(), true);
+				staysCSV.getValue(), args);
 
 		Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>> outputTotals = CSVHandler
 				.readTotalsCSV(totalsCSV.getKey());
@@ -136,7 +145,7 @@ public class DataHandlerTest {
 		TestResults results = new TestResults(antennaData.getKey().getKey(), outputTotals.getKey(),
 				antennaData.getKey().getValue(), outputTotals.getValue(), antennaData.getValue(), outputStays);
 
-		OutputDataTest.validateResults(results, true);
+		OutputDataTest.validateResults(results, args);
 
 		errorLog.checkLine("Reading an antenna record from the input file failed.");
 	}
@@ -152,8 +161,11 @@ public class DataHandlerTest {
 
 		Pair<FileInputStreamHandler, FileOutputStreamHandler> dataCSV = tempFolder
 				.newTempIOFile("invalid_last_record_antennadata.csv");
+
+		Arguments args = Arguments.empty();
+		args.fillDays = true;
 		Pair<Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>>, Map<String, List<ZoneStay>>> antennaData = AntennaDataGenerator
-				.generateAntennaData(mappings.turkeys, mappings.zones, dataCSV.getValue(), 5, true, true);
+				.generateAntennaData(mappings.turkeys, mappings.zones, dataCSV.getValue(), args, 5, true);
 		dataCSV.getValue().println("Test;Data;Here");
 
 		Pair<FileInputStreamHandler, FileOutputStreamHandler> totalsCSV = tempFolder
@@ -162,7 +174,7 @@ public class DataHandlerTest {
 				.newTempIOFile("invalid_last_record_stays.csv");
 
 		DataHandler.handleStreams(dataCSV.getKey(), mappings.turkeysIn, mappings.zonesIn, totalsCSV.getValue(),
-				staysCSV.getValue(), true);
+				staysCSV.getValue(), args);
 
 		Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>> outputTotals = CSVHandler
 				.readTotalsCSV(totalsCSV.getKey());
@@ -172,7 +184,7 @@ public class DataHandlerTest {
 		TestResults results = new TestResults(antennaData.getKey().getKey(), outputTotals.getKey(),
 				antennaData.getKey().getValue(), outputTotals.getValue(), antennaData.getValue(), outputStays);
 
-		OutputDataTest.validateResults(results, true);
+		OutputDataTest.validateResults(results, args);
 
 		errorLog.checkLine("Reading an antenna record from the input file failed.");
 	}

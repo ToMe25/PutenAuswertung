@@ -28,12 +28,14 @@ Jedes mal wenn eine gültige Zeile eingelesen wurde, wird die interne Repräsent
 
 **Falls diese bereits existiert, und zuletzt im selben Bereich aufgezeichnet wurde**, wird nur deren letzter Aufzeichnungs-Zeitpunkt geändert.
 
-**Falls sie bereits existiert, aber zuletzt in einem anderen Bereich aufgezeichnet wurde**, passiert eine von zwei Sachen:
- 1. Falls der letzte aufgezeichnete Bereichswechsel mehr als fünf Minuten her ist:  
+**Falls sie bereits existiert, aber zuletzt in einem anderen Bereich aufgezeichnet wurde**, passiert eine von drei Sachen:
+ 1. Falls das `fill-days` [Argument](arguments.md#argument-erklaerung) verwendet wird und die letzte Aufzeichnung von einem vorherigen Tag ist:  
+    In diesem Fall wird die Pute so behandelt was wäre ihre letzte Aufzeichnung um Mitternacht, mehr als fünf Minuten her und in dem Bereich in dem sie nun ist.
+ 2. Falls der letzte aufgezeichnete Bereichswechsel mehr als fünf Minuten her ist:  
     In diesem Fall wird aufgezeichnet, das die Pute sich für den Zeitraum seit diese Bereichswechsel, in dem Bereich in dem sie zuvor Aufgezeichnet wurde befand.  
     Der vorläufige Endzeitpunkt dieses Aufenthalts ist der Zeitpunkt der neuen Aufzeichnung.  
     Außerdem wird der Aufenthalt vor dem nun beendeten in die Datei [PutenAuswertungAufenthalte.csv](output.md#putenauswertungaufenthalte-csv) geschrieben.
- 2. Falls der letzte Aufenthalts-Zeitraum weniger als fünf Minuten lang war:  
+ 3. Falls der letzte Aufenthalts-Zeitraum weniger als fünf Minuten lang war:  
     In diesem Fall wird aufgezeichnet, das die Pute sich bis zu der neusten Aufzeichnung im letzten Bereich aufhielt, in dem sie sich mehr als fünf Minuten am Stück aufgehalten hat.
 
 Unabhängig davon, ob die Pute sich im letzten Bereich mehr als fünf Minuten aufgehalten hat, wird die Pute dann Vorläufig als in dem Bereich der neuesten Aufzeichnung befindlich markiert.  
@@ -49,11 +51,11 @@ Was in diesem Fall passiert hängt davon ab ob das neue Datum der nächste Tag n
 
 **Falls das neue Datum vor dem alten ist**, wird eine [Fehlermeldung] geschrieben, und die Zeile ignoriert.
 
-**Falls das neue Datum auf das alte folgt**, passiert momentan nichts.  
-Es sind einige Funktionen für diesen Fall geplant, aber noch keine so implementiert, das sie normal erreichbar ist.
+**Falls das neue Datum auf das alte folgt**, werden falls das `fill-days` [Argument](arguments.md#argument-erklaerung) übergeben wurde alle Puten so behandelt als hätte sie sich bis Mitternacht in ihrem momentanen Bereich aufgehalten.
 
 **Falls das neue Datum nicht auf das vorherige folgt**, wird die alte Aufzeichnung als beendet betrachtet und eine neue gestartet.  
-Das heißt alle Puten werden so behandelt als ob sie bis zu der letzten Aufzeichnung der letzten Pute in ihrem momentanen Bereich geblieben sind.  
+Das heißt falls das `fill-days` [Argument](arguments.md#argument-erklaerung) übergeben wurde werden alle Puten so behandelt als hätten sie sich bis Mitternacht in ihrem momentanen Bereich aufgehalten.  
+Andernfalls werden alle Puten so behandelt als ob sie bis zu der letzten Aufzeichnung der letzten Pute in ihrem momentanen Bereich geblieben sind.  
 An diesem Punkt werden die Aufenthalts-Zeiten pro Tag pro Pute in die `PutenAuswertungZeiten.csv` Datei geschrieben.
 
 Danach wird alles so behandelt als ob hier der Anfang einer neuen [AntennenDaten.csv] wäre, mit zwei Ausnahmen.

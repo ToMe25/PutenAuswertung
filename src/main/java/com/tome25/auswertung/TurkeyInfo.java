@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import com.tome25.auswertung.args.Arguments;
 import com.tome25.auswertung.stream.IOutputStreamHandler;
 import com.tome25.auswertung.utils.TimeUtils;
 
@@ -36,6 +37,12 @@ public class TurkeyInfo {
 	 * The string id of the turkey represented by this info object.
 	 */
 	private final String id;
+
+	/**
+	 * The {@link Arguments} object storing the configuration to be used by this
+	 * object.
+	 */
+	private final Arguments args;
 
 	/**
 	 * A list containing all transponders that represent this turkey.
@@ -129,37 +136,46 @@ public class TurkeyInfo {
 	 *                     Set to {@code null} to mark as not yet known.
 	 * @param startTime    The time of the first recorded day at which the records
 	 *                     should start.<br/>
-	 *                     Set to {@code null} to start at midnight of the first day
-	 *                     at which they are recorded.
+	 *                     Can only be {@code null} if {@link Arguments#fillDays} is
+	 *                     {@code true}.
+	 * @param args         An {@link Arguments} instance containing the
+	 *                     configuration for the current data analysis.
 	 * @throws NullPointerException If {@code id} or {@code stayOut} is
 	 *                              {@code null}.
 	 */
 	public TurkeyInfo(String id, List<String> transponders, IOutputStreamHandler stayOut, String currentZone,
-			Calendar time, Calendar startTime) throws NullPointerException {
-		Objects.requireNonNull(id, "The turkey id cannot be null.");
+			Calendar time, Calendar startTime, Arguments args) throws NullPointerException {
+		this.id = Objects.requireNonNull(id, "The turkey id cannot be null.");
+		this.args = Objects.requireNonNull(args, "The args object configuring this cannot be null.");
 
-		if (time != null && (currentZone == null || currentZone.trim().isEmpty())) {
-			throw new NullPointerException("The current zone cannot be null when the current time isn't null.");
+		// If time is null this is just used as a static storage object.
+		if (time != null) {
+			if (currentZone == null || currentZone.trim().isEmpty()) {
+				throw new NullPointerException("The current zone cannot be null when the current time isn't null.");
+			}
+
+			if (!args.fillDays) {
+				this.startTime = Objects.requireNonNull(startTime,
+						"The start time cannot be null of args.fillDays is false.");
+			}
 		}
 
 		if (currentZone != null) {
 			currentZone = currentZone.trim();
 		}
 
-		this.id = id;
 		this.transponders = transponders;
 		this.stayOut = stayOut;
 		this.currentZone = currentZone;
 		this.currentTime = time;
 		this.lastZoneChange = time == null ? 0 : time.getTimeInMillis();
-		this.startTime = startTime;
 
 		if (time != null) {
 			lastStay = new ZoneStay(id, currentZone,
 					startTime == null ? TimeUtils.parseDate(TimeUtils.encodeDate(time)) : startTime);
 
 			dayZoneTimes.put(TimeUtils.encodeDate(time), new HashMap<String, Integer>());
-			if (fillDays() && currentZone != null) {
+			if (args.fillDays && currentZone != null) {
 				addTime(time, currentZone, TimeUtils.getMsOfDay(time));
 			} else if (currentZone != null) {
 				addTime(time, currentZone, (int) (time.getTimeInMillis() - startTime.getTimeInMillis()));
@@ -203,7 +219,7 @@ public class TurkeyInfo {
 		if (currentZone != null && !newRec) {
 			int timeSpent = (int) (timeMs - currentTime.getTimeInMillis());
 			addTime(time, currentZone, timeSpent);
-		} else if (fillDays()) {
+		} else if (args.fillDays) {
 			addTime(time, newZone, TimeUtils.getMsOfDay(time));
 
 			if (newRec && stayOut != null && lastStay.getExitCal() == null) {
@@ -431,7 +447,7 @@ public class TurkeyInfo {
 	public void endDay(Calendar time) throws NullPointerException {
 		Objects.requireNonNull(time, "Time can't be null.");
 
-		if (fillDays()) {
+		if (args.fillDays) {
 			// FIXME probably produces 1ms offsets
 			Calendar cal = (Calendar) currentTime.clone();
 			cal.set(Calendar.HOUR_OF_DAY, 23);
@@ -608,24 +624,43 @@ public class TurkeyInfo {
 		this.startTime = startTime;
 	}
 
-	/**
-	 * Whether the time before the first and after the last record of the first/last
-	 * day should be counted towards the first/last zone.
-	 * 
-	 * @return {@code true} if those times should be filled.
-	 */
-	private boolean fillDays() {
-		return startTime == null;
-	}
-
 	@Override
 	public String toString() {
-		return String.format(
-				"TurkeyInfo[id=%s, transponders=%s, stayOut=%s, startTimeDate=%s, startTimeOfDay=%s, dayZoneTimes=%s, totalZoneTimes=%s, currentZone=%s, lastStay=%s, currentTimeDate=%s, currentTimeOfDay=%s, lastZoneChange=%d, todayZoneChanges=%d, totalZoneChanges=%d, dayZoneChanges=%s]",
-				id, transponders, stayOut, TimeUtils.encodeDate(startTime),
-				TimeUtils.encodeTime(TimeUtils.getMsOfDay(startTime)), dayZoneTimes, totalZoneTimes, currentZone,
-				lastStay, TimeUtils.encodeDate(currentTime), TimeUtils.encodeTime(TimeUtils.getMsOfDay(currentTime)),
-				lastZoneChange, todayZoneChanges, totalZoneChanges, dayZoneChanges);
+		StringBuilder builder = new StringBuilder();
+		builder.append("TurkeyInfo [id=");
+		builder.append(id);
+		builder.append(", args=");
+		builder.append(args);
+		builder.append(", transponders=");
+		builder.append(transponders);
+		builder.append(", stayOut=");
+		builder.append(stayOut);
+		builder.append(", startTimeDate=");
+		builder.append(TimeUtils.encodeDate(startTime));
+		builder.append(", startTimeOfDay=");
+		builder.append(TimeUtils.encodeTime(TimeUtils.getMsOfDay(startTime)));
+		builder.append(", dayZoneTimes=");
+		builder.append(dayZoneTimes);
+		builder.append(", totalZoneTimes=");
+		builder.append(totalZoneTimes);
+		builder.append(", currentZone=");
+		builder.append(currentZone);
+		builder.append(", lastStay=");
+		builder.append(lastStay);
+		builder.append(", currentTimeDate=");
+		builder.append(TimeUtils.encodeDate(currentTime));
+		builder.append(", currentTimeOfDay=");
+		builder.append(TimeUtils.encodeTime(TimeUtils.getMsOfDay(currentTime)));
+		builder.append(", lastZoneChange=");
+		builder.append(lastZoneChange);
+		builder.append(", todayZoneChanges=");
+		builder.append(todayZoneChanges);
+		builder.append(", totalZoneChanges=");
+		builder.append(totalZoneChanges);
+		builder.append(", dayZoneChanges=");
+		builder.append(dayZoneChanges);
+		builder.append("]");
+		return builder.toString();
 	}
 
 }

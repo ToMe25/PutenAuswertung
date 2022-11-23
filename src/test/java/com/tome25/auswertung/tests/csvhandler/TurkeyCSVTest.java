@@ -9,6 +9,8 @@ import org.junit.Test;
 
 import com.tome25.auswertung.CSVHandler;
 import com.tome25.auswertung.TurkeyInfo;
+import com.tome25.auswertung.args.Arguments;
+import com.tome25.auswertung.testdata.TurkeyGenerator;
 import com.tome25.auswertung.utils.TimeUtils;
 
 /**
@@ -122,8 +124,9 @@ public class TurkeyCSVTest {
 	public static TurkeyInfo getBasicInfo(String day) throws NullPointerException {
 		Objects.requireNonNull(day, "The day to generate for can't be null.");
 
-		TurkeyInfo info = new TurkeyInfo("0", Arrays.asList(new String[] { "T1", "Trans 2", "T3" }), null, "Z1",
-				TimeUtils.parseTime(day, 10510), null);
+		Arguments args = Arguments.empty();
+		args.fillDays = true;
+		TurkeyInfo info = TurkeyGenerator.generateTurkey("0", 5, args, "Z1", TimeUtils.parseTime(day, 10510));
 		info.changeZone("Zone 2", TimeUtils.parseTime(day, 20410));
 		info.changeZone("Zone 2", TimeUtils.parseTime(day, 100060));
 		info.changeZone("Z1", TimeUtils.parseTime(day, 599610));
