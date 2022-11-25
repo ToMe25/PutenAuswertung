@@ -196,6 +196,20 @@ public class TimeUtils {
 	}
 
 	/**
+	 * Converts the given time to a date string of the format
+	 * "DD.MM.YYYY".
+	 * 
+	 * @param date Time time to encode.
+	 * @return The date string representing the given date.
+	 * @throws NullPointerException If {@code date} is {@code null}.
+	 */
+	public static String encodeDate(long time) {
+		Calendar cal = new GregorianCalendar();
+		cal.setTimeInMillis(time);
+		return encodeDate(cal);
+	}
+
+	/**
 	 * Converts the given {@link Calendar} object to a date string of the format
 	 * "DD.MM.YYYY".
 	 * 

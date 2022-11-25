@@ -68,10 +68,10 @@ Die Tabelle in diesem Abschnitt beschreibt die Funktion aller Argumente.
 | -s            | `--silent`        | Deaktiviert alle [Programm-Statusmeldungen], inklusive Fehlermeldungen.                                        |  
 |               |                   | Dies betrifft sowohl das Terminal als auch die Logdatei.                                                       |  
 |               |                   | Der `--help` Hilfetext und die `--version` Versions-Informationen sind hiervon unbetroffen.                    |  
-| -D            | `--docs`          | Extrahiert diese Dokumentation von der Jar-Datei dieses Programms.                                             |  
+| -D            | `--docs`          | Kann als Optionalen Wert ein Verzeichnis verarbeiten.                                                          |  
+|               |                   | Extrahiert diese Dokumentation von der Jar-Datei dieses Programms.                                             |  
 |               |                   | Diese wird dann in einen Ordner mit dem Namen `PutenAuswertung-docs` im aktuellen Verzeichnis geschrieben.     |  
-|               |                   | Kann als Optionalen Wert ein Verzeichnis übergeben.                                                            |  
-|               |                   | Falls dieser angegeben wurde wird der `PutenAuswertung-docs` Order stattdessen in diesem erstellt.             |  
+|               |                   | Falls ein Wert angegeben wurde wird der `PutenAuswertung-docs` Order stattdessen in diesem erstellt.           |  
 |               |                   | **Info:** Falls eine der Dateien in diesem Order bereits existiert wird diese nicht überschrieben.             |  
 | -a            | `--antenna-data`, | Erwartet als Wert eine existierende Datei.                                                                     |  
 |               | `--antennadata`   | Das Programm liest dann die [Antennen-Daten](input.md#antennendaten-csv) aus dieser Datei.                     |  
@@ -97,6 +97,12 @@ Die Tabelle in diesem Abschnitt beschreibt die Funktion aller Argumente.
 |               |                   | **Achtung:** Die Logdatei wird ohne nachfrage überschrieben.                                                   |  
 | -f            | `--fill-days`,    | Teilt dem Programm mit Puten sollen so behandelt werden als ob sie sich vor ihrer ersten und nach ihrer letzten|  
 |               | `--filldays`      | Aufzeichnung jeden Tag in dem Bereich aufgehalten in dem sie zuerste/zuletzt aufgezeichnet wurden.             |  
+| -m            | `--min-time`,     | Erwartet eine positive Zeit in Sekunden als Wert.                                                              |  
+|               | `--mintime`       | Setzt die Bereichs-Mindest-Aufenthaltsdauer für die Puten.                                                     |  
+|               |                   | Nur Bereichs-Aufenthalte die länger als diese Dauer anhalten werden gewertet.                                  |  
+|               |                   | Kürzere Aufenthalte werden dem letzten längeren Aufenthalt angerechnet.                                        |  
+|               |                   | Ein Wert von 0 kann verwendet werden um die Mindestdauer zu deaktivieren.                                      |  
+|               |                   | Wenn dieses Argument nicht verwendet wird, ist die Mindest-Aufenthaltsdauer 5 Minuten(300 Sekunden).           |  
 
 Hier das Ergebnis von `--help`:
 
@@ -134,6 +140,11 @@ Options:
  -f, --fill-days,            Makes the program pad the recording time to full days.
      --filldays              This means it will assume that all turkeys were in the zone they were first recorded in until their first record.
                              And that they all were in their last recorded zone until the end of each day.
+ -m, --min-time, <TIME>      Sets the minimum time a turkey has to spend in a zone at a time for the stay to be counted.
+     --mintime <TIME>        Set to 0 to disable the check entirely.
+                             Stays shorter than this are counted towards the last stay longer than this value.
+                             The value is in seconds.
+                             The default is 300 seconds, aka 5 minutes.
 ```
 
 #### Leerzeichen

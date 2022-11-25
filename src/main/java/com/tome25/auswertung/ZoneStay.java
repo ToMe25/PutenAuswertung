@@ -85,8 +85,8 @@ public class ZoneStay {
 	public void setExitTime(Calendar exit) throws IllegalArgumentException {
 		if (exit == null) {
 			this.exit = null;
-		} else if (exit.before(entry)) {
-			throw new IllegalArgumentException("Exit time was before entry time.");
+		} else if (!exit.after(entry)) {
+			throw new IllegalArgumentException("Exit time wasn't after entry time.");
 		} else {
 			this.exit = exit;
 		}
@@ -108,6 +108,16 @@ public class ZoneStay {
 	 */
 	public String getZone() {
 		return zone;
+	}
+
+	/**
+	 * Gets a {@link Calendar} representing the time at which the turkey entered
+	 * this zone.
+	 * 
+	 * @return The zone entry time.
+	 */
+	public Calendar getEntryCal() {
+		return (Calendar) entry.clone();
 	}
 
 	/**

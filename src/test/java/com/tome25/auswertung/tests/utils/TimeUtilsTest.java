@@ -187,7 +187,7 @@ public class TimeUtilsTest {
 	public void noYearStringToCal() throws IllegalArgumentException {
 		TimeUtils.parseDate("12.11");
 	}
-	
+
 	/**
 	 * Tests parsing of a String with an empty month.
 	 * 
@@ -197,9 +197,10 @@ public class TimeUtilsTest {
 	public void emptyMonthStringToCal() throws IllegalArgumentException {
 		TimeUtils.parseDate("12..2022");
 	}
-	
+
 	/**
-	 * Tests parsing a date with a day that is higher that the last day of that month.
+	 * Tests parsing a date with a day that is higher that the last day of that
+	 * month.
 	 * 
 	 * @throws IllegalArgumentException Always.
 	 */
@@ -207,7 +208,7 @@ public class TimeUtilsTest {
 	public void tooLargeDayStringToCal() throws IllegalArgumentException {
 		TimeUtils.parseDate("29.02.2021");
 	}
-	
+
 	/**
 	 * Tests parsing a date string with a month that is above 12.
 	 * 
@@ -326,6 +327,15 @@ public class TimeUtilsTest {
 		cal.set(2022, 5, 21, 13, 49, 23);
 		cal.set(Calendar.MILLISECOND, 120);
 		assertEquals("The time of day from the calendar didn't match.", 49763120, TimeUtils.getMsOfDay(cal));
+	}
+
+	/**
+	 * Test converting a time in ms to a date string.
+	 */
+	@Test
+	public void msToDateString() {
+		assertEquals("The from a timestamp generate date string didn't match.", "21.05.2022",
+				TimeUtils.encodeDate(1653095713000l));
 	}
 
 }

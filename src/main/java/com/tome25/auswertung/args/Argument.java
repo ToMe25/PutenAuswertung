@@ -231,6 +231,37 @@ public enum Argument {
 					"This means it will assume that all turkeys were in the zone they were first recorded in until their first record.",
 					"And that they all were in their last recorded zone until the end of each day." };
 		}
+	},
+	MINTIME('m', ArgumentValue.REQUIRED, "TIME", (short) 5, "min-time", "mintime") {
+		@Override
+		public void onReceived(Arguments inst, String val) throws IllegalArgumentException {
+			if (val == null || val.trim().isEmpty()) {
+				throw new IllegalArgumentException("No minimum zone time specified.");
+			}
+
+			int min_time = 0;
+			try {
+				min_time = Integer.parseInt(val);
+			} catch (NumberFormatException e) {
+				throw new IllegalArgumentException("Minimum zone time couldn't be parsed to an integer.", e);
+			}
+
+			if (min_time < 0) {
+				throw new IllegalArgumentException("Minimum zone time cannot be negative.");
+			}
+
+			inst.minTime = min_time;
+		}
+
+		@Override
+		public String[] getDescription() {
+			return new String[] {
+					"Sets the minimum time a turkey has to spend in a zone at a time for the stay to be counted.",
+					"Set to 0 to disable the check entirely.",
+					"Stays shorter than this are counted towards the last stay longer than this value.",
+					"The value is in seconds.", "The default is 300 seconds, aka 5 minutes." };
+		}
+
 	};
 
 	/**

@@ -77,6 +77,14 @@ public class Arguments {
 	public boolean fillDays = false;
 
 	/**
+	 * The minimum time a turkey has to spend in one zone for it to be counted as a
+	 * separate stay.<br/>
+	 * In seconds.<br/>
+	 * Set to 0 to disable minimum completely.
+	 */
+	public int minTime = 300;
+
+	/**
 	 * A set containing all the specified arguments, in case one argument needs to
 	 * check whether another argument was specified.<br/>
 	 * This is populated before the arguments {@link Argument#onReceived onReceived}
@@ -459,6 +467,8 @@ public class Arguments {
 		builder.append(logFile);
 		builder.append(", fillDays=");
 		builder.append(fillDays);
+		builder.append(", minTime=");
+		builder.append(minTime);
 		builder.append(", arguments=");
 		builder.append(arguments);
 		builder.append("]");

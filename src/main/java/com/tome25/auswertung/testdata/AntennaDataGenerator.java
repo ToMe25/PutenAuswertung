@@ -132,7 +132,12 @@ public class AntennaDataGenerator {
 						zoneTime = 24 * 3600000 - TimeUtils.getMsOfDay(changeCal);
 					}
 
-					totalTimes.put(zone, totalTimes.get(zone) + zoneTime);
+					if (totalTimes.containsKey(zone)) {
+						totalTimes.put(zone, totalTimes.get(zone) + zoneTime);
+					} else {
+						totalTimes.put(zone, (long) zoneTime);
+					}
+
 					if (zoneDayTimes.containsKey(zone)) {
 						zoneDayTimes.put(zone, zoneDayTimes.get(zone) + zoneTime);
 					} else {
@@ -354,7 +359,7 @@ public class AntennaDataGenerator {
 					Calendar lastChangeCal = new GregorianCalendar();
 					lastChangeCal.setTimeInMillis(lastZoneChange.get(turkeyName));
 
-					if (zoneTime >= TurkeyInfo.MIN_ZONE_TIME) {
+					if (args.minTime <= 0 || zoneTime >= args.minTime * 1000) {
 						String cZone = currentZone.get(turkeyName);
 
 						if (!zoneTimes.containsKey(turkeyName)) {

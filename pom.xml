@@ -48,6 +48,9 @@
         <plugin>
           <artifactId>maven-surefire-plugin</artifactId>
           <version>2.22.2</version>
+          <configuration>
+            <!-- <argLine>-agentpath:/home/theodor/Dokumente/visualvm_215/visualvm/lib/deployed/jdk16/linux-amd64/libprofilerinterface.so=/home/theodor/Dokumente/visualvm_215/visualvm/lib,5140</argLine> -->
+          </configuration>
         </plugin>
         <plugin>
           <artifactId>maven-jar-plugin</artifactId>

@@ -47,7 +47,7 @@ public class OutputDataTest {
 	@Test
 	public void basic() throws IOException {
 		Arguments args = Arguments.empty();
-		TestResults results = generateTestValues(100, 5, 10, args, true, tempFolder);
+		final TestResults results = generateTestValues(100, 5, 10, args, true, tempFolder);
 		validateResults(results, args);
 	}
 
@@ -60,7 +60,33 @@ public class OutputDataTest {
 	@Test
 	public void basicNonCont() throws IOException {
 		Arguments args = Arguments.empty();
-		TestResults results = generateTestValues(100, 5, 10, args, false, tempFolder);
+		final TestResults results = generateTestValues(100, 5, 10, args, false, tempFolder);
+		validateResults(results, args);
+	}
+
+	/**
+	 * A basic non continuous test without a min zone stay time.
+	 * 
+	 * @throws IOException If reading/writing/creating a temp file failed.
+	 */
+	@Test
+	public void basicNoMinTime() throws IOException {
+		Arguments args = Arguments.empty();
+		args.minTime = 0;
+		final TestResults results = generateTestValues(100, 5, 10, args, false, tempFolder);
+		validateResults(results, args);
+	}
+
+	/**
+	 * A basic non continuous test with a min zone stay time of 30 minutes.
+	 * 
+	 * @throws IOException If reading/writing/creating a temp file failed.
+	 */
+	@Test
+	public void basic30mMinTime() throws IOException {
+		Arguments args = Arguments.empty();
+		args.minTime = 30 * 60;
+		final TestResults results = generateTestValues(100, 5, 10, args, false, tempFolder);
 		validateResults(results, args);
 	}
 
@@ -73,7 +99,7 @@ public class OutputDataTest {
 	public void fillDays() throws IOException {
 		Arguments args = Arguments.empty();
 		args.fillDays = true;
-		TestResults results = generateTestValues(100, 5, 10, args, true, tempFolder);
+		final TestResults results = generateTestValues(100, 5, 10, args, true, tempFolder);
 		validateResults(results, args);
 	}
 
@@ -87,7 +113,37 @@ public class OutputDataTest {
 	public void fillDaysNonCont() throws IOException {
 		Arguments args = Arguments.empty();
 		args.fillDays = true;
-		TestResults results = generateTestValues(100, 5, 10, args, false, tempFolder);
+		final TestResults results = generateTestValues(100, 5, 10, args, false, tempFolder);
+		validateResults(results, args);
+	}
+
+	/**
+	 * A basic non continuous test without a min zone stay time filling day starts
+	 * and ends.
+	 * 
+	 * @throws IOException If reading/writing/creating a temp file failed.
+	 */
+	@Test
+	public void fillDaysNoMinTime() throws IOException {
+		Arguments args = Arguments.empty();
+		args.fillDays = true;
+		args.minTime = 0;
+		final TestResults results = generateTestValues(100, 5, 10, args, false, tempFolder);
+		validateResults(results, args);
+	}
+
+	/**
+	 * A basic non continuous test with a min zone stay time of 30 minutes filling
+	 * day starts and ends.
+	 * 
+	 * @throws IOException If reading/writing/creating a temp file failed.
+	 */
+	@Test
+	public void fillDays30mMinTime() throws IOException {
+		Arguments args = Arguments.empty();
+		args.fillDays = true;
+		args.minTime = 30 * 60;
+		final TestResults results = generateTestValues(100, 5, 10, args, false, tempFolder);
 		validateResults(results, args);
 	}
 
@@ -382,21 +438,22 @@ public class OutputDataTest {
 			throws IOException, NullPointerException {
 		Pair<FileInputStreamHandler, FileOutputStreamHandler> turkeysPair = tempFolder.newTempIOFile("turkeys.csv");
 		FileOutputStreamHandler turkeysOut = turkeysPair.getValue();
-		FileInputStreamHandler turkeysIn = turkeysPair.getKey();
 
-		List<TurkeyInfo> tks = TurkeyGenerator.generateTurkeys(turkeys, 5);
-		CSVHandler.writeTurkeyCSV(tks, turkeysOut);
+		final TestMappings mappings = new TestMappings();
+		mappings.turkeysIn = turkeysPair.getKey();
+		mappings.turkeys = TurkeyGenerator.generateTurkeys(turkeys, 5);
+		CSVHandler.writeTurkeyCSV(mappings.turkeys, turkeysOut);
 		turkeysOut.close();
 
 		Pair<FileInputStreamHandler, FileOutputStreamHandler> zonesPair = tempFolder.newTempIOFile("zones.csv");
 		FileOutputStreamHandler zonesOut = zonesPair.getValue();
-		FileInputStreamHandler zonesIn = zonesPair.getKey();
+		mappings.zonesIn = zonesPair.getKey();
 
-		Map<String, List<String>> zs = ZoneGenerator.generateZones(zones);
-		CSVHandler.writeZonesCSV(zs, zonesOut);
+		mappings.zones = ZoneGenerator.generateZones(zones);
+		CSVHandler.writeZonesCSV(mappings.zones, zonesOut);
 		zonesOut.close();
 
-		return new TestMappings(tks, zs, turkeysIn, zonesIn);
+		return mappings;
 	}
 
 	/**
@@ -431,35 +488,38 @@ public class OutputDataTest {
 			throw new IllegalArgumentException("The days to generate cannot be less than 1.");
 		}
 
-		TestMappings mappings = generateTestMappings(turkeys, zones, tempFolder);
+		final TestMappings mappings = generateTestMappings(turkeys, zones, tempFolder);
+		final TestResults results = new TestResults();
 
-		Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder.newTempIOFile("antenna.csv");
-		FileOutputStreamHandler antennaOut = antennaPair.getValue();
-		FileInputStreamHandler antennaIn = antennaPair.getKey();
-		Pair<Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>>, Map<String, List<ZoneStay>>> antennaData = AntennaDataGenerator
-				.generateAntennaData(mappings.turkeys, mappings.zones, antennaOut, args, days, continuous);
+		final Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder
+				.newTempIOFile("antenna.csv");
+		final FileOutputStreamHandler antennaOut = antennaPair.getValue();
+		final FileInputStreamHandler antennaIn = antennaPair.getKey();
+		results.setAntennaData(AntennaDataGenerator.generateAntennaData(mappings.turkeys, mappings.zones, antennaOut,
+				args, days, continuous));
 		antennaOut.close();
 
-		Pair<FileInputStreamHandler, FileOutputStreamHandler> totalsPair = tempFolder.newTempIOFile("totals.csv");
-		FileOutputStreamHandler totalsOut = totalsPair.getValue();
-		FileInputStreamHandler totalsIn = totalsPair.getKey();
+		final Pair<FileInputStreamHandler, FileOutputStreamHandler> totalsPair = tempFolder.newTempIOFile("totals.csv");
+		final FileOutputStreamHandler totalsOut = totalsPair.getValue();
+		final FileInputStreamHandler totalsIn = totalsPair.getKey();
 
-		Pair<FileInputStreamHandler, FileOutputStreamHandler> staysPair = tempFolder.newTempIOFile("stays.csv");
-		FileOutputStreamHandler staysOut = staysPair.getValue();
-		FileInputStreamHandler staysIn = staysPair.getKey();
+		final Pair<FileInputStreamHandler, FileOutputStreamHandler> staysPair = tempFolder.newTempIOFile("stays.csv");
+		final FileOutputStreamHandler staysOut = staysPair.getValue();
+		final FileInputStreamHandler staysIn = staysPair.getKey();
 		DataHandler.handleStreams(antennaIn, mappings.turkeysIn, mappings.zonesIn, totalsOut, staysOut, args);
 		totalsOut.close();
 		staysOut.close();
 
-		Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>> outputTotals = CSVHandler
+		final Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>> outputTotals = CSVHandler
 				.readTotalsCSV(totalsIn);
 		totalsIn.close();
+		results.outputTimes = outputTotals.getKey();
+		results.outputChanges = outputTotals.getValue();
 
-		Map<String, List<ZoneStay>> outputStays = CSVHandler.readStaysCSV(staysIn);
+		results.outputStays = CSVHandler.readStaysCSV(staysIn);
 		staysIn.close();
 
-		return new TestResults(antennaData.getKey().getKey(), outputTotals.getKey(), antennaData.getKey().getValue(),
-				outputTotals.getValue(), antennaData.getValue(), outputStays);
+		return results;
 	}
 
 	/**
@@ -473,22 +533,28 @@ public class OutputDataTest {
 		/**
 		 * A collection of turkeys generated for testing.
 		 */
-		public final List<TurkeyInfo> turkeys;
+		public List<TurkeyInfo> turkeys;
 
 		/**
 		 * A list of zones generated for testing.
 		 */
-		public final Map<String, List<String>> zones;
+		public Map<String, List<String>> zones;
 
 		/**
 		 * A {@link FileInputStreamHandler} to read the turkey mappings from.
 		 */
-		public final FileInputStreamHandler turkeysIn;
+		public FileInputStreamHandler turkeysIn;
 
 		/**
 		 * A {@link FileInputStreamHandler} to read the zones mappings from.
 		 */
-		public final FileInputStreamHandler zonesIn;
+		public FileInputStreamHandler zonesIn;
+
+		/**
+		 * Creates an empty TestMappings object.
+		 */
+		public TestMappings() {
+		}
 
 		/**
 		 * Creates a new TestMappings object and initializes all final fields.
@@ -500,8 +566,8 @@ public class OutputDataTest {
 		 * @param zonesIn   A {@link FileInputStreamHandler} to read the zones mappings
 		 *                  from.
 		 */
-		public TestMappings(List<TurkeyInfo> turkeys, Map<String, List<String>> zones, FileInputStreamHandler turkeysIn,
-				FileInputStreamHandler zonesIn) {
+		public TestMappings(final List<TurkeyInfo> turkeys, final Map<String, List<String>> zones,
+				final FileInputStreamHandler turkeysIn, final FileInputStreamHandler zonesIn) {
 			this.turkeys = turkeys;
 			this.zones = zones;
 			this.turkeysIn = turkeysIn;
@@ -520,52 +586,74 @@ public class OutputDataTest {
 		/**
 		 * Generated times per zone per day per turkey.
 		 */
-		public final Map<String, Map<String, Map<String, Long>>> antennaTimes;
+		public Map<String, Map<String, Map<String, Long>>> antennaTimes;
 
 		/**
 		 * Time per zone per day per turkey read from the output file.
 		 */
-		public final Map<String, Map<String, Map<String, Long>>> outputTimes;
+		public Map<String, Map<String, Map<String, Long>>> outputTimes;
 
 		/**
 		 * Generated zone change counts.
 		 */
-		public final Map<String, Map<String, Integer>> antennaChanges;
+		public Map<String, Map<String, Integer>> antennaChanges;
 
 		/**
 		 * Zone change counts parsed from the output file.
 		 */
-		public final Map<String, Map<String, Integer>> outputChanges;
+		public Map<String, Map<String, Integer>> outputChanges;
 
 		/**
 		 * Generated zone stays per turkey.
 		 */
-		public final Map<String, List<ZoneStay>> antennaStays;
+		public Map<String, List<ZoneStay>> antennaStays;
 
 		/**
 		 * Zone stays per turkey parsed from the output file.
 		 */
-		public final Map<String, List<ZoneStay>> outputStays;
+		public Map<String, List<ZoneStay>> outputStays;
 
 		/**
-		 * Creates a new TestTotals object and initializes all final fields.
+		 * Creates an empty TestResults object.
+		 */
+		public TestResults() {
+		}
+
+		/**
+		 * Creates a new TestResults object and initializes all final fields.
 		 * 
 		 * @param antennaTimes   Calculated times per turkey per day per zone.
 		 * @param outputTimes    Time per turkey per day per zone parsed from the output
 		 *                       file.
 		 * @param antennaChanges Calculated zone changes per turkey.
 		 * @param outputChanges  Zone changes per turkey parsed from the output file.
+		 * @param antennaStays   A list containing all the generated {@link ZoneStay}.
+		 * @param outputStays    A list containing all the {@link ZoneStay} objects
+		 *                       parsed from the output file.
 		 */
-		public TestResults(Map<String, Map<String, Map<String, Long>>> antennaTimes,
-				Map<String, Map<String, Map<String, Long>>> outputTimes,
-				Map<String, Map<String, Integer>> antennaChanges, Map<String, Map<String, Integer>> outputChanges,
-				Map<String, List<ZoneStay>> antennaStays, Map<String, List<ZoneStay>> outputStays) {
+		public TestResults(final Map<String, Map<String, Map<String, Long>>> antennaTimes,
+				final Map<String, Map<String, Map<String, Long>>> outputTimes,
+				final Map<String, Map<String, Integer>> antennaChanges,
+				final Map<String, Map<String, Integer>> outputChanges, final Map<String, List<ZoneStay>> antennaStays,
+				final Map<String, List<ZoneStay>> outputStays) {
 			this.antennaTimes = antennaTimes;
 			this.outputTimes = outputTimes;
 			this.antennaChanges = antennaChanges;
 			this.outputChanges = outputChanges;
 			this.antennaStays = antennaStays;
 			this.outputStays = outputStays;
+		}
+
+		/**
+		 * Set the generated antenna data values.
+		 * 
+		 * @param antennaData The generated values to be used as antenna data.
+		 */
+		public void setAntennaData(
+				final Pair<Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>>, Map<String, List<ZoneStay>>> antennaData) {
+			antennaTimes = antennaData.getKey().getKey();
+			antennaChanges = antennaData.getKey().getValue();
+			antennaStays = antennaData.getValue();
 		}
 	}
 

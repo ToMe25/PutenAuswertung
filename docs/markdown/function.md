@@ -26,24 +26,27 @@ Außerdem wird eine [Fehlermeldung] geschrieben.
 ## Antennen-Aufzeichnung verarbeiten
 Jedes mal wenn eine gültige Zeile eingelesen wurde, wird die interne Repräsentation der Pute die den aufgezeichneten Transponder trägt aktualisiert.
 
+Die Verarbeitung hier hängt von der [konfigurierbaren](arguments.md) Mindest-Aufenthaltsdauer ab.  
+Standardmäßig ist diese fünf Minuten.
+
 **Falls diese bereits existiert, und zuletzt im selben Bereich aufgezeichnet wurde**, wird nur deren letzter Aufzeichnungs-Zeitpunkt geändert.
 
 **Falls sie bereits existiert, aber zuletzt in einem anderen Bereich aufgezeichnet wurde**, passiert eine von drei Sachen:
  1. Falls das `fill-days` [Argument](arguments.md#argument-erklaerung) verwendet wird und die letzte Aufzeichnung von einem vorherigen Tag ist:  
-    In diesem Fall wird die Pute so behandelt was wäre ihre letzte Aufzeichnung um Mitternacht, mehr als fünf Minuten her und in dem Bereich in dem sie nun ist.
- 2. Falls der letzte aufgezeichnete Bereichswechsel mehr als fünf Minuten her ist:  
+    In diesem Fall wird die Pute so behandelt was wäre ihre letzte Aufzeichnung um Mitternacht, mehr als die Mindest-Aufenthaltsdauer her und in dem Bereich in dem sie nun ist.
+ 2. Falls der letzte aufgezeichnete Bereichswechsel mehr als die Mindest-Aufenthaltsdauer her ist:  
     In diesem Fall wird aufgezeichnet, das die Pute sich für den Zeitraum seit diese Bereichswechsel, in dem Bereich in dem sie zuvor Aufgezeichnet wurde befand.  
     Der vorläufige Endzeitpunkt dieses Aufenthalts ist der Zeitpunkt der neuen Aufzeichnung.  
     Außerdem wird der Aufenthalt vor dem nun beendeten in die Datei [PutenAuswertungAufenthalte.csv](output.md#putenauswertungaufenthalte-csv) geschrieben.
- 3. Falls der letzte Aufenthalts-Zeitraum weniger als fünf Minuten lang war:  
-    In diesem Fall wird aufgezeichnet, das die Pute sich bis zu der neusten Aufzeichnung im letzten Bereich aufhielt, in dem sie sich mehr als fünf Minuten am Stück aufgehalten hat.
+ 3. Falls der letzte Aufenthalts-Zeitraum weniger als die Mindest-Aufenthaltsdauer lang war:  
+    In diesem Fall wird aufgezeichnet, das die Pute sich bis zu der neusten Aufzeichnung im letzten Bereich aufhielt, in dem sie sich mehr als die Mindest-Aufenthaltsdauer am Stück aufgehalten hat.
 
-Unabhängig davon, ob die Pute sich im letzten Bereich mehr als fünf Minuten aufgehalten hat, wird die Pute dann Vorläufig als in dem Bereich der neuesten Aufzeichnung befindlich markiert.  
-Danach wird die Anzahl der Bereichswechsel aktualisiert.
+Danach wird die Pute Vorläufig als in dem Bereich der neuesten Aufzeichnung befindlich markiert.  
+Dann wird die Anzahl der Bereichswechsel aktualisiert.
 
 **Falls die Pute noch nicht aufgezeichnet wurde**, wird eine neue interne Repräsentation für diese Pute erzeugt.  
 Diese wird so behandelt, als ob sie sich seit dem Anfang der Aufzeichnungen im ersten Bereich in dem sie Aufgezeichnet wurde aufgehalten hätte.  
-Egal ob dies mehr als fünf Minuten sind.  
+Egal ob dies mehr als die Mindest-Aufenthaltsdauer ist.  
 Der Anfang der Aufzeichnungen kann je nach [Konfiguration](arguments.md) der Zeitpunkt der ersten Aufzeichnung der ersten Pute, oder der Anfang des Tages der ersten Aufzeichnung dieser Pute sein.
 
 ### Wenn eine Aufzeichnung ein anderes Datum hat

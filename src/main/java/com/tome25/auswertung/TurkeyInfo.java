@@ -29,11 +29,6 @@ public class TurkeyInfo {
 	public static final int DAY_END = 24 * 60 * 60 * 1000 - 1;
 
 	/**
-	 * The minimum time a turkey has to spend in a zone for it to be counted at all.
-	 */
-	public static final int MIN_ZONE_TIME = 5 * 60 * 1000;
-
-	/**
 	 * The string id of the turkey represented by this info object.
 	 */
 	private final String id;
@@ -172,7 +167,8 @@ public class TurkeyInfo {
 
 		if (time != null) {
 			lastStay = new ZoneStay(id, currentZone,
-					startTime == null ? TimeUtils.parseDate(TimeUtils.encodeDate(time)) : startTime);
+					startTime == null ? TimeUtils.parseDate(TimeUtils.encodeDate(time)) : startTime); // TODO make more
+																										// performant.
 
 			dayZoneTimes.put(TimeUtils.encodeDate(time), new HashMap<String, Integer>());
 			if (args.fillDays && currentZone != null) {
@@ -259,7 +255,7 @@ public class TurkeyInfo {
 					stayOut.println(CSVHandler.stayToCsvLine(lastStay));
 					lastStay = new ZoneStay(id, currentZone, lastCal, currentTime);
 					stayOut.println(CSVHandler.stayToCsvLine(lastStay));
-				} else {
+				} else if (currentTime.after(lastStay.getEntryCal())) {
 					lastStay.setExitTime(currentTime);
 					stayOut.println(CSVHandler.stayToCsvLine(lastStay));
 				}
@@ -274,7 +270,7 @@ public class TurkeyInfo {
 
 		int zoneTime = (int) (timeMs - lastZoneChange);
 		if (currentZone != null && !newZone.equals(currentZone)) {
-			if (zoneTime < MIN_ZONE_TIME) {// TODO disable with argument
+			if (args.minTime > 0 && zoneTime < args.minTime * 1000) {
 				addTime(time, currentZone, -zoneTime);
 				addTime(time, lastStay.getZone(), zoneTime);
 
@@ -313,7 +309,7 @@ public class TurkeyInfo {
 			}
 
 			lastZoneChange = timeMs;
-		} else if (zoneTime > MIN_ZONE_TIME && !lastStay.getZone().equals(currentZone)) {
+		} else if ((args.minTime <= 0 || zoneTime >= args.minTime * 1000) && !lastStay.getZone().equals(currentZone)) {
 			Calendar lastChangeCal = new GregorianCalendar();
 			lastChangeCal.setTimeInMillis(lastZoneChange);
 			if (stayOut != null) {
@@ -485,7 +481,7 @@ public class TurkeyInfo {
 			stayOut.println(CSVHandler.stayToCsvLine(lastStay), temporary);
 			lastStay = new ZoneStay(id, currentZone, lastCal, currentTime);
 			stayOut.println(CSVHandler.stayToCsvLine(lastStay), temporary);
-		} else {
+		} else if (currentTime.after(lastStay.getEntryCal())) {
 			lastStay.setExitTime(currentTime);
 			stayOut.println(CSVHandler.stayToCsvLine(lastStay), temporary);
 		}
