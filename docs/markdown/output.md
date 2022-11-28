@@ -11,7 +11,22 @@ Die Ergebnisdateien werden in dem Verzeichnis angelegt in dem das Programm ausge
 Also da wo sich auch die [Input-Dateien](input.md) befinden müssen.  
 Wie auch die [Input-Dateien](input.md) sind die Ergebnis-Dateien im [CSV Format](formats.md#csv).
 
-**Achtung:** Das Programm überschreibt momentan die Ergebnis-Dateien ohne Nachfrage.
+Die Namen und Positionen dieser Dateien können mittels [Programm-Argumenten](arguments.md) verändert werden.
+
+Falls eine Ergebnisdatei schon existiert fragt das Programm nach ob diese überschrieben, oder eine andere verwendet werden soll.
+
+Diese Nachfrage sieht so aus:
+
+```
+Output file "PutenAuswertungZeiten.csv" already exists.
+Do you want to [O]verride, [R]ename, or [C]ancel?
+```
+
+Falls `Rename` gewählt wird, kann im nächsten Schritt ein neuer Name angegeben werden.
+
+Note: Diese Nachfrage wird nur in das Terminal geschrieben, sie taucht nicht in der Logdatei auf.
+
+**Achtung:** Das Programm überschreibt die Ergebnis-Dateien, wenn es nicht in einem Terminal ausgeführt wird, ohne Nachfrage.
 
 ## PutenAuswertungZeiten.csv
 Die `PutenAuswertungZeiten.csv` Datei enthält die Zeiten die eine Pute an einem Tag in einem Bereich verbracht hat.  

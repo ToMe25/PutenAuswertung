@@ -63,6 +63,12 @@ public class Arguments {
 	public String staysOutput = null;
 
 	/**
+	 * Whether output files should be overridden without asking.<br/>
+	 * Always treated as {@code true} if the program isn't run in interactive mode.
+	 */
+	public boolean overrideOutput = false;
+
+	/**
 	 * The specified file to write logging messages to.<br/>
 	 * {@code null} if no log file should be created.
 	 */

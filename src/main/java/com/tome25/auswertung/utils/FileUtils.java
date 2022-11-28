@@ -1,8 +1,10 @@
 package com.tome25.auswertung.utils;
 
+import java.io.Console;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.Writer;
 import java.net.URL;
 import java.nio.file.DirectoryNotEmptyException;
 import java.nio.file.FileAlreadyExistsException;
@@ -15,6 +17,7 @@ import java.util.Stack;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
+import com.tome25.auswertung.args.Arguments;
 import com.tome25.auswertung.log.LogHandler;
 
 /**
@@ -307,6 +310,157 @@ public class FileUtils {
 				}
 			}
 		}
+	}
+
+	/**
+	 * Gets the file to use as an output file.
+	 * 
+	 * Always returns the default output file if either the override argument is
+	 * given, or the program is run non-interactively.<br/>
+	 * Unless the file exists but is not a file or cannot be written, in which case
+	 * it returns {@code null}.<br/>
+	 * Also returns the default file if it does not exist.
+	 * 
+	 * If none of these are true it asks the user what to do.<br/>
+	 * The user then has three choices:
+	 * <ul>
+	 * <li>Override: The file is to be overridden. This method returns that
+	 * file.</li>
+	 * <li>Rename: The content is to be written to a different user specified file.
+	 * This method returns that specified file.</li>
+	 * <li>Cancel: Program execution is to be canceled. This method returns
+	 * {@code null}.</li>
+	 * </ul>
+	 * 
+	 * @param defaultFile The default file to be used.
+	 * @param args        The commandline arguments given to this program.
+	 * @return The file to write to instead of {@code defaultFile}, or {@code null}
+	 *         if no valid file could be found.
+	 * @throws IOException If something goes wrong with underlying IO methods.
+	 */
+	public static File getOutputFile(File defaultFile, Arguments args) throws IOException {
+		if (defaultFile == null) {
+			return defaultFile;
+		}
+
+		if (!defaultFile.exists()) {
+			return defaultFile;
+		}
+
+		boolean allowOverride = true;
+		if (!defaultFile.isFile() || !defaultFile.canWrite()) {
+			allowOverride = false;
+		}
+
+		Console cons = System.console();
+		if (cons == null) {
+			if (allowOverride) {
+				return defaultFile;
+			} else {
+				LogHandler.err_println(
+						"Cannot override file \"" + defaultFile + "\" because it isn't a file or can't be written.");
+				LogHandler.print_debug_info("File: %s, Interactive: %s, Arguments: %s", defaultFile,
+						cons == null ? "false" : "true", args);
+				return null;
+			}
+		}
+
+		if (args.overrideOutput) {
+			if (allowOverride) {
+				return defaultFile;
+			} else {
+				LogHandler.err_println(
+						"Cannot override file \"" + defaultFile + "\" because it isn't a file or can't be written.");
+				LogHandler.print_debug_info("File: %s, Interactive: %s, Arguments: %s", defaultFile,
+						cons == null ? "false" : "true", args);
+				return null;
+			}
+		}
+
+		Writer out = cons.writer();
+		out.write("Output file \"" + defaultFile + "\" already exists." + System.lineSeparator());
+		out.write("Do you want to ");
+		if (allowOverride) {
+			out.write("[O]verride, ");
+		}
+		out.write("[R]ename, or [C]ancel?" + System.lineSeparator());
+		out.flush();
+		out.close();
+
+		String response = cons.readLine().trim();
+		while (response.length() == 0) {
+			response = cons.readLine().trim();
+		}
+
+		if (response.length() > 1) {
+			LogHandler.err_println("Received invalid input \"" + response + "\".");
+			return null;
+		}
+
+		char c = response.charAt(0);
+		File file = null;
+		if (c == 'o' || c == 'O') {
+			file = defaultFile;
+		} else if (c == 'r' || c == 'R') {
+			String newName = cons.readLine("Enter new file name: ").trim();
+			while (newName.length() == 0) {
+				newName = cons.readLine().trim();
+			}
+			file = getOutputFile(new File(newName), args);
+		} else if (c == 'c' || c == 'C') {
+			LogHandler.out_println("Execution canceled.");
+			return null;
+		} else {
+			LogHandler.err_println("Received invalid input " + c + '.');
+			return null;
+		}
+
+		return file;
+	}
+
+	/**
+	 * Creates the given file and all missing parent directories.
+	 * 
+	 * @param file The file to create.
+	 * @return {@code true} if the file now exists and is a file. {@code false}
+	 *         otherwise.
+	 * @throws NullPointerException If {@code file} is {@code null}.
+	 * @throws IOException          If something with file io goes wrong.
+	 */
+	public static boolean createFile(File file) throws NullPointerException, IOException {
+		Objects.requireNonNull(file, "The file to create cannot be null.");
+
+		if (file.exists() && file.isFile()) {
+			return true;
+		}
+
+		if (file.exists() && !file.isFile()) {
+			LogHandler
+					.err_println("The file \"" + file + "\" could not be created because it exists, but isn't a file.");
+			LogHandler.print_debug_info("File: %s", file);
+			return false;
+		}
+
+		file = file.getAbsoluteFile();
+		File parent = file.getParentFile();
+
+		if (parent.exists() && !parent.isDirectory()) {
+			LogHandler.err_println("The parent directory for the file \"" + file + "\" exists, but isn't a directory.");
+			LogHandler.print_debug_info("File: %s, Parent Dir: %s", file, parent);
+			return false;
+		}
+
+		if (!parent.exists()) {
+			if (parent.mkdirs()) {
+				LogHandler.out_println("Created output directory \"" + parent.getCanonicalPath() + "\".", true);
+			} else {
+				LogHandler.err_println("Failed to create the directory to put the file \"" + file + "\" into.");
+				LogHandler.print_debug_info("File: %s, Parent Dir: %s", file, parent);
+				return false;
+			}
+		}
+
+		return file.createNewFile();
 	}
 
 }

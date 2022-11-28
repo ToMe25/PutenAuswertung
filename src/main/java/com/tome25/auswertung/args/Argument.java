@@ -261,7 +261,19 @@ public enum Argument {
 					"Stays shorter than this are counted towards the last stay longer than this value.",
 					"The value is in seconds.", "The default is 300 seconds, aka 5 minutes." };
 		}
+	},
+	OVERRIDE('O', (short) 5, "override", "override-outputs") {
+		@Override
+		public void onReceived(Arguments inst, String val) throws IllegalArgumentException {
+			inst.overrideOutput = true;
+		}
 
+		@Override
+		public String[] getDescription() {
+			return new String[] { "Tells the program to override output files if they already exist.",
+					"If this argument is not specified the program will ask what to do if output files already exist.",
+					"If the program is run non-interactively(in a script or by double-clicking) it overrides output files even without this argument." };
+		}
 	};
 
 	/**

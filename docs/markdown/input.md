@@ -12,6 +12,8 @@ Die ersten zwei dieser Dateien werden in dieser Dokumentation "Zuordnungs-Dateie
 Dies ist da diese Zuordnungen von Ids zu anderen Ids enthalten.  
 Diese werden an einigen Stellen gleich behandelt.
 
+[Fehlermeldung]: usage.md#status-meldungen "Status-Meldungen"
+
 ## Allgemein
 Hier ein Paar Informationen die für alle Input-Dateien gelten.
 
@@ -21,8 +23,7 @@ Hier ein Paar Informationen die für alle Input-Dateien gelten.
  4. Diese Dateien müssen sich in dem Verzeichnis befinden in dem das Programm ausgeführt wird, nicht in dem Verzeichnis in dem das Programm gespeichert ist.
  5. Ungültige Zeilen werden mit einer [Fehlermeldung] ignoriert.  
     Sie sorgen nicht für das beenden der Auswertung.
-
-[Fehlermeldung]: usage.md#status-meldungen "Status-Meldungen"
+ 6. Die Dateinamen und Positionen können mittels [Programm-Argumenten](arguments.md) verändert werden.
 
 ## Puten.csv
 Die `Puten.csv` Datei muss zuerst eine Spalte mit der Id der Pute, und dann eine oder mehr Spalten mit den Transpondern die zu dieser Pute gehören, enthalten.  

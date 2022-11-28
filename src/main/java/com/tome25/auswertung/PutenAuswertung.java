@@ -10,6 +10,7 @@ import com.tome25.auswertung.stream.FileInputStreamHandler;
 import com.tome25.auswertung.stream.FileOutputStreamHandler;
 import com.tome25.auswertung.stream.IInputStreamHandler;
 import com.tome25.auswertung.stream.IOutputStreamHandler;
+import com.tome25.auswertung.utils.FileUtils;
 import com.tome25.auswertung.utils.StringUtils;
 
 /**
@@ -89,6 +90,10 @@ public class PutenAuswertung {
 		LogHandler.out_println("Debug argument received, printing additional status/error messages.", true);
 
 		LogHandler.removeLogCache(argHandler.logFile, argHandler.logFile);
+
+		if (System.console() != null) {
+			LogHandler.out_println("Interactive mode detected.", true);
+		}
 
 		File antennaFile = null;
 		if (argHandler.antennaDataInput != null) {
@@ -224,17 +229,22 @@ public class PutenAuswertung {
 			totalFile = new File(DEFAULT_TOTALS_FILE);
 		}
 
-		if (totalFile.exists() && !totalFile.isFile()) {
+		try {
+			totalFile = FileUtils.getOutputFile(totalFile, argHandler);
+		} catch (IOException e) {
+			LogHandler.err_println("Failed to check what file to write totals to.");
 			totalFile = null;
-			LogHandler.err_println(
-					"The totals output file \"" + argHandler.totalsOutput + "\" exists, but isn't a file.");
-		} else {
+		}
+
+		if (totalFile != null) {
 			try {
 				LogHandler.out_println("Writing totals to file \"" + totalFile.getCanonicalPath() + "\".");
 			} catch (IOException e) {
 				LogHandler.err_println("An error occurred while getting a files canonical path.");
 				LogHandler.print_exception(e, "get canonical path", "File: %s", totalFile);
 			}
+		} else {
+			return 3;
 		}
 
 		File stayFile = null;
@@ -244,75 +254,44 @@ public class PutenAuswertung {
 			stayFile = new File(DEFAULT_STAYS_FILE);
 		}
 
-		if (stayFile.exists() && !stayFile.isFile()) {
+		try {
+			stayFile = FileUtils.getOutputFile(stayFile, argHandler);
+		} catch (IOException e) {
+			LogHandler.err_println("Failed to check what file to write stays to.");
 			stayFile = null;
-			LogHandler.err_println(
-					"The zone stays output file \"" + argHandler.staysOutput + "\" exists, but isn't a file.");
-		} else {
+		}
+
+		if (stayFile != null) {
 			try {
 				LogHandler.out_println("Writing zone stays to file \"" + stayFile.getCanonicalPath() + "\".");
 			} catch (IOException e) {
 				LogHandler.err_println("An error occurred while getting a files canonical path.");
 				LogHandler.print_exception(e, "get canonical path", "File: %s", stayFile);
 			}
+		} else {
+			return 3;
 		}
 
-		if (totalFile != null && !totalFile.exists()) {
-			File parent = totalFile.getAbsoluteFile().getParentFile();
+		if (totalFile != null) {
 			try {
-				if (parent.exists() && !parent.isDirectory()) {
-					LogHandler.err_println(
-							"The directory in which the total output file should be created exists, but isn't a directory.");
-					LogHandler.print_debug_info("Totals File: %s, Parent Dir: %s", totalFile, parent);
+				if (!FileUtils.createFile(totalFile)) {
 					totalFile = null;
 				}
-
-				if (totalFile != null && !parent.exists()) {
-					if (parent.mkdirs()) {
-						LogHandler.out_println("Created output directory \"" + parent.getCanonicalPath() + "\".", true);
-					} else {
-						LogHandler.err_println("Failed to create the directory to put the totals file into.");
-						LogHandler.print_debug_info("Totals File: %s, Parent Dir: %s", totalFile, parent);
-						totalFile = null;
-					}
-				}
-
-				if (totalFile != null) {
-					totalFile.createNewFile();
-				}
 			} catch (IOException e) {
-				LogHandler.err_println("Failed to create totals output file \"" + totalFile.getAbsolutePath() + "\".");
-				LogHandler.print_exception(e, "create output file", "File: %s", totalFile);
+				LogHandler.err_println("Failed to create totals output file.");
+				LogHandler.print_exception(e, "create totals file", "Totals File: %s, Arguments: %s", totalFile, args);
 				totalFile = null;
 			}
 		}
 
-		if (stayFile != null && !stayFile.exists()) {
-			File parent = stayFile.getAbsoluteFile().getParentFile();
+		if (stayFile != null) {
 			try {
-				if (parent.exists() && !parent.isDirectory()) {
-					LogHandler.err_println(
-							"The directory in which the stays output file should be created exists, but isn't a directory.");
-					LogHandler.print_debug_info("Stays File: %s, Parent Dir: %s", stayFile, parent);
+				if (!FileUtils.createFile(stayFile)) {
 					stayFile = null;
 				}
-
-				if (stayFile != null && !parent.exists()) {
-					if (parent.mkdirs()) {
-						LogHandler.out_println("Created output directory \"" + parent.getCanonicalPath() + "\".", true);
-					} else {
-						LogHandler.err_println("Failed to create the directory to put the stays file into.");
-						LogHandler.print_debug_info("Stays File: %s, Parent Dir: %s", stayFile, parent);
-						stayFile = null;
-					}
-				}
-
-				if (stayFile != null) {
-					stayFile.createNewFile();
-				}
 			} catch (IOException e) {
-				LogHandler.err_println("Failed to create stays output file \"" + stayFile.getAbsolutePath() + "\".");
-				LogHandler.print_exception(e, "create output file", "File: %s", stayFile);
+				LogHandler.err_println("Failed to create stays output file.");
+				LogHandler.print_exception(e, "create stays file", "Stays File: %s, Arguments: %s", stayFile, args);
 				stayFile = null;
 			}
 		}

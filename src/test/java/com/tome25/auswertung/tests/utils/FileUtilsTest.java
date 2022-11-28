@@ -362,4 +362,79 @@ public class FileUtilsTest {
 		FileUtils.copyDirectory(source, target);
 	}
 
+	/**
+	 * Test creating a file that already exists.
+	 * 
+	 * @throws IOException If the file creation fails.
+	 */
+	@Test
+	public void createExistingFile() throws IOException {
+		File target = tempFolder.newFile("existing.txt");
+		assertTrue("Creating an already existing file returned false.", FileUtils.createFile(target));
+	}
+
+	/**
+	 * Test creating a file that doesn't exist.
+	 * 
+	 * @throws IOException If creating the file failed.
+	 */
+	@Test
+	public void createNotExistingFile() throws IOException {
+		File target = tempFolder.newFile("missing.txt");
+		target.delete();
+		assertTrue("Creating a not existing file returned false.", FileUtils.createFile(target));
+	}
+
+	/**
+	 * Test creating a file in a directory that doesn't exist.
+	 * 
+	 * @throws IOException If something fails.
+	 */
+	@Test
+	public void createFileAndParentDir() throws IOException {
+		File target = tempFolder.newFolder("missing");
+		target.delete();
+		target = new File(target, "test.txt");
+		assertTrue("Creating a file and a dir returned false.", FileUtils.createFile(target));
+	}
+
+	/**
+	 * Test creating a file in a directory that exists, but is a file.
+	 * 
+	 * @throws IOException If something fails, idk.
+	 */
+	@Test
+	public void createFileInFile() throws IOException {
+		File target = tempFolder.newFile("missing");
+		target = new File(target, "test.txt");
+		assertFalse("Creating a file in dir that was a file returned true.", FileUtils.createFile(target));
+	}
+
+	/**
+	 * Test creating a file in a directory in a missing directory.
+	 * 
+	 * @throws IOException If file or directory creation fails.
+	 */
+	@Test
+	public void createParentDirInMissing() throws IOException {
+		File target = tempFolder.newFolder("missing");
+		target.delete();
+		target = new File(target, "parent");
+		target = new File(target, "file.txt");
+		assertTrue("Creating a file and two directories returned false.", FileUtils.createFile(target));
+	}
+
+	/**
+	 * Test creating a file in a directory in a file.
+	 * 
+	 * @throws IOException If something fails.
+	 */
+	@Test
+	public void createParentDirInFile() throws IOException {
+		File target = tempFolder.newFile("missing");
+		target = new File(target, "parent");
+		target = new File(target, "file.txt");
+		assertFalse("Creating a file in a dir in a file returned true.", FileUtils.createFile(target));
+	}
+
 }
