@@ -3,6 +3,7 @@ package com.tome25.auswertung.tests.csvhandler;
 import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Objects;
 
 import org.junit.Test;
@@ -18,7 +19,6 @@ import com.tome25.auswertung.utils.TimeUtils;
  * 
  * @author theodor
  */
-//TODO Add multi day tests
 public class TurkeyCSVTest {
 
 	/**
@@ -109,6 +109,41 @@ public class TurkeyCSVTest {
 	}
 
 	/**
+	 * Test converting the first day of a {@link TurkeyInfo} with info about two
+	 * days to a csv line.
+	 */
+	@Test
+	public void convertFirstDay() {
+		String date = "05.12.2021";
+		TurkeyInfo info = getTwoDayInfo(date);
+		assertEquals("Getting zone info for the first day of a TurkeyInfo returned an invalid string.",
+				"0;05.12.2021;5;11:39:55.28;01:28:33.19;10:51:31.53", CSVHandler.turkeyToCsvLine(info, date, null));
+	}
+
+	/**
+	 * Test converting the second day of a {@link TurkeyInfo} with info about two
+	 * days to a csv line.
+	 */
+	@Test
+	public void convertSecondDay() {
+		TurkeyInfo info = getTwoDayInfo("21.09.2023");
+		assertEquals("Getting zone info for the first day of a TurkeyInfo returned an invalid string.",
+				"0;22.09.2023;5;08:37:29.52;02:50:52.58;12:12:37.92;00:18:59.98",
+				CSVHandler.turkeyToCsvLine(info, "22.09.2023", null));
+	}
+
+	/**
+	 * Test generating a totals line for a two day {@link TurkeyInfo}.
+	 */
+	@Test
+	public void convertMultiDayTotals() {
+		TurkeyInfo info = getTwoDayInfo("21.09.2023");
+		assertEquals("Getting zone info for the first day of a TurkeyInfo returned an invalid string.",
+				"0;total;10;20:17:24.80;04:19:25.77;12:12:37.92;11:10:31.51",
+				CSVHandler.turkeyToCsvLine(info, null, null));
+	}
+
+	/**
 	 * Generates a basic {@link TurkeyInfo} for testing.<br/>
 	 * The generated {@link TurkeyInfo} has the transponders "T1", "Trans 2", and
 	 * "T3".<br/>
@@ -136,6 +171,33 @@ public class TurkeyCSVTest {
 		info.endDay(day);
 
 		return info;
+	}
+
+	/**
+	 * Generates a basic turkey containing zone info for two days.<br/>
+	 * The generated {@link TurkeyInfo} has the transponders "T1", "Trans 2", and
+	 * "T3".<br/>
+	 * It has entered the zones "Z1", "Zone 2", "#3", and "Z4".
+	 * 
+	 * @param firstDate The first of the two days for which to generate zone info.
+	 * @return The generated {@link TurkeyInfo}.
+	 * @throws NullPointerException If {@code firstDate} is {@code null}.
+	 */
+	public static TurkeyInfo getTwoDayInfo(String firstDate) throws NullPointerException {
+		Objects.requireNonNull(firstDate, "The first date to use was null.");
+
+		TurkeyInfo ti = getBasicInfo(firstDate);
+		Calendar cal = TimeUtils.parseDate(firstDate);
+		cal.add(Calendar.DATE, 1);
+		String secondDate = TimeUtils.encodeDate(cal);
+		ti.changeZone("Z4", TimeUtils.parseTime(secondDate, 87234));
+		ti.changeZone("Zone 2", TimeUtils.parseTime(secondDate, 2345054));
+		ti.changeZone("#3", TimeUtils.parseTime(secondDate, 3485034));
+		ti.changeZone("Z4", TimeUtils.parseTime(secondDate, 34534555));
+		ti.changeZone("Z1", TimeUtils.parseTime(secondDate, 76234657));
+		ti.endDay(secondDate);
+
+		return ti;
 	}
 
 }
