@@ -166,9 +166,11 @@ public class TurkeyInfo {
 		this.lastZoneChange = time == null ? 0 : time.getTimeInMillis();
 
 		if (time != null) {
+			Calendar dayStart = new GregorianCalendar();
+			dayStart.setTimeInMillis(0);
+			dayStart.set(time.get(Calendar.YEAR), time.get(Calendar.MONTH), time.get(Calendar.DAY_OF_MONTH));
 			lastStay = new ZoneStay(id, currentZone,
-					startTime == null ? TimeUtils.parseDate(TimeUtils.encodeDate(time)) : startTime); // TODO make more
-																										// performant.
+					args.fillDays ? dayStart : startTime);
 
 			dayZoneTimes.put(TimeUtils.encodeDate(time), new HashMap<String, Integer>());
 			if (args.fillDays && currentZone != null) {
@@ -240,7 +242,9 @@ public class TurkeyInfo {
 			}
 
 			currentZone = newZone;
-			Calendar dayStart = TimeUtils.parseDate(TimeUtils.encodeDate(time));
+			Calendar dayStart = new GregorianCalendar();
+			dayStart.setTimeInMillis(0);
+			dayStart.set(time.get(Calendar.YEAR), time.get(Calendar.MONTH), time.get(Calendar.DAY_OF_MONTH));
 			lastZoneChange = dayStart.getTimeInMillis();
 			lastStay = new ZoneStay(id, newZone, dayStart);
 		} else {
