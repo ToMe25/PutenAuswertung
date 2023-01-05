@@ -64,7 +64,7 @@ public class DataHandlerTest {
 
 		Arguments args = Arguments.empty();
 		args.fillDays = true;
-		AntennaDataGenerator.generateAntennaData(turkeys, zones, dataCSV.getValue(), args, 5, true);
+		AntennaDataGenerator.generateAntennaData(turkeys, zones, dataCSV.getValue(), args, 5, true, true);
 
 		DataHandler.handleStreams(dataCSV.getKey(), turkeyCSV.getKey(), zoneCSV.getKey(), totalsCSV.getKey(),
 				staysCSV.getKey(), args);
@@ -99,7 +99,7 @@ public class DataHandlerTest {
 
 		Arguments args = Arguments.empty();
 		args.fillDays = true;
-		AntennaDataGenerator.generateAntennaData(turkeys, zones, dataCSV.getValue(), args, 5, true);
+		AntennaDataGenerator.generateAntennaData(turkeys, zones, dataCSV.getValue(), args, 5, true, true);
 
 		DataHandler.handleStreams(dataCSV.getKey(), turkeyCSV.getKey(), zoneCSV.getKey(), totalsCSV.getKey(),
 				staysCSV.getKey(), args);
@@ -126,7 +126,7 @@ public class DataHandlerTest {
 		Arguments args = Arguments.empty();
 		args.fillDays = true;
 		Pair<Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>>, Map<String, List<ZoneStay>>> antennaData = AntennaDataGenerator
-				.generateAntennaData(mappings.turkeys, mappings.zones, dataCSV.getValue(), args, 5, true);
+				.generateAntennaData(mappings.turkeys, mappings.zones, dataCSV.getValue(), args, 5, true, true);
 		dataCSV.getValue().println(null);
 
 		Pair<FileInputStreamHandler, FileOutputStreamHandler> totalsCSV = tempFolder
@@ -165,7 +165,7 @@ public class DataHandlerTest {
 		Arguments args = Arguments.empty();
 		args.fillDays = true;
 		Pair<Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>>, Map<String, List<ZoneStay>>> antennaData = AntennaDataGenerator
-				.generateAntennaData(mappings.turkeys, mappings.zones, dataCSV.getValue(), args, 5, true);
+				.generateAntennaData(mappings.turkeys, mappings.zones, dataCSV.getValue(), args, 5, true, true);
 		dataCSV.getValue().println("Test;Data;Here");
 
 		Pair<FileInputStreamHandler, FileOutputStreamHandler> totalsCSV = tempFolder

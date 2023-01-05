@@ -118,14 +118,20 @@ public class DataHandler {
 				}
 
 				if (lastDate != null && !TimeUtils.isNextDay(lastDate, record.date)) {
+					Calendar oldStart = startTime;
 					startTime = record.cal;
 					for (TurkeyInfo ti : turkeyInfos.values()) {
 						if (!args.fillDays) {
-							ti.changeZone(ti.getCurrentZone(), lastTimes.get(lastDate));
+							if (ti.getCurrentCal().after(oldStart) || ti.getCurrentCal().equals(oldStart)) {
+								ti.changeZone(ti.getCurrentZone(), lastTimes.get(lastDate));
+								ti.endDay(lastDate);
+								ti.printCurrentStay(false);
+							}
 							ti.setStartTime(startTime);
+						} else {
+							ti.endDay(ti.getCurrentDate());
+							ti.printCurrentStay(false);
 						}
-						ti.endDay(ti.getCurrentDate());
-						ti.printCurrentStay(false);
 					}
 
 					for (String date : dates) {
@@ -168,10 +174,15 @@ public class DataHandler {
 
 		for (TurkeyInfo ti : turkeyInfos.values()) {
 			if (!args.fillDays) {
-				ti.changeZone(ti.getCurrentZone(), lastTimes.get(ti.getCurrentDate()));
+				if (ti.getCurrentCal().after(startTime) || ti.getCurrentCal().equals(startTime)) {
+					ti.changeZone(ti.getCurrentZone(), lastTimes.get(lastDate));
+					ti.endDay(lastDate);
+					ti.printCurrentStay(false);
+				}
+			} else {
+				ti.endDay(ti.getCurrentDate());
+				ti.printCurrentStay(false);
 			}
-			ti.endDay(ti.getCurrentDate());
-			ti.printCurrentStay(false);
 		}
 
 		for (String date : dates) {

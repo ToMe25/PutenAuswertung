@@ -3,6 +3,7 @@ package com.tome25.auswertung.testdata;
 import static com.tome25.auswertung.CSVHandler.DEFAULT_SEPARATOR;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
@@ -47,13 +48,19 @@ public class AntennaDataGenerator {
 	 *                   generated.
 	 * @param days       The number of days to generate example data for.
 	 * @param continuous Whether there should be days missing in the example data.
+	 * @param complete   Whether every turkey should get at least one record every
+	 *                   day.<br/>
+	 *                   Note that setting this to {@code true} does not guarantee
+	 *                   that every turkey gets at least one record each day, it is
+	 *                   just very likely.<br/>
+	 *                   {@code false} however guarantees that some are ignored.
 	 * @return The three maps described above.
 	 * @throws NullPointerException     If one of the arguments is {@code null}.
 	 * @throws IllegalArgumentException If days is less than 1.
 	 */
 	public static Pair<Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>>, Map<String, List<ZoneStay>>> generateAntennaData(
 			List<TurkeyInfo> turkeys, Map<String, List<String>> zones, IOutputStreamHandler output, Arguments args,
-			int days, boolean continuous) throws NullPointerException, IllegalArgumentException {
+			int days, boolean continuous, boolean complete) throws NullPointerException, IllegalArgumentException {
 		Objects.requireNonNull(turkeys, "The turkeys to generate input data for cannot be null.");
 		Objects.requireNonNull(zones, "The zones to use for the generated input can't be null.");
 		Objects.requireNonNull(output, "The output to write the file to can not be null.");
@@ -81,7 +88,7 @@ public class AntennaDataGenerator {
 		for (int day = 0; day < days; day++) {
 			String date = TimeUtils.encodeDate(cal);
 			Pair<Pair<Map<String, Map<String, Integer>>, Map<String, Integer>>, Map<String, List<ZoneStay>>> dayData = generateDayAntennaData(
-					turkeys, zones, date, output, lastZoneChange, currentZone, lastZone, lastRecord, args);
+					turkeys, zones, date, output, lastZoneChange, currentZone, lastZone, lastRecord, args, complete);
 			Map<String, Map<String, Integer>> dayTimes = dayData.getKey().getKey();
 			Map<String, Integer> dayChanges = dayData.getKey().getValue();
 			Map<String, List<ZoneStay>> dayStays = dayData.getValue();
@@ -143,6 +150,19 @@ public class AntennaDataGenerator {
 					} else {
 						zoneDayTimes.put(zone, (long) zoneTime);
 					}
+
+					if (lastRecord.get(turkey) == -1 && (day == days - 1 || skipNext)) {
+						Calendar dayCal = new GregorianCalendar();
+						dayCal.setTimeInMillis(lastZoneChange.get(turkey));
+						while (times.get(turkey).containsKey(TimeUtils.encodeDate(dayCal))) {
+							Map<String, Long> zoneTimes = times.get(turkey).get(TimeUtils.encodeDate(dayCal));
+							for (String z : zoneTimes.keySet()) {
+								totalTimes.put(z, totalTimes.get(z) - zoneTimes.get(z));
+							}
+							times.get(turkey).remove(TimeUtils.encodeDate(dayCal));
+							dayCal.add(Calendar.DATE, -1);
+						}
+					}
 				}
 
 				// Changes handling below
@@ -163,14 +183,15 @@ public class AntennaDataGenerator {
 				}
 
 				// Stays handling below
-				if (!stays.containsKey(turkey)) {
+				if (!stays.containsKey(turkey) || stays.get(turkey).size() == 0) {
 					stays.put(turkey, dayStays.get(turkey));
 				} else {
 					ZoneStay lastStay = stays.get(turkey).get(stays.get(turkey).size() - 1);
 					ZoneStay firstDayStay = dayStays.get(turkey).get(0);
 
 					if (lastStay.getZone().equals(firstDayStay.getZone())
-							&& lastStay.getExitDate().equals(firstDayStay.getEntryDate())) {
+							&& (lastStay.getExitDate().equals(firstDayStay.getEntryDate())
+									|| lastStay.getExitCal().after(firstDayStay.getEntryCal()))) {
 						lastStay.setExitTime(firstDayStay.getExitCal());
 						dayStays.get(turkey).remove(firstDayStay);
 					}
@@ -196,6 +217,10 @@ public class AntennaDataGenerator {
 					} else if (endCal.getTimeInMillis() > lastStay.getExitCal().getTimeInMillis()) {
 						stays.get(turkey)
 								.add(new ZoneStay(turkey, currentZone.get(turkey), lastStay.getExitCal(), endCal));
+					}
+
+					if (!args.fillDays && lastRecord.get(turkey) == -1 && stays.get(turkey).size() > 0) {
+						stays.get(turkey).remove(stays.get(turkey).size() - 1);
 					}
 				}
 			}
@@ -248,13 +273,19 @@ public class AntennaDataGenerator {
 	 *                       Will be mutated to be used as day to day storage.<br/>
 	 *                       A new {@link HashMap} will be used if {@code null}.
 	 * @param args           The arguments to use for the day to be generated.
+	 * @param complete       Whether every turkey should get at least one record
+	 *                       every day.<br/>
+	 *                       Note that setting this to {@code true} does not
+	 *                       guarantee that every turkey gets at least one record
+	 *                       each day, it is just very likely.<br/>
+	 *                       {@code false} however guarantees that some are ignored.
 	 * @return The times each turkey spent in each zone.
 	 * @throws NullPointerException If one of the parameters is {@code null}.
 	 */
 	public static Pair<Pair<Map<String, Map<String, Integer>>, Map<String, Integer>>, Map<String, List<ZoneStay>>> generateDayAntennaData(
 			List<TurkeyInfo> turkeys, Map<String, List<String>> zones, String date, IOutputStreamHandler output,
 			Map<String, Long> lastZoneChange, Map<String, String> currentZone, Map<String, String> lastZone,
-			Map<String, Long> lastRecord, Arguments args) throws NullPointerException {
+			Map<String, Long> lastRecord, Arguments args, boolean complete) throws NullPointerException {
 		Objects.requireNonNull(turkeys, "The turkeys to generate input data for can't be null.");
 		Objects.requireNonNull(zones, "The zones to use for the generated input can't be null.");
 		Objects.requireNonNull(date, "The date to generate data for can't be null.");
@@ -277,10 +308,35 @@ public class AntennaDataGenerator {
 			lastRecord = new HashMap<String, Long>();
 		}
 
+		// Turkey -> Zone -> Time
+		Map<String, Map<String, Integer>> zoneTimes = new HashMap<String, Map<String, Integer>>();
+		Map<String, Integer> zoneChanges = new HashMap<String, Integer>(); // Turkey -> Zone Changes
+
+		// Turkey -> zone stays
+		Map<String, List<ZoneStay>> stays = new HashMap<String, List<ZoneStay>>();
+
+		List<String> zoneNames = new ArrayList<String>(zones.keySet());
+
+		List<TurkeyInfo> usedTurkeys = new ArrayList<TurkeyInfo>(turkeys);
+		List<String> ignoredTurkeys = new ArrayList<String>();
+		if (!complete) {
+			final int toRemove = RANDOM.nextInt(usedTurkeys.size() / 10) + 1;
+			for (int i = 0; i < toRemove; i++) {
+				TurkeyInfo removed = usedTurkeys.remove(RANDOM.nextInt(usedTurkeys.size()));
+				ignoredTurkeys.add(removed.getId());
+				if (args.fillDays) {
+					currentZone.remove(removed.getId());
+				} else if (!currentZone.containsKey(removed.getId())) {
+					lastRecord.put(removed.getId(), -1l);
+					currentZone.put(removed.getId(), zoneNames.get(RANDOM.nextInt(zoneNames.size())));
+				}
+			}
+		}
+
 		// Generate 10-20 zone changes per transponder on average
-		int perTrans = 10 + RANDOM.nextInt(11);
+		final int perTrans = 10 + RANDOM.nextInt(11);
 		int nTrans = 0;
-		for (TurkeyInfo ti : turkeys) {
+		for (TurkeyInfo ti : usedTurkeys) {
 			nTrans += ti.getTransponders().size();
 		}
 
@@ -293,32 +349,34 @@ public class AntennaDataGenerator {
 		long startTime = -1;
 
 		long lastTime = TimeUtils.parseDate(date).getTimeInMillis();
-		List<String> zoneNames = new ArrayList<String>(zones.keySet());
-
-		// Turkey -> Zone -> Time
-		Map<String, Map<String, Integer>> zoneTimes = new HashMap<String, Map<String, Integer>>();
-		Map<String, Integer> zoneChanges = new HashMap<String, Integer>(); // Turkey -> Zone Changes
-
-		// Turkey -> zone stays
-		Map<String, List<ZoneStay>> stays = new HashMap<String, List<ZoneStay>>();
 
 		for (int i = 0; i < numChanges; i++) {
-			TurkeyInfo turkey = turkeys.get(RANDOM.nextInt(turkeys.size()));
+			TurkeyInfo turkey = usedTurkeys.get(RANDOM.nextInt(usedTurkeys.size()));
 			String turkeyName = turkey.getId();
 			String transponder = turkey.getTransponders().get(RANDOM.nextInt(turkey.getTransponders().size()));
 			String zone = zoneNames.get(RANDOM.nextInt(zoneNames.size()));
+
+			// If there was no record for this turkey yet, but it was ignored.
+			if (lastRecord.containsKey(turkeyName) && lastRecord.get(turkeyName) == -1) {
+				zone = currentZone.get(turkeyName);
+			}
 			String antenna = zones.get(zone).get(RANDOM.nextInt(zones.get(zone).size()));
 
 			long changeTime = lastTime + timePerChange + RANDOM.nextInt(timePerChange / 10) - timePerChange / 20;
 			changeTime = ((changeTime + 5) / 10) * 10;// round to 10.
 			changeTime = Math.max(lastTime, changeTime);
 
-			if (startTime == -1) {
-				startTime = changeTime;
-			}
-
 			Calendar changeCal = new GregorianCalendar();
 			changeCal.setTimeInMillis(changeTime);
+
+			if (startTime == -1) {
+				startTime = changeTime;
+				for (String t : ignoredTurkeys) {
+					if (lastRecord.containsKey(t) && lastRecord.get(t) == -1 && !lastZoneChange.containsKey(t)) {
+						lastZoneChange.put(t, startTime);
+					}
+				}
+			}
 
 			StringBuilder line = new StringBuilder();
 			line.append(transponder);
@@ -350,7 +408,11 @@ public class AntennaDataGenerator {
 
 				currentZone.put(turkeyName, zone);
 				lastZone.put(turkeyName, zone);
-				zoneChanges.put(turkeyName, 0);
+				if (!zoneChanges.containsKey(turkeyName)) {
+					zoneChanges.put(turkeyName, 0);
+				} else {
+					zoneChanges.put(turkeyName, zoneChanges.get(turkeyName) + 1);
+				}
 				lastRecord.put(turkeyName, changeTime);
 			} else {
 				if (!currentZone.get(turkeyName).equals(zone)) {
@@ -365,10 +427,9 @@ public class AntennaDataGenerator {
 						if (!zoneTimes.containsKey(turkeyName)) {
 							zoneTimes.put(turkeyName, new HashMap<String, Integer>());
 							zoneTimes.get(turkeyName).put(cZone, TimeUtils.getMsOfDay(changeCal) - zoneTime);
-							zoneChanges.put(turkeyName, 0);
 
-							stays.put(turkeyName, new ArrayList<ZoneStay>());
-							stays.get(turkeyName).add(new ZoneStay(turkeyName, cZone, lastChangeCal));
+							stays.put(turkeyName, new ArrayList<ZoneStay>(
+									Arrays.asList(new ZoneStay(turkeyName, cZone, lastChangeCal))));
 						} else if (!currentZone.get(turkeyName).equals(lastZone.get(turkeyName))) {
 							stays.get(turkeyName).get(stays.get(turkeyName).size() - 1).setExitTime(lastChangeCal);
 							stays.get(turkeyName).add(new ZoneStay(turkeyName, cZone, lastChangeCal));
@@ -380,7 +441,11 @@ public class AntennaDataGenerator {
 							zoneTimes.get(turkeyName).put(cZone, zoneTime);
 						}
 
-						zoneChanges.put(turkeyName, zoneChanges.get(turkeyName) + 1);
+						if (!zoneChanges.containsKey(turkeyName)) {
+							zoneChanges.put(turkeyName, 1);
+						} else {
+							zoneChanges.put(turkeyName, zoneChanges.get(turkeyName) + 1);
+						}
 						lastZone.put(turkeyName, currentZone.get(turkeyName));
 					} else {
 						String lZone = lastZone.get(turkeyName);
@@ -388,16 +453,19 @@ public class AntennaDataGenerator {
 						if (!zoneTimes.containsKey(turkeyName)) {
 							zoneTimes.put(turkeyName, new HashMap<String, Integer>());
 							zoneTimes.get(turkeyName).put(zone, TimeUtils.getMsOfDay(changeCal) - zoneTime);
-							zoneChanges.put(turkeyName, 0);
 
-							stays.put(turkeyName, new ArrayList<ZoneStay>());
-							stays.get(turkeyName).add(new ZoneStay(turkeyName, zone, lastChangeCal));
+							stays.put(turkeyName, new ArrayList<ZoneStay>(
+									Arrays.asList(new ZoneStay(turkeyName, zone, lastChangeCal))));
 						}
 
 						if (zoneTimes.get(turkeyName).containsKey(lZone)) {
 							zoneTimes.get(turkeyName).put(lZone, zoneTimes.get(turkeyName).get(lZone) + zoneTime);
 						} else {
 							zoneTimes.get(turkeyName).put(lZone, zoneTime);
+						}
+
+						if (!zoneChanges.containsKey(turkeyName)) {
+							zoneChanges.put(turkeyName, 0);
 						}
 
 						if (zone.equals(lastZone.get(turkeyName))) {
@@ -429,6 +497,41 @@ public class AntennaDataGenerator {
 					zoneTimes.get(turkey).put(zone, zoneTimes.get(turkey).get(zone) + zoneTime);
 				} else {
 					zoneTimes.get(turkey).put(zone, zoneTime);
+				}
+
+				if (stays.containsKey(turkey)) {
+					ZoneStay lastStay = stays.get(turkey).get(stays.get(turkey).size() - 1);
+					Calendar endCal = TimeUtils.parseDate(date);
+					endCal.add(Calendar.DATE, 1);
+					if (lastStay.getZone().equals(zone)) {
+						lastStay.setExitTime(endCal);
+					} else {
+						stays.get(turkey).add(new ZoneStay(turkey, zone, lastStay.getExitCal(), endCal));
+					}
+				}
+			}
+		} else if (!complete) {
+			Calendar startCal = new GregorianCalendar();
+			startCal.setTimeInMillis(startTime);
+			Calendar lastCal = new GregorianCalendar();
+			lastCal.setTimeInMillis(lastTime);
+			for (String turkey : ignoredTurkeys) {
+				if (currentZone.containsKey(turkey)) {
+					zoneTimes.put(turkey, new HashMap<String, Integer>());
+					zoneChanges.put(turkey, 0);
+					Calendar entryCal = new GregorianCalendar();
+					entryCal.setTimeInMillis(lastZoneChange.get(turkey));
+					if (lastRecord.containsKey(turkey) && lastRecord.get(turkey) == -1
+							&& TimeUtils.isSameDay(startCal, entryCal)) {
+						zoneTimes.get(turkey).put(currentZone.get(turkey), (int) (lastTime - startTime));
+						stays.put(turkey, new ArrayList<ZoneStay>(
+								Arrays.asList(new ZoneStay(turkey, currentZone.get(turkey), startCal, lastCal))));
+					} else {
+						zoneTimes.get(turkey).put(currentZone.get(turkey), TimeUtils.getMsOfDay(lastCal));
+						stays.put(turkey, new ArrayList<ZoneStay>(
+								Arrays.asList(new ZoneStay(turkey, currentZone.get(turkey), entryCal, lastCal))));
+					}
+					lastZoneChange.put(turkey, lastTime);
 				}
 			}
 		}

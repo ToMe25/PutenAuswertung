@@ -169,8 +169,7 @@ public class TurkeyInfo {
 			Calendar dayStart = new GregorianCalendar();
 			dayStart.setTimeInMillis(0);
 			dayStart.set(time.get(Calendar.YEAR), time.get(Calendar.MONTH), time.get(Calendar.DAY_OF_MONTH));
-			lastStay = new ZoneStay(id, currentZone,
-					args.fillDays ? dayStart : startTime);
+			lastStay = new ZoneStay(id, currentZone, args.fillDays ? dayStart : startTime);
 
 			dayZoneTimes.put(TimeUtils.encodeDate(time), new HashMap<String, Integer>());
 			if (args.fillDays && currentZone != null) {
@@ -215,27 +214,27 @@ public class TurkeyInfo {
 		long timeMs = time.getTimeInMillis();
 
 		if (currentZone != null && !newRec) {
-			int timeSpent = (int) (timeMs - currentTime.getTimeInMillis());
-			addTime(time, currentZone, timeSpent);
+			int recordTime = (int) (timeMs - currentTime.getTimeInMillis());
+			addTime(time, currentZone, recordTime);
 		} else if (args.fillDays) {
 			addTime(time, newZone, TimeUtils.getMsOfDay(time));
 
 			if (newRec && stayOut != null && lastStay.getExitCal() == null) {
+				Calendar lastCal = new GregorianCalendar();
+				lastCal.setTimeInMillis(lastZoneChange);
 				// FIXME probably produces 1ms offsets
-				Calendar cal = (Calendar) currentTime.clone();
+				Calendar cal = (Calendar) lastCal.clone();
 				cal.set(Calendar.HOUR_OF_DAY, 23);
 				cal.set(Calendar.MINUTE, 59);
 				cal.set(Calendar.SECOND, 59);
 				cal.set(Calendar.MILLISECOND, 999);
 
-				if (!currentZone.equals(lastStay.getZone()) && lastZoneChange < currentTime.getTimeInMillis()) {
-					Calendar lastCal = new GregorianCalendar();
-					lastCal.setTimeInMillis(lastZoneChange);
+				if (!currentZone.equals(lastStay.getZone()) && lastZoneChange < cal.getTimeInMillis()) {
 					lastStay.setExitTime(lastCal);
 					stayOut.println(CSVHandler.stayToCsvLine(lastStay));
 					lastStay = new ZoneStay(id, currentZone, lastCal, cal);
 					stayOut.println(CSVHandler.stayToCsvLine(lastStay));
-				} else {
+				} else if (currentTime.after(lastStay.getEntryCal())) {
 					lastStay.setExitTime(cal);
 					stayOut.println(CSVHandler.stayToCsvLine(lastStay));
 				}
@@ -329,10 +328,11 @@ public class TurkeyInfo {
 	/**
 	 * Adds the given amount of time to the dayZoneTime for the given zone and
 	 * day.<br/>
-	 * Does not check whether the time to be added is positive, but does not allow
-	 * for a negative resulting day zone time.
+	 * Automatically adds time to previous days, if necessary. Does not check
+	 * whether the time to be added is positive, but does not allow for a negative
+	 * resulting day zone time.
 	 * 
-	 * @param day  The day for which to add the time to the given zone.
+	 * @param now  The day for which to add the time to the given zone.
 	 * @param zone The zone in which the time was spent.
 	 * @param time The amount of time that was spent in the given zone.
 	 * @throws NullPointerException if {@code day} or {@code zone} is {@code null}.
@@ -361,19 +361,28 @@ public class TurkeyInfo {
 					dayZoneTimes.get(date).put(zone, TimeUtils.getMsOfDay(now));
 				}
 
-				Calendar yesterday = (Calendar) now.clone();
-				yesterday.add(Calendar.DATE, -1);
-				int yesterdayTime = time - TimeUtils.getMsOfDay(now);
-				String yesterdayDate = TimeUtils.encodeDate(yesterday);
+				Calendar previousDay = (Calendar) now.clone();
+				int previousTime = time - TimeUtils.getMsOfDay(now);
+				while (previousTime > 0) {
+					previousDay.add(Calendar.DATE, -1);
+					String previousDate = TimeUtils.encodeDate(previousDay);
 
-				// FIXME not sure how to handle if it isn't
-				if (dayZoneTimes.containsKey(yesterdayDate)) {
-					if (dayZoneTimes.get(yesterdayDate).containsKey(zone)) {
-						dayZoneTimes.get(yesterdayDate).put(zone,
-								dayZoneTimes.get(yesterdayDate).get(zone) + yesterdayTime);
+					if (dayZoneTimes.containsKey(previousDate)) {
+						if (dayZoneTimes.get(previousDate).containsKey(zone)) {
+							dayZoneTimes.get(previousDate).put(zone,
+									dayZoneTimes.get(previousDate).get(zone) + Math.min(DAY_END + 1, previousTime));
+						} else {
+							dayZoneTimes.get(previousDate).put(zone, Math.min(DAY_END + 1, previousTime));
+						}
 					} else {
-						dayZoneTimes.get(yesterdayDate).put(zone, yesterdayTime);
+						dayZoneTimes.put(previousDate, new HashMap<String, Integer>());
+						dayZoneTimes.get(previousDate).put(zone, Math.min(DAY_END + 1, previousTime));
+						if (!dayZoneChanges.containsKey(previousDate)) {
+							dayZoneChanges.put(previousDate, 0);
+						}
 					}
+
+					previousTime = Math.max(0, previousTime - DAY_END - 1);
 				}
 			}
 		} else if (time < 0) {
@@ -486,8 +495,11 @@ public class TurkeyInfo {
 			lastStay = new ZoneStay(id, currentZone, lastCal, currentTime);
 			stayOut.println(CSVHandler.stayToCsvLine(lastStay), temporary);
 		} else if (currentTime.after(lastStay.getEntryCal())) {
+			Calendar oldExit = lastStay.getExitCal();
 			lastStay.setExitTime(currentTime);
-			stayOut.println(CSVHandler.stayToCsvLine(lastStay), temporary);
+			if (!args.fillDays || oldExit == null) {
+				stayOut.println(CSVHandler.stayToCsvLine(lastStay), temporary);
+			}
 		}
 	}
 
@@ -515,7 +527,7 @@ public class TurkeyInfo {
 	 * Returns the date for which the values of this object are currently
 	 * calculated.
 	 * 
-	 * @return the current date.
+	 * @return The current date of this object.
 	 */
 	public String getCurrentDate() {
 		return TimeUtils.encodeDate(currentTime);
@@ -529,6 +541,16 @@ public class TurkeyInfo {
 	 */
 	public int getCurrentTime() {
 		return TimeUtils.getMsOfDay(currentTime);
+	}
+
+	/**
+	 * Gets a copy of the {@link Calendar} representing the time for which this
+	 * objects values are currently calculated.
+	 * 
+	 * @return The current time of this object.
+	 */
+	public Calendar getCurrentCal() {
+		return (Calendar) currentTime.clone();
 	}
 
 	/**

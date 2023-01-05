@@ -8,8 +8,10 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -47,7 +49,7 @@ public class OutputDataTest {
 	@Test
 	public void basic() throws IOException {
 		Arguments args = Arguments.empty();
-		final TestResults results = generateTestValues(100, 5, 10, args, true, tempFolder);
+		final TestResults results = generateTestValues(100, 5, 10, args, true, true, tempFolder);
 		validateResults(results, args);
 	}
 
@@ -60,7 +62,7 @@ public class OutputDataTest {
 	@Test
 	public void basicNonCont() throws IOException {
 		Arguments args = Arguments.empty();
-		final TestResults results = generateTestValues(100, 5, 10, args, false, tempFolder);
+		final TestResults results = generateTestValues(100, 5, 10, args, false, true, tempFolder);
 		validateResults(results, args);
 	}
 
@@ -73,7 +75,7 @@ public class OutputDataTest {
 	public void basicNoMinTime() throws IOException {
 		Arguments args = Arguments.empty();
 		args.minTime = 0;
-		final TestResults results = generateTestValues(100, 5, 10, args, false, tempFolder);
+		final TestResults results = generateTestValues(100, 5, 10, args, false, true, tempFolder);
 		validateResults(results, args);
 	}
 
@@ -86,7 +88,31 @@ public class OutputDataTest {
 	public void basic30mMinTime() throws IOException {
 		Arguments args = Arguments.empty();
 		args.minTime = 30 * 60;
-		final TestResults results = generateTestValues(100, 5, 10, args, false, tempFolder);
+		final TestResults results = generateTestValues(100, 5, 10, args, false, true, tempFolder);
+		validateResults(results, args);
+	}
+
+	/**
+	 * A basic test in which not every turkey has a record each day.
+	 * 
+	 * @throws IOException If reading/writing/creating a temp file failed.
+	 */
+	@Test
+	public void basicIncomplete() throws IOException {
+		Arguments args = Arguments.empty();
+		final TestResults results = generateTestValues(100, 5, 10, args, true, false, tempFolder);
+		validateResults(results, args);
+	}
+
+	/**
+	 * A basic non continuous test in which not every turkey has a record each day.
+	 * 
+	 * @throws IOException If reading/writing/creating a temp file failed.
+	 */
+	@Test
+	public void basicIncompleteNonCont() throws IOException {
+		Arguments args = Arguments.empty();
+		final TestResults results = generateTestValues(100, 5, 10, args, false, false, tempFolder);
 		validateResults(results, args);
 	}
 
@@ -99,7 +125,7 @@ public class OutputDataTest {
 	public void fillDays() throws IOException {
 		Arguments args = Arguments.empty();
 		args.fillDays = true;
-		final TestResults results = generateTestValues(100, 5, 10, args, true, tempFolder);
+		final TestResults results = generateTestValues(100, 5, 10, args, true, true, tempFolder);
 		validateResults(results, args);
 	}
 
@@ -113,7 +139,7 @@ public class OutputDataTest {
 	public void fillDaysNonCont() throws IOException {
 		Arguments args = Arguments.empty();
 		args.fillDays = true;
-		final TestResults results = generateTestValues(100, 5, 10, args, false, tempFolder);
+		final TestResults results = generateTestValues(100, 5, 10, args, false, true, tempFolder);
 		validateResults(results, args);
 	}
 
@@ -128,7 +154,7 @@ public class OutputDataTest {
 		Arguments args = Arguments.empty();
 		args.fillDays = true;
 		args.minTime = 0;
-		final TestResults results = generateTestValues(100, 5, 10, args, false, tempFolder);
+		final TestResults results = generateTestValues(100, 5, 10, args, false, true, tempFolder);
 		validateResults(results, args);
 	}
 
@@ -143,7 +169,36 @@ public class OutputDataTest {
 		Arguments args = Arguments.empty();
 		args.fillDays = true;
 		args.minTime = 30 * 60;
-		final TestResults results = generateTestValues(100, 5, 10, args, false, tempFolder);
+		final TestResults results = generateTestValues(100, 5, 10, args, false, true, tempFolder);
+		validateResults(results, args);
+	}
+
+	/**
+	 * A basic test in which not every turkey has a record each day.<br/>
+	 * Fills day starts and ends.
+	 * 
+	 * @throws IOException If reading/writing/creating a temp file failed.
+	 */
+	@Test
+	public void fillDaysIncomplete() throws IOException {
+		Arguments args = Arguments.empty();
+		args.fillDays = true;
+		final TestResults results = generateTestValues(100, 5, 10, args, true, false, tempFolder);
+		validateResults(results, args);
+	}
+
+	/**
+	 * A basic non continuous test in which not every turkey has a record each
+	 * day.<br/>
+	 * Fills day starts and ends.
+	 * 
+	 * @throws IOException If reading/writing/creating a temp file failed.
+	 */
+	@Test
+	public void fillDaysIncompleteNonCont() throws IOException {
+		Arguments args = Arguments.empty();
+		args.fillDays = true;
+		final TestResults results = generateTestValues(100, 5, 10, args, false, false, tempFolder);
 		validateResults(results, args);
 	}
 
@@ -399,10 +454,10 @@ public class OutputDataTest {
 			assertEquals("The number of zone stays for turkey \"" + turkey + "\" didn't match.",
 					antennaStays.get(turkey).size(), outputStays.get(turkey).size());
 
+			Set<ZoneStay> turkeyAntennaStays = new HashSet<ZoneStay>(antennaStays.get(turkey));
 			Map<String, Long> stayTotals = new HashMap<String, Long>();
 			for (ZoneStay stay : outputStays.get(turkey)) {
-				assertTrue("The stay " + stay + " did not match a generated one.",
-						antennaStays.get(turkey).contains(stay));
+				assertTrue("The stay " + stay + " did not match a generated one.", turkeyAntennaStays.contains(stay));
 
 				// Compare zone stay time sum with output total
 				if (stayTotals.containsKey(stay.getZone())) {
@@ -467,6 +522,8 @@ public class OutputDataTest {
 	 * @param args       The configuration to use to generate test data.
 	 * @param continuous Whether there should be days without records between the
 	 *                   days of records.
+	 * @param complete   Whether each turkey should have at least one record each
+	 *                   day.
 	 * @param tempFolder The {@link TempFileStreamHandler} object to use to create
 	 *                   the required temporary files.
 	 * @return An object containing both the generated "ideal" results, as well as
@@ -479,7 +536,8 @@ public class OutputDataTest {
 	 *                                  {@code days} is less than 1.
 	 */
 	public static TestResults generateTestValues(int turkeys, int zones, int days, Arguments args, boolean continuous,
-			TempFileStreamHandler tempFolder) throws IOException, NullPointerException, IllegalArgumentException {
+			boolean complete, TempFileStreamHandler tempFolder)
+			throws IOException, NullPointerException, IllegalArgumentException {
 		if (turkeys < 1) {
 			throw new IllegalArgumentException("The turkeys to generate can't be less than 1.");
 		} else if (zones < 1) {
@@ -496,7 +554,7 @@ public class OutputDataTest {
 		final FileOutputStreamHandler antennaOut = antennaPair.getValue();
 		final FileInputStreamHandler antennaIn = antennaPair.getKey();
 		results.setAntennaData(AntennaDataGenerator.generateAntennaData(mappings.turkeys, mappings.zones, antennaOut,
-				args, days, continuous));
+				args, days, continuous, complete));
 		antennaOut.close();
 
 		final Pair<FileInputStreamHandler, FileOutputStreamHandler> totalsPair = tempFolder.newTempIOFile("totals.csv");
