@@ -124,7 +124,7 @@ public class TimeUtilsTest {
 	 */
 	@Test(expected = IllegalArgumentException.class)
 	public void noHoursStringToMs() throws IllegalArgumentException {
-		TimeUtils.parseTime("21:35");
+		TimeUtils.parseTime("21:35.15");
 	}
 
 	/**
@@ -316,6 +316,39 @@ public class TimeUtilsTest {
 		Calendar refCal = new GregorianCalendar(2020, Calendar.OCTOBER, 3, 12, 54, 3);
 		refCal.set(Calendar.MILLISECOND, 680);
 		assertEquals("Parsed date and time didn't match.", refCal, cal);
+	}
+
+	/**
+	 * A test parsing an invalid date string and a time to a {@link Calendar}
+	 * object.
+	 * 
+	 * @throws IllegalArgumentException Always.
+	 */
+	@Test(expected = IllegalArgumentException.class)
+	public void invalidDateStringAndTimeToCal() throws IllegalArgumentException {
+		TimeUtils.parseTime("10.2020", 113545);
+	}
+
+	/**
+	 * A test parsing a valid date string and an invalid time string to a
+	 * {@link Calendar} object.
+	 * 
+	 * @throws IllegalArgumentException Always.
+	 */
+	@Test(expected = IllegalArgumentException.class)
+	public void dateAndInvalidTimeStringToCal() throws IllegalArgumentException {
+		TimeUtils.parseTime("01.05.2022", "12:45.82");
+	}
+
+	/**
+	 * A test parsing a valid date and a valid time string representing more than 24
+	 * hours to a {@link Calendar}.
+	 * 
+	 * @throws IllegalArgumentException Always.
+	 */
+	@Test(expected = IllegalArgumentException.class)
+	public void dateAndTooLargeTimeStringToCal() throws IllegalArgumentException {
+		TimeUtils.parseTime("26.03.2022", "32:12:41.92");
 	}
 
 	/**

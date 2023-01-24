@@ -136,14 +136,22 @@ public class TimeUtils {
 	 * Parses a {@link Calendar} object from the given date string and time of day.
 	 * 
 	 * @param date The date for the {@link Calendar} object.
-	 * @param time The time of day for the {@link Calendar}.
+	 * @param time The time of day for the {@link Calendar}.<br/>
+	 *             Cannot be more than 24 hours.<br/>
+	 *             Exactly 24 hours is allowed because of rounding.
 	 * @return A {@link Calendar} object representing the given time.
-	 * @throws NullPointerException     If {@code date} is {@code null}.
+	 * @throws NullPointerException     If {@code date} or {@code time} is
+	 *                                  {@code null}.
 	 * @throws IllegalArgumentException If one of the strings doesn't match the
-	 *                                  required format.
+	 *                                  required format.<br/>
+	 *                                  Or time is more than 24 hours.
 	 */
 	public static Calendar parseTime(String date, String time) throws NullPointerException, IllegalArgumentException {
-		return parseTime(date, (int) parseTime(time));
+		long ms = parseTime(time);
+		if (ms > 24 * 3600000) {
+			throw new IllegalArgumentException("The time of day to parse has to be less than a full day.");
+		}
+		return parseTime(date, (int) ms);
 	}
 
 	/**
@@ -196,8 +204,7 @@ public class TimeUtils {
 	}
 
 	/**
-	 * Converts the given time to a date string of the format
-	 * "DD.MM.YYYY".
+	 * Converts the given time to a date string of the format "DD.MM.YYYY".
 	 * 
 	 * @param date Time time to encode.
 	 * @return The date string representing the given date.
