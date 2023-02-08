@@ -47,11 +47,14 @@ public class IntOrStringComparator implements Comparator<String> {
 		Objects.requireNonNull(o1, "The strings to compare cannot be null.");
 		Objects.requireNonNull(o2, "The strings to compare cannot be null.");
 
-		if (StringUtils.isInteger(o1) && !StringUtils.isInteger(o2)) {
+		final boolean o1IsInt = StringUtils.isInteger(o1);
+		final boolean o2IsInt = StringUtils.isInteger(o2);
+
+		if (o1IsInt && !o2IsInt) {
 			return -1;
-		} else if (!StringUtils.isInteger(o1) && StringUtils.isInteger(o2)) {
+		} else if (!o1IsInt && o2IsInt) {
 			return 1;
-		} else if (StringUtils.isInteger(o1) && StringUtils.isInteger(o2)) {
+		} else if (o1IsInt && o2IsInt) {
 			try {
 				Integer i1 = Integer.parseInt(o1.trim());
 				Integer i2 = Integer.parseInt(o2.trim());
