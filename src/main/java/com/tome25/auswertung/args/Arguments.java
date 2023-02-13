@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import com.tome25.auswertung.PutenAuswertung;
 import com.tome25.auswertung.args.Argument.ArgumentValue;
@@ -49,6 +50,13 @@ public class Arguments {
 	 * Or {@code null} if not specified.
 	 */
 	public String zonesInput = null;
+
+	/**
+	 * The specified downtimes input file.<br/>
+	 * An empty optional if no downtimes file should be used.<br/>
+	 * Or {@code null} if not specified.
+	 */
+	public Optional<String> downtimesInput = null;
 
 	/**
 	 * The specified totals output file.<br/>
@@ -465,6 +473,14 @@ public class Arguments {
 		builder.append(turkeysInput);
 		builder.append(", zonesInput=");
 		builder.append(zonesInput);
+		builder.append(", downtimesInput=");
+		if (downtimesInput == null) {
+			builder.append("null");
+		} else if (!downtimesInput.isPresent()) {
+			builder.append("none");
+		} else {
+			builder.append(downtimesInput.get());
+		}
 		builder.append(", totalsOutput=");
 		builder.append(totalsOutput);
 		builder.append(", staysOutput=");

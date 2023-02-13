@@ -10,6 +10,7 @@
 Puten.csv*
 Bereiche.csv*
 AntennenDaten.csv*
+Ausfälle.csv*
 
 # Output
 PutenAuswertungZeiten*.csv*

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,20 +33,25 @@ public class DataHandler {
 	 * Reads the data from the given streams, and generates output based on it.<br/>
 	 * Calculates all the expected data.
 	 * 
-	 * @param antennaStream The stream handler to read the antenna records from.
-	 * @param turkeyStream  The stream handler to read
-	 *                      {@code turkey id -> transponder ids} mappings from.
-	 * @param zonesStream   The stream handler to read zone definitions from.
-	 * @param totalsStream  The output stream handler to write the daily total times
-	 *                      per zone and zone changes to.
-	 * @param staysStream   The output stream handler to write the individual zone
-	 *                      stays to.
-	 * @param args          The arguments to be used for this data analysis.
-	 * @throws NullPointerException If one of the arguments is {@code null}.
+	 * @param antennaStream   The stream handler to read the antenna records from.
+	 * @param turkeyStream    The stream handler to read
+	 *                        {@code turkey id -> transponder ids} mappings from.
+	 * @param zonesStream     The stream handler to read zone definitions from.
+	 * @param downtimesStream The stream handler to read the downtimes from. Can be
+	 *                        {@code null}.
+	 * @param totalsStream    The output stream handler to write the daily total
+	 *                        times per zone and zone changes to.
+	 * @param staysStream     The output stream handler to write the individual zone
+	 *                        stays to.
+	 * @param args            The arguments to be used for this data analysis.
+	 * @throws NullPointerException If {@code antennaStream}, {@code turkeyStream},
+	 *                              {@code zonesStream}, {@code totalsStream},
+	 *                              {@code staysStream}, or {@code args} is
+	 *                              {@code null}.
 	 */
 	public static void handleStreams(IInputStreamHandler antennaStream, IInputStreamHandler turkeyStream,
-			IInputStreamHandler zonesStream, IOutputStreamHandler totalsStream, IOutputStreamHandler staysStream,
-			Arguments args) throws NullPointerException {
+			IInputStreamHandler zonesStream, IInputStreamHandler downtimesStream, IOutputStreamHandler totalsStream,
+			IOutputStreamHandler staysStream, Arguments args) throws NullPointerException {
 		Objects.requireNonNull(antennaStream, "The stream handler to read antenna data from can't be null.");
 		Objects.requireNonNull(turkeyStream, "The stream handler to read turkey mappings from can't be null.");
 		Objects.requireNonNull(zonesStream, "The stream handler to read zone mappings from can't be null.");
@@ -69,23 +75,27 @@ public class DataHandler {
 			return;
 		}
 
-		Map<String, TurkeyInfo> turkeyInfos = new TreeMap<>(IntOrStringComparator.INSTANCE);
-		String lastDate = null;
-		Map<String, Calendar> lastTimes = new HashMap<String, Calendar>();
+		List<Pair<Long, Long>> downtimes = null;
+		if (downtimesStream != null) {
+			downtimes = CSVHandler.readDowntimesCSV(downtimesStream);
+		}
 
 		totalsStream.println(CSVHandler.turkeyCsvHeader(zones.getKey().keySet()));
 		staysStream.println(CSVHandler.staysCsvHeader());
-
-		List<String> dates = new ArrayList<String>();
-		short[] tokenOrder = new short[] { 0, 1, 2, 3 };
 
 		if (antennaStream instanceof FileInputStreamHandler) {// TODO convert to some kind of generic getInputName
 			LogHandler.out_println(
 					"Started reading file " + ((FileInputStreamHandler) antennaStream).getInputFile().getPath(), true);
 		}
 
+		Map<String, TurkeyInfo> turkeyInfos = new TreeMap<>(IntOrStringComparator.INSTANCE);
+		String lastDate = null;
+		Map<String, Calendar> lastTimes = new HashMap<String, Calendar>();
+		List<String> dates = new ArrayList<String>();
+		short[] tokenOrder = new short[] { 0, 1, 2, 3 };
 		Calendar startTime = null;
-		while (!antennaStream.done()) {
+
+		read_loop: while (!antennaStream.done()) {
 			AntennaRecord record = CSVHandler.readAntennaRecord(antennaStream, tokenOrder);
 			if (record == null) {
 				LogHandler.err_println("Reading an antenna record from the input file failed.", true);
@@ -98,20 +108,109 @@ public class DataHandler {
 				turkeyId = turkeys.getValue().get(record.transponder);
 			} else {
 				LogHandler.err_println(String.format(
-						"Received antenna record for unknown transponder id \"%s\" on day %s. Considering it a separate turkey.",
-						record.transponder, record.date));
+						"Received antenna record for unknown transponder id \"%s\" on day %s at %s. Considering it a separate turkey.",
+						record.transponder, record.date, TimeUtils.encodeTime(record.tod)));
 				LogHandler.print_debug_info("Antenna Record: %s, Arguments: %s", record, args);
 			}
 
 			if (!zones.getValue().containsKey(record.antenna)) {
 				LogHandler.err_println(String.format(
-						"Received antenna record from unknown antenna id \"%s\". Skipping line.", record.antenna));
+						"Received antenna record from unknown antenna id \"%s\" on day %s at %s. Skipping line.",
+						record.antenna, record.date, TimeUtils.encodeTime(record.tod)));
 				LogHandler.print_debug_info("Antenna Record: %s, Arguments: %s", record, args);
 				continue;
 			}
 
+			long recordMs = record.cal.getTimeInMillis();
+			Calendar downtimeStart = null;
+			Calendar downtimeEnd = null;
+			if (downtimes != null) {
+				for (Pair<Long, Long> downtime : downtimes) {
+					if (recordMs > downtime.getValue()) {
+						// Last record was before the downtime, current one is after.
+						if (lastTimes.get(lastDate).getTimeInMillis() < downtime.getKey()) {
+							downtimeStart = new GregorianCalendar();
+							downtimeStart.setTimeInMillis(downtime.getKey());
+							downtimeEnd = new GregorianCalendar();
+							downtimeEnd.setTimeInMillis(downtime.getValue());
+						}
+						continue;
+					}
+
+					if (recordMs > downtime.getKey()) {
+						downtimeStart = new GregorianCalendar();
+						downtimeStart.setTimeInMillis(downtime.getKey());
+						downtimeEnd = new GregorianCalendar();
+						downtimeEnd.setTimeInMillis(downtime.getValue());
+						LogHandler.err_println(String.format(
+								"Received antenna record for time %s %s, which is during the downtime from %s %s to %s %s. Skipping record.",
+								record.date, TimeUtils.encodeTime(record.tod), TimeUtils.encodeDate(downtimeStart),
+								TimeUtils.encodeTime(TimeUtils.getMsOfDay(downtimeStart)),
+								TimeUtils.encodeDate(downtimeEnd),
+								TimeUtils.encodeTime(TimeUtils.getMsOfDay(downtimeEnd))));
+						LogHandler.print_debug_info(
+								"Antenna Record: %s, Downtime Start Date: %s, Downtime Start Time: %s, Downtime End Date: %s, Downtime End Time: %s, Arguments: %s",
+								record, TimeUtils.encodeDate(downtimeStart),
+								TimeUtils.encodeTime(TimeUtils.getMsOfDay(downtimeStart)),
+								TimeUtils.encodeDate(downtimeEnd),
+								TimeUtils.encodeTime(TimeUtils.getMsOfDay(downtimeEnd)), args);
+						continue read_loop;
+					} else {
+						break;
+					}
+				}
+			}
+
+			// Check if there were missing days, indicating an unrecorded downtime.
+			if (downtimeStart == null && downtimeEnd == null && lastDate != null && !record.date.equals(lastDate)
+					&& !TimeUtils.isNextDay(lastDate, record.date)) {
+				downtimeStart = lastTimes.get(lastDate);
+				downtimeEnd = record.cal;
+				LogHandler.out_println(String.format("Skipping days from %s %s to %s %s because there are no records.",
+						TimeUtils.encodeDate(downtimeStart), TimeUtils.encodeTime(TimeUtils.getMsOfDay(downtimeStart)),
+						record.date, TimeUtils.encodeTime(record.tod)), true);
+				LogHandler.print_debug_info("Antenna Record: %s, Last Date: %s, Last Time: %s, Arguments: %s", record,
+						TimeUtils.encodeDate(downtimeStart), TimeUtils.encodeTime(TimeUtils.getMsOfDay(downtimeStart)),
+						args);
+			}
+
 			if (startTime == null) {
 				startTime = record.cal;
+			}
+
+			if (downtimeStart != null && downtimeEnd != null) {
+				for (TurkeyInfo ti : turkeyInfos.values()) {
+					if (!args.fillDays) {
+						if (ti.getCurrentCal().after(startTime) || ti.getCurrentCal().equals(startTime)) {
+							// FIXME what if lastDate isn't the same day as downtimeStart?
+							ti.changeZone(ti.getCurrentZone(), downtimeStart);
+							ti.endDay(lastDate);
+							ti.printCurrentStay(false);
+						}
+						ti.setStartTime(downtimeEnd);
+					} else {
+						ti.endDay(ti.getCurrentDate());
+						ti.printCurrentStay(false);
+					}
+				}
+
+				startTime = downtimeEnd;
+
+				for (String date : dates) {
+					printDayOutput(totalsStream, turkeyInfos.values(), date, zones.getKey().keySet(), true);
+				}
+				dates.clear();
+
+				dates.add(record.date);
+			}
+
+			if (record.cal.before(lastTimes.get(record.date))) {
+				LogHandler.err_println("New antenna record is before the last one. Skipping line.");
+				LogHandler.print_debug_info(
+						"Antenna Record: %s, New Time of Day: %s, New Date: %s, Current Time of Day: %s, Current Date: %s, Arguments: %s",
+						record, record.time, record.date,
+						TimeUtils.encodeTime(TimeUtils.getMsOfDay(lastTimes.get(record.date))), lastDate, args);
+				continue;
 			}
 
 			if (!record.date.equals(lastDate)) {
@@ -119,41 +218,13 @@ public class DataHandler {
 					printDayOutput(totalsStream, turkeyInfos.values(), lastDate, zones.getKey().keySet(), false);
 				}
 
-				if (lastDate != null && !TimeUtils.isNextDay(lastDate, record.date)) {
-					Calendar oldStart = startTime;
-					startTime = record.cal;
-					for (TurkeyInfo ti : turkeyInfos.values()) {
-						if (!args.fillDays) {
-							if (ti.getCurrentCal().after(oldStart) || ti.getCurrentCal().equals(oldStart)) {
-								ti.changeZone(ti.getCurrentZone(), lastTimes.get(lastDate));
-								ti.endDay(lastDate);
-								ti.printCurrentStay(false);
-							}
-							ti.setStartTime(startTime);
-						} else {
-							ti.endDay(ti.getCurrentDate());
-							ti.printCurrentStay(false);
-						}
-					}
-
-					for (String date : dates) {
-						printDayOutput(totalsStream, turkeyInfos.values(), date, zones.getKey().keySet(), true);
-					}
-					dates.clear();
-				}
-
 				lastDate = record.date;
-				dates.add(lastDate);
+				if (!dates.contains(lastDate)) {
+					dates.add(lastDate);
+				}
 				lastTimes.put(record.date, record.cal);
 			} else if (record.cal.after(lastTimes.get(record.date))) {
 				lastTimes.put(record.date, record.cal);
-			} else if (!record.cal.equals(lastTimes.get(record.date))) {
-				LogHandler.err_println("New antenna record is before the last one. Skipping line.");
-				LogHandler.print_debug_info(
-						"Antenna Record: %s, New Time of Day: %s, New Date: %s, Current Time of Day: %s, Current Date: %s, Arguments: %s",
-						record, record.time, record.date,
-						TimeUtils.encodeTime(TimeUtils.getMsOfDay(lastTimes.get(record.date))), lastDate, args);
-				continue;
 			}
 
 			if (!turkeyInfos.containsKey(turkeyId)) {

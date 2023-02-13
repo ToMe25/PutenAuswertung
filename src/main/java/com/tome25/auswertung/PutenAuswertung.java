@@ -44,6 +44,13 @@ public class PutenAuswertung {
 	private static final String DEFAULT_BEREICHE_FILE = "Bereiche.csv";
 
 	/**
+	 * The default file for system down times.<br/>
+	 * Unlike specified inputs defaults are checked as they are and entirely
+	 * lowercase.
+	 */
+	private static final String DEFAULT_AUSFÄLLE_FILE = "Ausfälle.csv";
+
+	/**
 	 * The default output file for the daily zone time and zone change totals.
 	 */
 	private static final String DEFAULT_TOTALS_FILE = "PutenAuswertungZeiten.csv";
@@ -203,22 +210,63 @@ public class PutenAuswertung {
 			}
 		}
 
-		if (antennaFile != null && !antennaFile.canRead()) {
+		boolean usingDowntimes = false;
+		File downtimeFile = null;
+		if (argHandler.downtimesInput != null && argHandler.downtimesInput.isPresent()) {
+			usingDowntimes = true;
+			downtimeFile = new File(argHandler.downtimesInput.get());
+
+			if (!downtimeFile.exists() || !downtimeFile.isFile()) {
+				downtimeFile = null;
+				LogHandler.err_println("The downtime input file \"" + argHandler.downtimesInput.get()
+						+ "\" doesn't exist or isn't a file.");
+			}
+		} else if (argHandler.downtimesInput == null) {
+			usingDowntimes = true;
+			downtimeFile = new File(DEFAULT_AUSFÄLLE_FILE);
+			if (!downtimeFile.exists() || !downtimeFile.isFile()) {
+				downtimeFile = new File(DEFAULT_AUSFÄLLE_FILE.toLowerCase());
+				if (!downtimeFile.exists() || !downtimeFile.isFile()) {
+					// No downtimes file being specified, and none existing isn't an error.
+					downtimeFile = null;
+					usingDowntimes = false;
+					LogHandler.out_println("No downtimes file found. This program expects an optional file called \""
+							+ DEFAULT_AUSFÄLLE_FILE + "\" in the directory you are executing this command in.");
+				}
+			}
+		}
+
+		if (downtimeFile != null && downtimeFile.exists()) {
+			try {
+				LogHandler.out_println(
+						String.format("Using downtimes input file \"%s\".", downtimeFile.getCanonicalPath()));
+			} catch (IOException e) {
+				LogHandler.err_println("An error occurred while getting a files canonical path.");
+				LogHandler.print_exception(e, "get canonical path", "File: %s", downtimeFile);
+			}
+		}
+
+		if (antennaFile != null && antennaFile.exists() && !antennaFile.canRead()) {
 			LogHandler.err_println("The antenna records input file cannot be read.");
 			antennaFile = null;
 		}
 
-		if (turkeyFile != null && !turkeyFile.canRead()) {
+		if (turkeyFile != null && turkeyFile.exists() && !turkeyFile.canRead()) {
 			LogHandler.err_println("The turkey mappings input file cannot be read.");
 			turkeyFile = null;
 		}
 
-		if (zoneFile != null && !zoneFile.canRead()) {
+		if (zoneFile != null && zoneFile.exists() && !zoneFile.canRead()) {
 			LogHandler.err_println("The zone mappings input file cannot be read.");
 			zoneFile = null;
 		}
 
-		if (antennaFile == null || turkeyFile == null || zoneFile == null) {
+		if (downtimeFile != null && downtimeFile.exists() && !downtimeFile.canRead()) {
+			LogHandler.err_println("The downtimes input file cannot be read.");
+			downtimeFile = null;
+		}
+
+		if (antennaFile == null || turkeyFile == null || zoneFile == null || (downtimeFile == null && usingDowntimes)) {
 			return 2;
 		}
 
@@ -315,9 +363,8 @@ public class PutenAuswertung {
 			antennaHandler = new FileInputStreamHandler(antennaFile);
 		} catch (FileNotFoundException e) {
 			LogHandler.err_println("Failed to open input stream for antenna record input file.");
-			LogHandler.print_exception(e, "init antenna record file input stream handler",
-					"Antenna record file: \"%s\", Turkey mapping file: \"%s\", Zone mapping file: \"%s\", Arguments: [%s]",
-					antennaFile.getAbsolutePath(), turkeyFile.getAbsolutePath(), zoneFile.getAbsolutePath(),
+			LogHandler.print_exception(e, "init file input stream handler",
+					"Antenna record file: \"%s\", Arguments: [%s]", antennaFile.getAbsolutePath(),
 					StringUtils.join(", ", args));
 		}
 
@@ -326,9 +373,8 @@ public class PutenAuswertung {
 			turkeyHandler = new FileInputStreamHandler(turkeyFile);
 		} catch (FileNotFoundException e) {
 			LogHandler.err_println("Failed to open input stream for turkey mappings input file.");
-			LogHandler.print_exception(e, "init turkey mappings file input stream handler",
-					"Antenna record file: \"%s\", Turkey mapping file: \"%s\", Zone mapping file: \"%s\", Arguments: [%s]",
-					antennaFile.getAbsolutePath(), turkeyFile.getAbsolutePath(), zoneFile.getAbsolutePath(),
+			LogHandler.print_exception(e, "init file input stream handler",
+					"Turkey mapping file: \"%s\", Arguments: [%s]", turkeyFile.getAbsolutePath(),
 					StringUtils.join(", ", args));
 		}
 
@@ -337,9 +383,20 @@ public class PutenAuswertung {
 			zoneHandler = new FileInputStreamHandler(zoneFile);
 		} catch (FileNotFoundException e) {
 			LogHandler.err_println("Failed to open input stream for zone mappings input file.");
-			LogHandler.print_exception(e, "init zone mappings file input stream handler",
-					"Antenna record file: \"%s\", Turkey mapping file: \"%s\", Zone mapping file: \"%s\", Arguments: [%s]",
-					antennaFile.getAbsolutePath(), turkeyFile.getAbsolutePath(), zoneFile.getAbsolutePath(),
+			LogHandler.print_exception(e, "init file input stream handler",
+					"Zone mapping file: \"%s\", Arguments: [%s]", zoneFile.getAbsolutePath(),
+					StringUtils.join(", ", args));
+		}
+
+		IInputStreamHandler downtimeHandler = null;
+		try {
+			if (usingDowntimes && downtimeFile != null && downtimeFile.exists()) {
+				downtimeHandler = new FileInputStreamHandler(downtimeFile);
+			}
+		} catch (FileNotFoundException e) {
+			LogHandler.err_println("Failed to open input stream for downtimes input file.");
+			LogHandler.print_exception(e, "init file input stream handler",
+					"Downtimes mapping file: \"%s\", Arguments: [%s]", downtimeFile.getAbsolutePath(),
 					StringUtils.join(", ", args));
 		}
 
@@ -366,7 +423,8 @@ public class PutenAuswertung {
 			return 4;
 		}
 
-		DataHandler.handleStreams(antennaHandler, turkeyHandler, zoneHandler, totalHandler, staysHandler, argHandler);
+		DataHandler.handleStreams(antennaHandler, turkeyHandler, zoneHandler, downtimeHandler, totalHandler,
+				staysHandler, argHandler);
 
 		LogHandler.out_println("Finished data analysis. Exiting.");
 		return 0;

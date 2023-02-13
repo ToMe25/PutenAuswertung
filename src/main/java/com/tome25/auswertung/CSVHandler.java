@@ -1,11 +1,14 @@
 package com.tome25.auswertung;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,6 +49,30 @@ public class CSVHandler {
 	private static final Pattern ID_REGEX = Pattern.compile("[A-Za-z0-9\\s]+");
 
 	/**
+	 * Makes sure the given input stream is non-null and non-empty.<br/>
+	 * Also prints a debug message about starting to read the input file.
+	 * 
+	 * @param input The input stream handler to check.
+	 * @throws EOFException         If the input stream handler is already
+	 *                              {@link IInputStreamHandler#done() done}, aka has
+	 *                              no more content to read.
+	 * @throws NullPointerException If the given input stream handler is
+	 *                              {@code null}.
+	 */
+	private static void checkInput(IInputStreamHandler input) throws EOFException, NullPointerException {
+		Objects.requireNonNull(input, "input cannot be null.");
+
+		if (input.done()) {
+			throw new EOFException("Trying to read empty input stream.");
+		}
+
+		if (input instanceof FileInputStreamHandler) {// TODO convert to some kind of generic getInputName
+			LogHandler.out_println("Started reading file " + ((FileInputStreamHandler) input).getInputFile().getPath(),
+					true);
+		}
+	}
+
+	/**
 	 * Reads the data from the stream handler as a CSV file and converts it to a two
 	 * maps.<br/>
 	 * The format of the first map is
@@ -60,11 +87,12 @@ public class CSVHandler {
 	 */
 	public static Pair<Map<String, List<String>>, Map<String, String>> readMappingCSV(IInputStreamHandler input)
 			throws NullPointerException {
-		Objects.requireNonNull(input, "input cannot be null.");
-
-		if (input instanceof FileInputStreamHandler) {// TODO convert to some kind of generic getInputName
-			LogHandler.out_println("Started reading file " + ((FileInputStreamHandler) input).getInputFile().getPath(),
-					true);
+		try {
+			checkInput(input);
+		} catch (EOFException e) {
+			LogHandler.err_println("Input file did not contain any data.");
+			LogHandler.print_exception(e, "read a mappings file", "Input Stream Handler: %s", input);
+			return null;
 		}
 
 		Map<String, List<String>> first = new LinkedHashMap<>();
@@ -75,6 +103,7 @@ public class CSVHandler {
 				String line = input.readline();
 				if (line == null || line.trim().isEmpty()) {
 					LogHandler.err_println("Read an empty line from Input Stream Handler : " + input.toString(), true);
+					LogHandler.print_debug_info("Input Stream Handler: %s, Line: \"%s\"", input.toString(), line);
 					continue;
 				}
 
@@ -164,6 +193,8 @@ public class CSVHandler {
 		}
 
 		if (first.isEmpty() && second.isEmpty()) {
+			LogHandler.err_println("Input file did not contain any valid data.");
+			LogHandler.print_debug_info("Input Stream Handler: %s", input);
 			return null;
 		} else {
 			return new Pair<>(first, second);
@@ -267,6 +298,138 @@ public class CSVHandler {
 	}
 
 	/**
+	 * Parses a downtimes csv file.<br/>
+	 * Creates a pair with the start and end time of each downtime and sorts them by
+	 * start time.<br/>
+	 * Overlapping downtimes are merged to prevent issues.
+	 * 
+	 * @param input The {@link IInputStreamHandler} to read the data from.
+	 * @return A list containing the downtimes, or {@code null} if there weren't
+	 *         any.
+	 * @throws NullPointerException If {@code input} is {@code null}.
+	 */
+	public static List<Pair<Long, Long>> readDowntimesCSV(IInputStreamHandler input) throws NullPointerException {
+		try {
+			checkInput(input);
+		} catch (EOFException e) {
+			LogHandler.err_println("Input file did not contain any data.");
+			LogHandler.print_exception(e, "read a downtimes file", "Input Stream Handler: %s", input);
+			return null;
+		}
+
+		List<Pair<Long, Long>> downtimes = new ArrayList<Pair<Long, Long>>();
+		boolean last_failed = false;
+		while (!input.done()) {
+			String line = null;
+			String tokens[] = null;
+			Calendar start = null;
+			try {
+				line = input.readline();
+				if (line == null || line.trim().isEmpty()) {
+					LogHandler.err_println("Read an empty line from Input Stream Handler : " + input.toString(), true);
+					LogHandler.print_debug_info("Input Stream Handler: %s, Line: \"%s\"", input.toString(), line);
+					continue;
+				}
+
+				tokens = SEPARATOR_REGEX.split(line.trim());
+				if (tokens.length != 4) {
+					LogHandler.err_println(
+							"Input line \"" + line + "\" did not contain exactly four tokens. Skipping line.");
+					LogHandler.print_debug_info(
+							"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
+							input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", tokens), line);
+					continue;
+				}
+
+				if (tokens[0].toLowerCase().startsWith("start")) {
+					LogHandler.out_println("Read header line \"" + line + "\".", true);
+					continue;
+				}
+
+				start = TimeUtils.parseTime(tokens[0], tokens[1]);
+				Calendar end = TimeUtils.parseTime(tokens[2], tokens[3]);
+				if (!end.after(start)) {
+					LogHandler.err_println("Downtime end wasn't after its start. Skipping line.");
+					LogHandler.print_debug_info(
+							"Start Date: %s, Start Time: %s, End Date: %s, End Time: %s, Input Stream Handler: %s, Line: \"%s\", Separator Chars: %s, Tokens: [%s]",
+							TimeUtils.encodeDate(start), TimeUtils.encodeTime(TimeUtils.getMsOfDay(start)),
+							TimeUtils.encodeDate(end), TimeUtils.encodeTime(TimeUtils.getMsOfDay(end)),
+							input.toString(), line, SEPARATOR_REGEX, StringUtils.join(", ", tokens));
+					continue;
+				}
+
+				// Handle overlapping downtimes.
+				long startMs = start.getTimeInMillis();
+				long endMs = end.getTimeInMillis();
+				Iterator<Pair<Long, Long>> downtimesIt = downtimes.iterator();
+				while (downtimesIt.hasNext()) {
+					Pair<Long, Long> downtime = downtimesIt.next();
+					if (startMs >= downtime.getKey() && startMs <= downtime.getValue()) {
+						startMs = downtime.getKey();
+						if (endMs >= downtime.getKey() && endMs <= downtime.getValue()) {
+							endMs = downtime.getValue();
+						}
+						downtimesIt.remove();
+					} else if (endMs >= downtime.getKey() && endMs <= downtime.getValue()) {
+						endMs = downtime.getValue();
+						downtimesIt.remove();
+					} else if (startMs < downtime.getKey() && endMs > downtime.getValue()) {
+						downtimesIt.remove();
+					}
+				}
+				downtimes.add(new Pair<Long, Long>(startMs, endMs));
+			} catch (IOException e) {
+				if (last_failed) {
+					LogHandler.err_println("Reading an input line failed. Returning current downtimes.");
+				} else {
+					LogHandler.err_println("Reading an input line failed. Trying another one.");
+				}
+				LogHandler.print_exception(e, "read a downtimes file", "Input Stream Handler: %s, Separator Chars: %s",
+						input.toString(), SEPARATOR_REGEX);
+
+				if (last_failed) {
+					break;
+				} else {
+					last_failed = true;
+				}
+			} catch (IllegalArgumentException e) {
+				if (start == null) {
+					LogHandler
+							.err_println("Failed to parse start time or date of line \"" + line + "\". Skipping line.");
+				} else {
+					LogHandler.err_println("Failed to parse end time or date of line \"" + line + "\". Skipping line.");
+				}
+				LogHandler.print_exception(e, "parse downtime line",
+						"Start Date: %s, Start Time: %s, Input Stream Handler: %s, Line: \"%s\", Separator Chars: %s, Tokens: [%s]",
+						start == null ? "null" : TimeUtils.encodeDate(start),
+						start == null ? "null" : TimeUtils.encodeTime(TimeUtils.getMsOfDay(start)), input.toString(),
+						line, SEPARATOR_REGEX, StringUtils.join(", ", tokens));
+			}
+		}
+
+		if (input instanceof FileInputStreamHandler) {// TODO convert to some kind of generic getInputName
+			LogHandler.out_println("Finished reading file " + ((FileInputStreamHandler) input).getInputFile().getPath(),
+					true);
+		}
+
+		// Due to merging there can never be two pairs with the same key.
+		Collections.sort(downtimes, new Comparator<Pair<Long, Long>>() {
+			@Override
+			public int compare(Pair<Long, Long> o1, Pair<Long, Long> o2) {
+				return (int) Math.min(Integer.MAX_VALUE, Math.max(Integer.MIN_VALUE, o1.getKey() - o2.getKey()));
+			}
+		});
+
+		if (downtimes.isEmpty()) {
+			LogHandler.err_println("Input file did not contain any valid data.");
+			LogHandler.print_debug_info("Input Stream Handler: %s", input);
+			return null;
+		} else {
+			return downtimes;
+		}
+	}
+
+	/**
 	 * Reads the next {@link AntennaRecord} from the given input.<br/>
 	 * Handles skipping the header line and unparsable lines.
 	 * 
@@ -317,9 +480,7 @@ public class CSVHandler {
 				line = input.readline();
 				if (line == null || line.trim().isEmpty()) {
 					LogHandler.err_println("Skipped an empty line from input file.", true);
-					LogHandler.print_debug_info(
-							"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
-							input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", tokens), line);
+					LogHandler.print_debug_info("Input Stream Handler: %s, Line: \"%s\"", input.toString(), line);
 					continue;
 				}
 
@@ -424,8 +585,9 @@ public class CSVHandler {
 				}
 			} catch (IllegalArgumentException e) {
 				LogHandler.err_println("Parsing time of day or date of line \"" + line + "\" failed. Skipping line.");
-				LogHandler.print_exception(e, "parse record time", "Input Stream Handler: %s, Tokens: [%s]",
-						input.toString(), StringUtils.join(", ", tokens));
+				LogHandler.print_exception(e, "parse record time",
+						"Input Stream Handler: %s, Line: \"%s\", Separator Chars: %s, Tokens: [%s]", input.toString(),
+						line, SEPARATOR_REGEX, StringUtils.join(", ", tokens));
 			}
 		}
 
@@ -518,49 +680,26 @@ public class CSVHandler {
 	}
 
 	/**
-	 * Returns the headers to be used for a stays csv.
-	 * 
-	 * @return The csv headers as a single string.
-	 */
-	public static String staysCsvHeader() {
-		return StringUtils.join(DEFAULT_SEPARATOR, "Tier", "Bereich", "Startdatum", "Startzeit", "Enddatum", "Endzeit",
-				"Aufenthaltszeit");
-	}
-
-	/**
-	 * Converts a {@link ZoneStay} to a csv line string.
-	 * 
-	 * @param stay The {@link ZoneStay} to convert to a csv line.
-	 * @return The finished string.
-	 * @throws NullPointerException     If {@code stay} is {@code null}.
-	 * @throws IllegalArgumentException If the zone stay does not have an exit time
-	 *                                  yet.
-	 */
-	public static String stayToCsvLine(ZoneStay stay) throws NullPointerException, IllegalArgumentException {
-		Objects.requireNonNull(stay, "The zone stay to convert to a string can't be null.");
-		if (!stay.hasLeft()) {
-			throw new IllegalArgumentException("The zone to convert has no exit time.");
-		}
-
-		return StringUtils.join(DEFAULT_SEPARATOR, stay.getTurkey(), stay.getZone(), stay.getEntryDate(),
-				TimeUtils.encodeTime(stay.getEntryTime()), stay.getExitDate(), TimeUtils.encodeTime(stay.getExitTime()),
-				TimeUtils.encodeTime(stay.getStayTime()));
-	}
-
-	/**
 	 * Reads a totals output csv generated by this program.<br/>
 	 * The result contains two maps:<br/>
 	 * The first map is {@code turkey -> date -> zone -> time}.<br/>
 	 * The second map is {@code turkey -> date -> zoneChanges}.
 	 * 
 	 * @param input The input stream handler to read the data from.
-	 * @return The parsed totals date.
+	 * @return The parsed totals date. Or {@code null} if the file did not contain
+	 *         any valid data.
 	 * @throws IOException          If reading the headers line fails.
 	 * @throws NullPointerException If {@code input} is {@code null}.
 	 */
 	public static Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>> readTotalsCSV(
 			IInputStreamHandler input) throws IOException, NullPointerException {
-		Objects.requireNonNull(input, "The input stream handler to read from cannot be null.");
+		try {
+			checkInput(input);
+		} catch (EOFException e) {
+			LogHandler.err_println("Input file did not contain any data.");
+			LogHandler.print_exception(e, "read a totals file", "Input Stream Handler: %s", input);
+			return null;
+		}
 
 		String headerLine = input.readline().trim();
 		if (!headerLine.toLowerCase().startsWith("tier")) {
@@ -573,8 +712,7 @@ public class CSVHandler {
 		String headers[] = SEPARATOR_REGEX.split(headerLine);
 
 		if (headers.length < 4) {
-			LogHandler.err_println(
-					String.format("Header line \"%s\" did not contain at least four headers.", headerLine));
+			LogHandler.err_println("Header line \"" + headerLine + "\" did not contain at least four headers.");
 			LogHandler.print_debug_info("Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
 					input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", headers), headerLine);
 			throw new IOException("Invalid input file");
@@ -596,8 +734,8 @@ public class CSVHandler {
 
 				tokens = SEPARATOR_REGEX.split(line.trim());
 				if (tokens.length < 4) {
-					LogHandler.err_println(String
-							.format("Input line \"%s\" did not contain at least four tokens. Skipping line.", line));
+					LogHandler.err_println(
+							"Input line \"" + line + "\" did not contain at least four tokens. Skipping line.");
 					LogHandler.print_debug_info(
 							"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
 							input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", tokens), line);
@@ -657,16 +795,55 @@ public class CSVHandler {
 				LogHandler.print_debug_info("Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
 						input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", tokens), line);
 			} catch (IllegalArgumentException e) {
-				LogHandler.err_println(
-						String.format("Parsing time of day or date of line \"%s\" failed. Skipping line.", line));
+				LogHandler.err_println("Parsing time of day or date of line \"" + line + "\" failed. Skipping line.");
 				LogHandler.print_exception(e, "parse record time of day or date",
 						"Input Stream Handler: %s, Tokens: [%s], Line: \"%s\"", input.toString(),
 						StringUtils.join(", ", tokens), line);
 			}
 		}
 
-		return new Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>>(turkeyTimes,
-				turkeyChanges);
+		if (input instanceof FileInputStreamHandler) {// TODO convert to some kind of generic getInputName
+			LogHandler.out_println("Finished reading file " + ((FileInputStreamHandler) input).getInputFile().getPath(),
+					true);
+		}
+
+		if (turkeyTimes.isEmpty() && turkeyChanges.isEmpty()) {
+			LogHandler.err_println("Input file did not contain any valid data.");
+			LogHandler.print_debug_info("Input Stream Handler: %s", input);
+			return null;
+		} else {
+			return new Pair<>(turkeyTimes, turkeyChanges);
+		}
+	}
+
+	/**
+	 * Returns the headers to be used for a stays csv.
+	 * 
+	 * @return The csv headers as a single string.
+	 */
+	public static String staysCsvHeader() {
+		return StringUtils.join(DEFAULT_SEPARATOR, "Tier", "Bereich", "Startdatum", "Startzeit", "Enddatum", "Endzeit",
+				"Aufenthaltszeit");
+	}
+
+	/**
+	 * Converts a {@link ZoneStay} to a csv line string.
+	 * 
+	 * @param stay The {@link ZoneStay} to convert to a csv line.
+	 * @return The finished string.
+	 * @throws NullPointerException     If {@code stay} is {@code null}.
+	 * @throws IllegalArgumentException If the zone stay does not have an exit time
+	 *                                  yet.
+	 */
+	public static String stayToCsvLine(ZoneStay stay) throws NullPointerException, IllegalArgumentException {
+		Objects.requireNonNull(stay, "The zone stay to convert to a string can't be null.");
+		if (!stay.hasLeft()) {
+			throw new IllegalArgumentException("The zone to convert has no exit time.");
+		}
+
+		return StringUtils.join(DEFAULT_SEPARATOR, stay.getTurkey(), stay.getZone(), stay.getEntryDate(),
+				TimeUtils.encodeTime(stay.getEntryTime()), stay.getExitDate(), TimeUtils.encodeTime(stay.getExitTime()),
+				TimeUtils.encodeTime(stay.getStayTime()));
 	}
 
 	/**
@@ -674,13 +851,20 @@ public class CSVHandler {
 	 * Returns a {@code turkey -> stays} map with the parsed data.
 	 * 
 	 * @param input The input stream handler to read the file from.
-	 * @return The parsed stays map.
+	 * @return The parsed stays map. Or {@code null} if the file did not contain any
+	 *         valid data.
 	 * @throws IOException          If reading the header line fails.
 	 * @throws NullPointerException If {@code input} is {@code null}.
 	 */
 	public static Map<String, List<ZoneStay>> readStaysCSV(IInputStreamHandler input)
 			throws IOException, NullPointerException {
-		Objects.requireNonNull(input, "The input stream handler to read from cannot be null.");
+		try {
+			checkInput(input);
+		} catch (EOFException e) {
+			LogHandler.err_println("Input file did not contain any data.");
+			LogHandler.print_exception(e, "read a stays file", "Input Stream Handler: %s", input);
+			return null;
+		}
 
 		String headerLine = input.readline().trim();
 		if (!headerLine.toLowerCase().startsWith("tier")) {
@@ -703,8 +887,8 @@ public class CSVHandler {
 
 				tokens = SEPARATOR_REGEX.split(line.trim());
 				if (tokens.length != 7) {
-					LogHandler.err_println(String
-							.format("Input line \"%s\" did not contain exactly seven tokens. Skipping line.", line));
+					LogHandler.err_println(
+							"Input line \"" + line + "\" did not contain exactly seven tokens. Skipping line.");
 					LogHandler.print_debug_info(
 							"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
 							input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", tokens), line);
@@ -746,15 +930,25 @@ public class CSVHandler {
 					last_failed = true;
 				}
 			} catch (IllegalArgumentException e) {
-				LogHandler.err_println(
-						String.format("Parsing time of day or date in line \"%s\" failed. Skipping line.", line));
+				LogHandler.err_println("Parsing time of day or date in line \"" + line + "\" failed. Skipping line.");
 				LogHandler.print_exception(e, "parse zone stay time of day or date",
 						"Input Stream Handler: %s, Tokens: [%s], Line: \"%s\"", input.toString(),
 						StringUtils.join(", ", tokens), line);
 			}
 		}
 
-		return stays;
+		if (input instanceof FileInputStreamHandler) {// TODO convert to some kind of generic getInputName
+			LogHandler.out_println("Finished reading file " + ((FileInputStreamHandler) input).getInputFile().getPath(),
+					true);
+		}
+
+		if (stays.isEmpty()) {
+			LogHandler.err_println("Input file did not contain any valid data.");
+			LogHandler.print_debug_info("Input Stream Handler: %s", input);
+			return null;
+		} else {
+			return stays;
+		}
 	}
 
 }

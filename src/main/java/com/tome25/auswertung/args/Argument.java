@@ -7,6 +7,7 @@ import java.net.URL;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.jar.Manifest;
 
 import com.tome25.auswertung.log.LogHandler;
@@ -153,7 +154,8 @@ public enum Argument {
 
 		@Override
 		public String[] getDescription() {
-			return new String[] { "Sets the file to read the turkey to transponder mappings from." };
+			return new String[] { "Sets the file to read the turkey to transponder mappings from.",
+					"These mappings tell the program which transponders are attached to the same turkey." };
 		}
 	},
 	ZONES('z', ArgumentValue.REQUIRED, "FILE", (short) 5, "zones", "areas") {
@@ -168,7 +170,28 @@ public enum Argument {
 
 		@Override
 		public String[] getDescription() {
-			return new String[] { "Sets the file to read zone to antenna mappings from." };
+			return new String[] { "Sets the file to read zone to antenna mappings from.",
+					"These mappings tell the program which antennas are part of which zone." };
+		}
+	},
+	DOWNTIMES('o', ArgumentValue.OPTIONAL, "FILE", (short) 5, "downtimes", "offline-times", "offlinetimes", "off-times",
+			"offtimes") {
+		@Override
+		public void onReceived(Arguments inst, String val) throws IllegalArgumentException {
+			if (val == null || val.trim().isEmpty()) {
+				LogHandler.out_println("Downtimes argument without value received, disabling downtimes file.");
+				inst.downtimesInput = Optional.empty();
+			} else {
+				inst.downtimesInput = Optional.of(val);
+			}
+		}
+
+		@Override
+		public String[] getDescription() {
+			return new String[] { "Sets the file to read the system downtimes from.",
+					"System downtimes are the times in which data could not be recorded,",
+					"which thus shouldn't be part of the evaluation.",
+					"Use without a value to not read any downtimes file." };
 		}
 	},
 	TOTALS('T', ArgumentValue.REQUIRED, "FILE", (short) 5, "totals") {

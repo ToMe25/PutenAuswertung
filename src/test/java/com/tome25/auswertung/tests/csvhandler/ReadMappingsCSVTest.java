@@ -3,6 +3,7 @@ package com.tome25.auswertung.tests.csvhandler;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
@@ -24,7 +25,7 @@ import com.tome25.auswertung.tests.rules.TempFileStreamHandler;
 import com.tome25.auswertung.utils.Pair;
 
 /**
- * A class containing unit tests related to {@link CSVHandler#readMappingCSV}.
+ * A class containing unit tests relating to {@link CSVHandler#readMappingCSV}.
  * 
  * @author theodor
  */
@@ -130,13 +131,29 @@ public class ReadMappingsCSVTest {
 	}
 
 	/**
+	 * A test reading an empty mappings csv.
+	 * 
+	 * @throws IOException if reading or creating the temporary file fails.
+	 */
+	@Test
+	public void readEmpty() throws IOException {
+		Pair<FileInputStreamHandler, PrintStream> tempFile = tempFolder.newTempInputFile("empty_mappings.csv");
+		FileInputStreamHandler fiin = tempFile.getKey();
+
+		assertTrue("File input stream handle for an empty file wasn't done.", fiin.done());
+		assertNull("The result of reading an empty mappings file was not null.", CSVHandler.readMappingCSV(fiin));
+
+		errorLog.checkLine("Input file did not contain any data.", 0);
+	}
+
+	/**
 	 * A unit test confirming that {@link CSVHandler#readMappingCSV} will throw a
 	 * {@link NullPointerException} when given a {@code null} input.
 	 * 
 	 * @throws NullPointerException expected
 	 */
 	@Test(expected = NullPointerException.class)
-	public void testNullInput() throws NullPointerException {
+	public void readNullInput() throws NullPointerException {
 		CSVHandler.readMappingCSV(null);
 	}
 

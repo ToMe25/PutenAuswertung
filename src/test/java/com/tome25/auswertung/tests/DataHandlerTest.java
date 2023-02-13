@@ -66,7 +66,7 @@ public class DataHandlerTest {
 		args.fillDays = true;
 		AntennaDataGenerator.generateAntennaData(turkeys, zones, dataCSV.getValue(), args, 5, true, true);
 
-		DataHandler.handleStreams(dataCSV.getKey(), turkeyCSV.getKey(), zoneCSV.getKey(), totalsCSV.getKey(),
+		DataHandler.handleStreams(dataCSV.getKey(), turkeyCSV.getKey(), zoneCSV.getKey(), null, totalsCSV.getKey(),
 				staysCSV.getKey(), args);
 
 		assertFalse("The totals output file was not empty after reading an empty turkey mappings file.",
@@ -74,7 +74,8 @@ public class DataHandlerTest {
 		assertFalse("The stays output file was not empty after reading an empty turkey mappings file.",
 				staysCSV.getValue().ready());
 
-		errorLog.checkLine("Failed to read turkey mappings from the input file.", 0);
+		errorLog.checkLine("Input file did not contain any data.", 0);
+		errorLog.checkLine("Failed to read turkey mappings from the input file.");
 	}
 
 	/**
@@ -101,7 +102,7 @@ public class DataHandlerTest {
 		args.fillDays = true;
 		AntennaDataGenerator.generateAntennaData(turkeys, zones, dataCSV.getValue(), args, 5, true, true);
 
-		DataHandler.handleStreams(dataCSV.getKey(), turkeyCSV.getKey(), zoneCSV.getKey(), totalsCSV.getKey(),
+		DataHandler.handleStreams(dataCSV.getKey(), turkeyCSV.getKey(), zoneCSV.getKey(), null, totalsCSV.getKey(),
 				staysCSV.getKey(), args);
 
 		assertFalse("The totals output file was not empty after reading an empty zone mappings file.",
@@ -109,7 +110,8 @@ public class DataHandlerTest {
 		assertFalse("The stays output file was not empty after reading an empty zone mappings file.",
 				staysCSV.getValue().ready());
 
-		errorLog.checkLine("Failed to read zone mappings from the input file.", 0);
+		errorLog.checkLine("Input file did not contain any data.", 0);
+		errorLog.checkLine("Failed to read zone mappings from the input file.");
 	}
 
 	/**
@@ -134,7 +136,7 @@ public class DataHandlerTest {
 		Pair<FileInputStreamHandler, FileOutputStreamHandler> staysCSV = tempFolder
 				.newTempIOFile("empty_last_record_stays.csv");
 
-		DataHandler.handleStreams(dataCSV.getKey(), mappings.turkeysIn, mappings.zonesIn, totalsCSV.getValue(),
+		DataHandler.handleStreams(dataCSV.getKey(), mappings.turkeysIn, mappings.zonesIn, null, totalsCSV.getValue(),
 				staysCSV.getValue(), args);
 
 		Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>> outputTotals = CSVHandler
@@ -173,7 +175,7 @@ public class DataHandlerTest {
 		Pair<FileInputStreamHandler, FileOutputStreamHandler> staysCSV = tempFolder
 				.newTempIOFile("invalid_last_record_stays.csv");
 
-		DataHandler.handleStreams(dataCSV.getKey(), mappings.turkeysIn, mappings.zonesIn, totalsCSV.getValue(),
+		DataHandler.handleStreams(dataCSV.getKey(), mappings.turkeysIn, mappings.zonesIn, null, totalsCSV.getValue(),
 				staysCSV.getValue(), args);
 
 		Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>> outputTotals = CSVHandler

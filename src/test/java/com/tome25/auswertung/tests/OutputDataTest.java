@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import org.junit.Rule;
@@ -23,6 +24,8 @@ import com.tome25.auswertung.ZoneStay;
 import com.tome25.auswertung.args.Arguments;
 import com.tome25.auswertung.stream.FileInputStreamHandler;
 import com.tome25.auswertung.stream.FileOutputStreamHandler;
+import com.tome25.auswertung.stream.IInputStreamHandler;
+import com.tome25.auswertung.stream.IOutputStreamHandler;
 import com.tome25.auswertung.testdata.AntennaDataGenerator;
 import com.tome25.auswertung.testdata.TurkeyGenerator;
 import com.tome25.auswertung.testdata.ZoneGenerator;
@@ -49,7 +52,12 @@ public class OutputDataTest {
 	@Test
 	public void basic() throws IOException {
 		Arguments args = Arguments.empty();
-		final TestResults results = generateTestValues(100, 5, 10, args, true, true, tempFolder);
+		final TestMappings mappings = generateTestMappings(100, 5, tempFolder);
+		final Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder
+				.newTempIOFile("antenna.csv");
+		final TestResults results = generateTestValues(mappings, 10, args, true, true, tempFolder,
+				antennaPair.getValue());
+		generateParsedData(mappings, results, args, tempFolder, antennaPair.getKey());
 		validateResults(results, args);
 	}
 
@@ -62,7 +70,12 @@ public class OutputDataTest {
 	@Test
 	public void basicNonCont() throws IOException {
 		Arguments args = Arguments.empty();
-		final TestResults results = generateTestValues(100, 5, 10, args, false, true, tempFolder);
+		final TestMappings mappings = generateTestMappings(100, 5, tempFolder);
+		final Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder
+				.newTempIOFile("antenna.csv");
+		final TestResults results = generateTestValues(mappings, 10, args, false, true, tempFolder,
+				antennaPair.getValue());
+		generateParsedData(mappings, results, args, tempFolder, antennaPair.getKey());
 		validateResults(results, args);
 	}
 
@@ -75,7 +88,12 @@ public class OutputDataTest {
 	public void basicNoMinTime() throws IOException {
 		Arguments args = Arguments.empty();
 		args.minTime = 0;
-		final TestResults results = generateTestValues(100, 5, 10, args, false, true, tempFolder);
+		final TestMappings mappings = generateTestMappings(100, 5, tempFolder);
+		final Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder
+				.newTempIOFile("antenna.csv");
+		final TestResults results = generateTestValues(mappings, 10, args, false, true, tempFolder,
+				antennaPair.getValue());
+		generateParsedData(mappings, results, args, tempFolder, antennaPair.getKey());
 		validateResults(results, args);
 	}
 
@@ -88,7 +106,12 @@ public class OutputDataTest {
 	public void basic30mMinTime() throws IOException {
 		Arguments args = Arguments.empty();
 		args.minTime = 30 * 60;
-		final TestResults results = generateTestValues(100, 5, 10, args, false, true, tempFolder);
+		final TestMappings mappings = generateTestMappings(100, 5, tempFolder);
+		final Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder
+				.newTempIOFile("antenna.csv");
+		final TestResults results = generateTestValues(mappings, 10, args, false, true, tempFolder,
+				antennaPair.getValue());
+		generateParsedData(mappings, results, args, tempFolder, antennaPair.getKey());
 		validateResults(results, args);
 	}
 
@@ -100,7 +123,12 @@ public class OutputDataTest {
 	@Test
 	public void basicIncomplete() throws IOException {
 		Arguments args = Arguments.empty();
-		final TestResults results = generateTestValues(100, 5, 10, args, true, false, tempFolder);
+		final TestMappings mappings = generateTestMappings(100, 5, tempFolder);
+		final Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder
+				.newTempIOFile("antenna.csv");
+		final TestResults results = generateTestValues(mappings, 10, args, true, false, tempFolder,
+				antennaPair.getValue());
+		generateParsedData(mappings, results, args, tempFolder, antennaPair.getKey());
 		validateResults(results, args);
 	}
 
@@ -112,7 +140,12 @@ public class OutputDataTest {
 	@Test
 	public void basicIncompleteNonCont() throws IOException {
 		Arguments args = Arguments.empty();
-		final TestResults results = generateTestValues(100, 5, 10, args, false, false, tempFolder);
+		final TestMappings mappings = generateTestMappings(100, 5, tempFolder);
+		final Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder
+				.newTempIOFile("antenna.csv");
+		final TestResults results = generateTestValues(mappings, 10, args, false, false, tempFolder,
+				antennaPair.getValue());
+		generateParsedData(mappings, results, args, tempFolder, antennaPair.getKey());
 		validateResults(results, args);
 	}
 
@@ -125,7 +158,12 @@ public class OutputDataTest {
 	public void fillDays() throws IOException {
 		Arguments args = Arguments.empty();
 		args.fillDays = true;
-		final TestResults results = generateTestValues(100, 5, 10, args, true, true, tempFolder);
+		final TestMappings mappings = generateTestMappings(100, 5, tempFolder);
+		final Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder
+				.newTempIOFile("antenna.csv");
+		final TestResults results = generateTestValues(mappings, 10, args, true, true, tempFolder,
+				antennaPair.getValue());
+		generateParsedData(mappings, results, args, tempFolder, antennaPair.getKey());
 		validateResults(results, args);
 	}
 
@@ -139,7 +177,12 @@ public class OutputDataTest {
 	public void fillDaysNonCont() throws IOException {
 		Arguments args = Arguments.empty();
 		args.fillDays = true;
-		final TestResults results = generateTestValues(100, 5, 10, args, false, true, tempFolder);
+		final TestMappings mappings = generateTestMappings(100, 5, tempFolder);
+		final Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder
+				.newTempIOFile("antenna.csv");
+		final TestResults results = generateTestValues(mappings, 10, args, false, true, tempFolder,
+				antennaPair.getValue());
+		generateParsedData(mappings, results, args, tempFolder, antennaPair.getKey());
 		validateResults(results, args);
 	}
 
@@ -154,7 +197,12 @@ public class OutputDataTest {
 		Arguments args = Arguments.empty();
 		args.fillDays = true;
 		args.minTime = 0;
-		final TestResults results = generateTestValues(100, 5, 10, args, false, true, tempFolder);
+		final TestMappings mappings = generateTestMappings(100, 5, tempFolder);
+		final Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder
+				.newTempIOFile("antenna.csv");
+		final TestResults results = generateTestValues(mappings, 10, args, false, true, tempFolder,
+				antennaPair.getValue());
+		generateParsedData(mappings, results, args, tempFolder, antennaPair.getKey());
 		validateResults(results, args);
 	}
 
@@ -169,7 +217,12 @@ public class OutputDataTest {
 		Arguments args = Arguments.empty();
 		args.fillDays = true;
 		args.minTime = 30 * 60;
-		final TestResults results = generateTestValues(100, 5, 10, args, false, true, tempFolder);
+		final TestMappings mappings = generateTestMappings(100, 5, tempFolder);
+		final Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder
+				.newTempIOFile("antenna.csv");
+		final TestResults results = generateTestValues(mappings, 10, args, false, true, tempFolder,
+				antennaPair.getValue());
+		generateParsedData(mappings, results, args, tempFolder, antennaPair.getKey());
 		validateResults(results, args);
 	}
 
@@ -183,7 +236,12 @@ public class OutputDataTest {
 	public void fillDaysIncomplete() throws IOException {
 		Arguments args = Arguments.empty();
 		args.fillDays = true;
-		final TestResults results = generateTestValues(100, 5, 10, args, true, false, tempFolder);
+		final TestMappings mappings = generateTestMappings(100, 5, tempFolder);
+		final Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder
+				.newTempIOFile("antenna.csv");
+		final TestResults results = generateTestValues(mappings, 10, args, true, false, tempFolder,
+				antennaPair.getValue());
+		generateParsedData(mappings, results, args, tempFolder, antennaPair.getKey());
 		validateResults(results, args);
 	}
 
@@ -198,7 +256,12 @@ public class OutputDataTest {
 	public void fillDaysIncompleteNonCont() throws IOException {
 		Arguments args = Arguments.empty();
 		args.fillDays = true;
-		final TestResults results = generateTestValues(100, 5, 10, args, false, false, tempFolder);
+		final TestMappings mappings = generateTestMappings(100, 5, tempFolder);
+		final Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder
+				.newTempIOFile("antenna.csv");
+		final TestResults results = generateTestValues(mappings, 10, args, false, false, tempFolder,
+				antennaPair.getValue());
+		generateParsedData(mappings, results, args, tempFolder, antennaPair.getKey());
 		validateResults(results, args);
 	}
 
@@ -259,7 +322,7 @@ public class OutputDataTest {
 		Pair<FileInputStreamHandler, FileOutputStreamHandler> staysPair = tempFolder.newTempIOFile("stays.csv");
 		FileOutputStreamHandler staysOut = staysPair.getValue();
 		FileInputStreamHandler staysIn = staysPair.getKey();
-		DataHandler.handleStreams(antennaIn, turkeysIn, zonesIn, totalsOut, staysOut, Arguments.empty());
+		DataHandler.handleStreams(antennaIn, turkeysIn, zonesIn, null, totalsOut, staysOut, Arguments.empty());
 		totalsOut.close();
 		staysOut.close();
 
@@ -485,12 +548,14 @@ public class OutputDataTest {
 	 *                   the required temporary files.
 	 * @return An object containing the sets of mappings and
 	 *         {@link FileInputStreamHandler FileInputStreamHandlers} to read them.
-	 * @throws IOException          If reading/writing/creating one of the temporary
-	 *                              files fails.
-	 * @throws NullPointerException If {@code tempFolder} is {@code null}.
+	 * @throws IOException              If reading/writing/creating one of the
+	 *                                  temporary files fails.
+	 * @throws NullPointerException     If {@code tempFolder} is {@code null}.
+	 * @throws IllegalArgumentException If {@code turkeys} or {@code zones} is less
+	 *                                  than 1.
 	 */
 	public static TestMappings generateTestMappings(int turkeys, int zones, TempFileStreamHandler tempFolder)
-			throws IOException, NullPointerException {
+			throws IOException, NullPointerException, IllegalArgumentException {
 		Pair<FileInputStreamHandler, FileOutputStreamHandler> turkeysPair = tempFolder.newTempIOFile("turkeys.csv");
 		FileOutputStreamHandler turkeysOut = turkeysPair.getValue();
 
@@ -512,11 +577,10 @@ public class OutputDataTest {
 	}
 
 	/**
-	 * Generates and writes mappings and totals files.
+	 * Generates the antenna records file to use for testing, as well as expected
+	 * results when parsing it.
 	 * 
-	 * @param turkeys    The number of turkeys to generate and use for the test
-	 *                   data.
-	 * @param zones      The number of zones to generate and use for the test data.
+	 * @param mappings   The mappings files to generate test data for.
 	 * @param days       The number of days worth of antenna records to generate and
 	 *                   use.
 	 * @param args       The configuration to use to generate test data.
@@ -526,36 +590,60 @@ public class OutputDataTest {
 	 *                   day.
 	 * @param tempFolder The {@link TempFileStreamHandler} object to use to create
 	 *                   the required temporary files.
+	 * @param antennaOut The {@link IOutputStreamHandler} to write the antenna data
+	 *                   to.
 	 * @return An object containing both the generated "ideal" results, as well as
 	 *         the parsed output file.
 	 * @throws IOException              If reading/writing/creating a temporary file
-	 *                                  failed.
-	 * @throws NullPointerException     If {@code args} or {@code tempFolder} is
+	 *                                  fails.
+	 * @throws NullPointerException     If {@code mappings}, {@code args},
+	 *                                  {@code tempFolder}, or {@code antennaOut} is
 	 *                                  {@code null}.
-	 * @throws IllegalArgumentException If {@code turkeys}, {@code zones}, or
-	 *                                  {@code days} is less than 1.
+	 * @throws IllegalArgumentException If {@code days} is less than 1.
 	 */
-	public static TestResults generateTestValues(int turkeys, int zones, int days, Arguments args, boolean continuous,
-			boolean complete, TempFileStreamHandler tempFolder)
-			throws IOException, NullPointerException, IllegalArgumentException {
-		if (turkeys < 1) {
-			throw new IllegalArgumentException("The turkeys to generate can't be less than 1.");
-		} else if (zones < 1) {
-			throw new IllegalArgumentException("The zones to generate can't be less than or 0.");
-		} else if (days < 1) {
+	public static TestResults generateTestValues(final TestMappings mappings, int days, final Arguments args,
+			boolean continuous, boolean complete, TempFileStreamHandler tempFolder,
+			final IOutputStreamHandler antennaOut) throws IOException, NullPointerException, IllegalArgumentException {
+		Objects.requireNonNull(mappings, "The mappings to generate valies for cannot be null.");
+		Objects.requireNonNull(args, "The arguments to use cannot be null.");
+		Objects.requireNonNull(tempFolder, "The temporary folder to use cannot be null.");
+		Objects.requireNonNull(antennaOut, "The output stream handler to write the antenna data to cannot be null.");
+
+		if (days < 1) {
 			throw new IllegalArgumentException("The days to generate cannot be less than 1.");
 		}
 
-		final TestMappings mappings = generateTestMappings(turkeys, zones, tempFolder);
 		final TestResults results = new TestResults();
-
-		final Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder
-				.newTempIOFile("antenna.csv");
-		final FileOutputStreamHandler antennaOut = antennaPair.getValue();
-		final FileInputStreamHandler antennaIn = antennaPair.getKey();
 		results.setAntennaData(AntennaDataGenerator.generateAntennaData(mappings.turkeys, mappings.zones, antennaOut,
 				args, days, continuous, complete));
 		antennaOut.close();
+
+		return results;
+	}
+
+	/**
+	 * Parses the given input data and returns the parsed results.
+	 * 
+	 * @param mappings   The mappings to use to parse the antenna data.
+	 * @param results    The object to write the parsed results to.
+	 * @param args       The arguments to use for parsing.
+	 * @param tempFolder The temporary folder to create the output files in.
+	 * @param antennaIn  The {@link IInputStreamHandler} to read the antenna records
+	 *                   from.
+	 * @return The modified {@link TestResults} object, now containing the parsed
+	 *         results.
+	 * @throws IOException          If reading/writing/creating a temporary file
+	 *                              fails.
+	 * @throws NullPointerException If one of the parameters is null.
+	 */
+	public static TestResults generateParsedData(final TestMappings mappings, TestResults results, final Arguments args,
+			TempFileStreamHandler tempFolder, final IInputStreamHandler antennaIn)
+			throws IOException, NullPointerException {
+		Objects.requireNonNull(mappings, "The mappings to use for parsing cannot be null.");
+		Objects.requireNonNull(results, "The object to store the results in cannot be null.");
+		Objects.requireNonNull(args, "The arguments to use cannot be null.");
+		Objects.requireNonNull(tempFolder, "The temporary folder to use cannot be null.");
+		Objects.requireNonNull(antennaIn, "The antenna data input cannot be null.");
 
 		final Pair<FileInputStreamHandler, FileOutputStreamHandler> totalsPair = tempFolder.newTempIOFile("totals.csv");
 		final FileOutputStreamHandler totalsOut = totalsPair.getValue();
@@ -564,7 +652,7 @@ public class OutputDataTest {
 		final Pair<FileInputStreamHandler, FileOutputStreamHandler> staysPair = tempFolder.newTempIOFile("stays.csv");
 		final FileOutputStreamHandler staysOut = staysPair.getValue();
 		final FileInputStreamHandler staysIn = staysPair.getKey();
-		DataHandler.handleStreams(antennaIn, mappings.turkeysIn, mappings.zonesIn, totalsOut, staysOut, args);
+		DataHandler.handleStreams(antennaIn, mappings.turkeysIn, mappings.zonesIn, null, totalsOut, staysOut, args);
 		totalsOut.close();
 		staysOut.close();
 

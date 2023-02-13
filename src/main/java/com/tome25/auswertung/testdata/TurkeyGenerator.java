@@ -138,8 +138,9 @@ public class TurkeyGenerator {
 	 * 
 	 * @param number The number of turkeys to generate.
 	 * @return The list containing all the newly generated turkeys.
+	 * @throws IllegalArgumentException If {@code number} is less than 1.
 	 */
-	public static List<TurkeyInfo> generateTurkeys(int number) {
+	public static List<TurkeyInfo> generateTurkeys(int number) throws IllegalArgumentException {
 		return generateTurkeys(number, DEFAULT_MAX_TRANSPONDERS);
 	}
 
@@ -153,8 +154,16 @@ public class TurkeyGenerator {
 	 * @param number          The number of turkeys to generate.
 	 * @param maxTransponders The max number of transponders per turkey.
 	 * @return The list containing all the newly generated turkeys.
+	 * @throws IllegalArgumentException If {@code number} or {@code maxTransponders}
+	 *                                  is less than 1.
 	 */
-	public static List<TurkeyInfo> generateTurkeys(int number, int maxTransponders) {
+	public static List<TurkeyInfo> generateTurkeys(int number, int maxTransponders) throws IllegalArgumentException {
+		if (number < 1) {
+			throw new IllegalArgumentException("Cannot generate less than 1 turkey.");
+		} else if (maxTransponders < 1) {
+			throw new IllegalArgumentException("Cannot generate turkeys with less than 1 transponder.");
+		}
+
 		List<TurkeyInfo> turkeys = new ArrayList<TurkeyInfo>();
 
 		for (int i = 0; i < number; i++) {
