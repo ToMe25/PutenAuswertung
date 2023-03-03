@@ -6,10 +6,8 @@ import static org.junit.Assert.fail;
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
@@ -33,22 +31,7 @@ public class ErrorLogRule implements TestRule {
 	/**
 	 * The list containing all the so far found lines of error logging.
 	 */
-	private List<String> lines = Collections.synchronizedList(new ArrayList<String>());
-
-	/**
-	 * The number of tests currently running using this instance.
-	 */
-	private volatile AtomicInteger running = new AtomicInteger(0);
-
-	/**
-	 * Whether debug mode was enabled before this rule forced it.
-	 */
-	private boolean initial_debug = false;
-
-	/**
-	 * Whether silent mode was enabled before this rule disabled it.
-	 */
-	private boolean initial_silent = false;
+	private List<String> lines = new ArrayList<String>();
 
 	@Override
 	public Statement apply(Statement base, Description description) {
@@ -191,26 +174,18 @@ public class ErrorLogRule implements TestRule {
 
 		@Override
 		public void evaluate() throws Throwable {
-			synchronized (this) {
-				if (running.getAndIncrement() == 0) {
-					LogHandler.addErrorStream(bout);
-					initial_debug = LogHandler.isDebug();
-					LogHandler.setDebug(true);
-					initial_silent = LogHandler.isSilent();
-					LogHandler.setSilent(false);
-				}
-			}
+			LogHandler.addErrorStream(bout);
+			boolean initial_debug = LogHandler.isDebug();
+			LogHandler.setDebug(true);
+			boolean initial_silent = LogHandler.isSilent();
+			LogHandler.setSilent(false);
 
 			try {
 				base.evaluate();
 			} finally {
-				synchronized (this) {
-					if (running.decrementAndGet() == 0) {
-						LogHandler.removeErrorStream(bout);
-						LogHandler.setDebug(initial_debug);
-						LogHandler.setSilent(initial_silent);
-					}
-				}
+				LogHandler.removeErrorStream(bout);
+				LogHandler.setDebug(initial_debug);
+				LogHandler.setSilent(initial_silent);
 			}
 		}
 
