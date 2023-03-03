@@ -74,7 +74,7 @@ public class DataHandlerTest {
 		assertFalse("The stays output file was not empty after reading an empty turkey mappings file.",
 				staysCSV.getValue().ready());
 
-		errorLog.checkLine("Input file did not contain any data.", 0);
+		errorLog.checkLine("Input file did not contain any data.");
 		errorLog.checkLine("Failed to read turkey mappings from the input file.");
 	}
 
@@ -110,7 +110,7 @@ public class DataHandlerTest {
 		assertFalse("The stays output file was not empty after reading an empty zone mappings file.",
 				staysCSV.getValue().ready());
 
-		errorLog.checkLine("Input file did not contain any data.", 0);
+		errorLog.checkLine("Input file did not contain any data.");
 		errorLog.checkLine("Failed to read zone mappings from the input file.");
 	}
 

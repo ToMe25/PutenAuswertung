@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.IllegalFormatException;
@@ -343,9 +344,9 @@ public class LogHandler {
 	 * Completely replaces the output stream, potentially removing all log files
 	 * added using {@link #addLogFile}.
 	 * 
-	 * @param output the new standard output stream.
+	 * @param out the new standard output stream.
 	 */
-	public static void setOutput(PrintStream out) {
+	public static synchronized void setOutput(PrintStream out) {
 		output = out;
 		LogHandler.out = null;
 
@@ -377,9 +378,9 @@ public class LogHandler {
 	 * Completely replaces the error stream, potentially removing all log files
 	 * added using {@link #addLogFile}.
 	 * 
-	 * @param output the new standard error stream.
+	 * @param err the new standard error stream.
 	 */
-	public static void setError(PrintStream err) {
+	public static synchronized void setError(PrintStream err) {
 		error = err;
 		LogHandler.err = null;
 
@@ -473,22 +474,12 @@ public class LogHandler {
 			fiout = new FileOutputStream(log);
 		}
 
-		if (err && !isErr) {
-			if (LogHandler.err == null) {
-				LogHandler.err = new MultiOutputStream(error == null ? System.err : error, fiout);
-				error = new PrintStream(LogHandler.err);
-			} else {
-				LogHandler.err.addStream(fiout);
-			}
+		if (err) {
+			addErrorStream(fiout);
 		}
 
-		if (out && !isOut) {
-			if (LogHandler.out == null) {
-				LogHandler.out = new MultiOutputStream(output == null ? System.out : output, fiout);
-				output = new PrintStream(LogHandler.out);
-			} else {
-				LogHandler.out.addStream(fiout);
-			}
+		if (out) {
+			addOutputStream(fiout);
 		}
 
 		if (logFiles.containsKey(log)) {
@@ -520,22 +511,90 @@ public class LogHandler {
 		FileOutputStream logOut = logFiles.get(log).getKey();
 
 		if (err) {
-			if (LogHandler.err != null) {
-				LogHandler.err.removeStream(logOut);
-			}
+			removeErrorStream(logOut);
 			logFiles.get(log).setValue(new Pair<Boolean, Boolean>(false, logFiles.get(log).getValue().getValue()));
 		}
 
 		if (out) {
-			if (LogHandler.out != null) {
-				LogHandler.out.removeStream(logOut);
-			}
+			removeOutputStream(logOut);
 			logFiles.get(log).getValue().setValue(false);
 		}
 
 		if ((out && err) || (!logFiles.get(log).getValue().getKey() && !logFiles.get(log).getValue().getValue())) {
 			logFiles.remove(log);
 		}
+	}
+
+	/**
+	 * Adds the given {@link OutputStream} as a output log target.
+	 * 
+	 * @param stream The stream to add.
+	 * @return {@code true} if the stream was successfully added.
+	 * @throws NullPointerException If {@code stream} was {@code null}.
+	 */
+	public static synchronized boolean addOutputStream(OutputStream stream) throws NullPointerException {
+		Objects.requireNonNull(stream, "The new output stream cannot be null.");
+
+		if (out == null) {
+			out = new MultiOutputStream(output == null ? System.out : output);
+			output = new PrintStream(out);
+		}
+
+		return out.addStream(stream);
+	}
+
+	/**
+	 * Removes the given {@link OutputStream} from the output log targets, if it was
+	 * used before.
+	 * 
+	 * @param stream The stream to remove.
+	 * @return {@code true} if the stream was successfully removed.
+	 * @throws NullPointerException If {@code stream} was {@code null}.
+	 */
+	public static boolean removeOutputStream(OutputStream stream) throws NullPointerException {
+		Objects.requireNonNull(stream, "The output stream to remove cannot be null.");
+
+		if (out == null) {
+			return false;
+		}
+
+		return out.removeStream(stream);
+	}
+
+	/**
+	 * Adds the given {@link OutputStream} as a error log target.
+	 * 
+	 * @param stream The stream to add.
+	 * @return {@code true} if the stream was successfully added.
+	 * @throws NullPointerException If {@code stream} was {@code null}.
+	 */
+	public static synchronized boolean addErrorStream(OutputStream stream) throws NullPointerException {
+		Objects.requireNonNull(stream, "The new output stream cannot be null.");
+
+		if (err == null) {
+			err = new MultiOutputStream(error == null ? System.err : error);
+			error = new PrintStream(err);
+		}
+
+		return err.addStream(stream);
+	}
+
+	/**
+	 * Removes the given {@link OutputStream} from the error log targets, if it was
+	 * used before.
+	 * 
+	 * @param stream The stream to remove.
+	 * @return {@code true} if the stream was successfully removed.
+	 * @throws NullPointerException If {@code stream} was {@code null}.
+	 */
+	public static boolean removeErrorStream(OutputStream stream) throws NullPointerException {
+		Objects.requireNonNull(stream, "The output stream to remove cannot be null.");
+
+		if (err == null) {
+			return false;
+		}
+
+		return err.removeStream(stream);
 	}
 
 	/**

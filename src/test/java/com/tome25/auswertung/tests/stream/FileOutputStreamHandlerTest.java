@@ -1,4 +1,4 @@
-package com.tome25.auswertung.tests.streamhandler;
+package com.tome25.auswertung.tests.stream;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -20,11 +20,14 @@ import com.tome25.auswertung.tests.rules.ErrorLogRule;
 import com.tome25.auswertung.tests.rules.TempFileStreamHandler;
 import com.tome25.auswertung.utils.Pair;
 
+import net.jcip.annotations.NotThreadSafe;
+
 /**
  * A class containing unit tests related to {@link FileOutputStreamHandler}.
  * 
  * @author theodor
  */
+@NotThreadSafe
 public class FileOutputStreamHandlerTest {
 
 	@Rule
@@ -140,11 +143,10 @@ public class FileOutputStreamHandlerTest {
 		fiout.close();
 		errorLog.checkEmpty();
 		fiout.close();
-		errorLog.checkLine("Trying to close an already closed FileOutputStreamHandler.", 0);
-		errorLog.clear();
+		errorLog.checkLine("Trying to close an already closed FileOutputStreamHandler.");
 
 		fiout.println("Some test line");
-		errorLog.checkLine("Tried to write line \"Some test line\" to an already closed FileOutputStreamHandler.", 0);
+		errorLog.checkLine("Tried to write line \"Some test line\" to an already closed FileOutputStreamHandler.");
 		assertEquals("Writing to a closed FileOutputStreamHandler caused the output file to have a size > 0.", 0,
 				Files.size(fiout.getOutputFile().toPath()));
 	}

@@ -24,11 +24,14 @@ import com.tome25.auswertung.tests.rules.ErrorLogRule;
 import com.tome25.auswertung.tests.rules.TempFileStreamHandler;
 import com.tome25.auswertung.utils.Pair;
 
+import net.jcip.annotations.NotThreadSafe;
+
 /**
  * A class containing unit tests relating to {@link CSVHandler#readMappingCSV}.
  * 
  * @author theodor
  */
+@NotThreadSafe
 public class ReadMappingsCSVTest {
 
 	@Rule

@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.PrintStream;
 
 import org.junit.After;
@@ -18,11 +19,14 @@ import org.junit.rules.TemporaryFolder;
 
 import com.tome25.auswertung.log.LogHandler;
 
+import net.jcip.annotations.NotThreadSafe;
+
 /**
  * A class containing unit tests related to this projects {@link LogHandler}.
  * 
  * @author theodor
  */
+@NotThreadSafe
 public class LogHandlerTest {
 
 	@Rule
@@ -230,6 +234,54 @@ public class LogHandlerTest {
 	@Test(expected = NullPointerException.class)
 	public void addNullLogFile() throws NullPointerException, FileNotFoundException {
 		LogHandler.addLogFile(null, true, true);
+	}
+
+	/**
+	 * Test adding an {@link OutputStream} as an output log target.
+	 */
+	@Test
+	public void addOutputStream() {
+		ByteArrayOutputStream bout = new ByteArrayOutputStream();
+		LogHandler.addOutputStream(bout);
+		LogHandler.out_println("Output line");
+		assertEquals("Output line wasn't written to an added output stream.", "Output line" + System.lineSeparator(),
+				bout.toString());
+	}
+
+	/**
+	 * Test adding an {@link OutputStream} as an error log target.
+	 */
+	@Test
+	public void addErrorStream() {
+		ByteArrayOutputStream bout = new ByteArrayOutputStream();
+		LogHandler.addErrorStream(bout);
+		LogHandler.err_println("Error line");
+		assertEquals("Error line wasn't written to an added output stream.", "Error line" + System.lineSeparator(),
+				bout.toString());
+	}
+
+	/**
+	 * Test removing an output log target stream.
+	 */
+	@Test
+	public void removeOutputStream() {
+		ByteArrayOutputStream bout = new ByteArrayOutputStream();
+		LogHandler.addOutputStream(bout);
+		LogHandler.removeOutputStream(bout);
+		LogHandler.out_println("Output line");
+		assertEquals("Output line was written to a removed output stream.", 0, bout.size());
+	}
+
+	/**
+	 * Test removing an error log target stream.
+	 */
+	@Test
+	public void removeErrorStream() throws IOException {
+		ByteArrayOutputStream bout = new ByteArrayOutputStream();
+		LogHandler.addErrorStream(bout);
+		LogHandler.removeErrorStream(bout);
+		LogHandler.out_println("Error line");
+		assertEquals("Error line was written to a removed output stream.", 0, bout.size());
 	}
 
 }

@@ -22,11 +22,14 @@ import com.tome25.auswertung.tests.rules.TempFileStreamHandler;
 import com.tome25.auswertung.utils.Pair;
 import com.tome25.auswertung.utils.TimeUtils;
 
+import net.jcip.annotations.NotThreadSafe;
+
 /**
  * A class containing the unit tests for {@link CSVHandler#readDowntimesCSV}.
  * 
  * @author theodor
  */
+@NotThreadSafe
 public class ReadDowntimesCSVTest {
 
 	@Rule

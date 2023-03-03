@@ -23,7 +23,13 @@
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>4.11</version>
+      <version>4.12</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.github.stephenc.jcip</groupId>
+      <artifactId>jcip-annotations</artifactId>
+      <version>1.0-1</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -50,6 +56,11 @@
           <version>2.22.2</version>
           <configuration>
             <!-- <argLine>-agentpath:/home/theodor/Dokumente/visualvm_215/visualvm/lib/deployed/jdk16/linux-amd64/libprofilerinterface.so=/home/theodor/Dokumente/visualvm_215/visualvm/lib,5140</argLine> -->
+            <parallel>methods</parallel>
+            <threadCount>4</threadCount>
+            <useUnlimitedThreads>false</useUnlimitedThreads>
+            <perCoreThreadCount>false</perCoreThreadCount>
+            <trimStackTrace>false</trimStackTrace>
           </configuration>
         </plugin>
         <plugin>

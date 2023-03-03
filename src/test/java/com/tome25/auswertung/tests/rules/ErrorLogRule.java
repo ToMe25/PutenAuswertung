@@ -4,18 +4,18 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
 import com.tome25.auswertung.log.LogHandler;
-import com.tome25.auswertung.stream.MultiOutputStream;
 
 /**
  * A {@link TestRule} that redirects the {@link LogHandler} error log to a
@@ -31,15 +31,24 @@ public class ErrorLogRule implements TestRule {
 	private final ByteArrayOutputStream bout = new ByteArrayOutputStream();
 
 	/**
-	 * The {@link PrintStream} to give to {@link LogHandler} to write to
-	 * {@code bout}.
-	 */
-	private final PrintStream pout = new PrintStream(new MultiOutputStream(System.err, bout));
-
-	/**
 	 * The list containing all the so far found lines of error logging.
 	 */
-	private List<String> lines = new ArrayList<String>();
+	private List<String> lines = Collections.synchronizedList(new ArrayList<String>());
+
+	/**
+	 * The number of tests currently running using this instance.
+	 */
+	private volatile AtomicInteger running = new AtomicInteger(0);
+
+	/**
+	 * Whether debug mode was enabled before this rule forced it.
+	 */
+	private boolean initial_debug = false;
+
+	/**
+	 * Whether silent mode was enabled before this rule disabled it.
+	 */
+	private boolean initial_silent = false;
 
 	@Override
 	public Statement apply(Statement base, Description description) {
@@ -54,13 +63,15 @@ public class ErrorLogRule implements TestRule {
 	 * @param line The line to check the error log for. Case sensitive.
 	 * @throws NullPointerException If {@code line} is {@code null}.
 	 */
-	public void checkLine(String line) throws NullPointerException {
+	public synchronized void checkLine(String line) throws NullPointerException {
 		Objects.requireNonNull(line, "The line to check for cannot be null.");
 
+		checkNotEmpty();
+
+		boolean found = false;
 		lines.addAll(Arrays.asList(bout.toString().split(System.lineSeparator())));
 		bout.reset();
 
-		boolean found = false;
 		for (int i = 0; i < lines.size(); i++) {
 			if (line.equals(lines.get(i))) {
 				found = true;
@@ -84,7 +95,7 @@ public class ErrorLogRule implements TestRule {
 	 * @param nr   The line number of the log line to compare with the given line.
 	 * @throws NullPointerException If {@code line} is {@code null}.
 	 */
-	public void checkLine(String line, int nr) throws NullPointerException {
+	public synchronized void checkLine(String line, int nr) throws NullPointerException {
 		Objects.requireNonNull(line, "The line to check for can't be null.");
 
 		checkNotEmpty();
@@ -135,7 +146,7 @@ public class ErrorLogRule implements TestRule {
 	/**
 	 * Removes all lines from the error log that were written before this call.
 	 */
-	public void clear() {
+	public synchronized void clear() {
 		lines.clear();
 		bout.reset();
 	}
@@ -147,7 +158,7 @@ public class ErrorLogRule implements TestRule {
 	 * 
 	 * @return Whether the this error log is empty.
 	 */
-	private boolean logEmpty() {
+	private synchronized boolean logEmpty() {
 		if (bout.size() > 0) {
 			return false;
 		}
@@ -180,19 +191,26 @@ public class ErrorLogRule implements TestRule {
 
 		@Override
 		public void evaluate() throws Throwable {
-			PrintStream oldErr = LogHandler.getError();
-			LogHandler.setError(pout);
-			boolean oldDebug = LogHandler.isDebug();
-			LogHandler.setDebug(true);
-			boolean oldSilent = LogHandler.isSilent();
-			LogHandler.setSilent(false);
+			synchronized (this) {
+				if (running.getAndIncrement() == 0) {
+					LogHandler.addErrorStream(bout);
+					initial_debug = LogHandler.isDebug();
+					LogHandler.setDebug(true);
+					initial_silent = LogHandler.isSilent();
+					LogHandler.setSilent(false);
+				}
+			}
 
 			try {
 				base.evaluate();
 			} finally {
-				LogHandler.setError(oldErr);
-				LogHandler.setDebug(oldDebug);
-				LogHandler.setSilent(oldSilent);
+				synchronized (this) {
+					if (running.decrementAndGet() == 0) {
+						LogHandler.removeErrorStream(bout);
+						LogHandler.setDebug(initial_debug);
+						LogHandler.setSilent(initial_silent);
+					}
+				}
 			}
 		}
 

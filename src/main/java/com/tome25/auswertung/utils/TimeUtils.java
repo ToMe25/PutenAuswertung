@@ -110,6 +110,7 @@ public class TimeUtils {
 		}
 
 		Calendar c = new GregorianCalendar();
+		c.setTimeZone(TimeZone.getTimeZone("GMT"));
 		c.setTimeInMillis(time);
 		c.set(Calendar.YEAR, Integer.parseInt(dateSplit[2]));
 
