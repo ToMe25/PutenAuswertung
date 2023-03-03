@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+import java.util.TimeZone;
 
 import org.junit.Test;
 
@@ -143,8 +144,7 @@ public class TimeUtilsTest {
 	@Test
 	public void dateStringToCal() {
 		Calendar cal = TimeUtils.parseDate("12.06.2022");
-		Calendar refCal = new GregorianCalendar(2022, Calendar.JUNE, 12, 0, 0, 0);
-		refCal.set(Calendar.MILLISECOND, 0);
+		Calendar refCal = makeCal(2022, Calendar.JUNE, 12, 0, 0, 0, 0);
 		assertEquals("The parsed date did not match.", refCal, cal);
 	}
 
@@ -154,8 +154,7 @@ public class TimeUtilsTest {
 	@Test
 	public void singleDigitStringToCal() {
 		Calendar cal = TimeUtils.parseDate("5.3.9");
-		Calendar refCal = new GregorianCalendar(9, Calendar.MARCH, 5, 0, 0, 0);
-		refCal.set(Calendar.MILLISECOND, 0);
+		Calendar refCal = makeCal(9, Calendar.MARCH, 5, 0, 0, 0, 0);
 		assertEquals("Parsing a single digit date didn't match.", refCal, cal);
 	}
 
@@ -302,8 +301,7 @@ public class TimeUtilsTest {
 	@Test
 	public void dateStringAndTimeToCal() {
 		Calendar cal = TimeUtils.parseTime("12.02.2022", 4671720);
-		Calendar refCal = new GregorianCalendar(2022, Calendar.FEBRUARY, 12, 1, 17, 51);
-		refCal.set(Calendar.MILLISECOND, 720);
+		Calendar refCal = makeCal(2022, Calendar.FEBRUARY, 12, 1, 17, 51, 720);
 		assertEquals("Parsed date with time didn't match.", refCal, cal);
 	}
 
@@ -313,8 +311,7 @@ public class TimeUtilsTest {
 	@Test
 	public void dateAndTimeStringToCal() {
 		Calendar cal = TimeUtils.parseTime("03.10.2020", "12:54:03.68");
-		Calendar refCal = new GregorianCalendar(2020, Calendar.OCTOBER, 3, 12, 54, 3);
-		refCal.set(Calendar.MILLISECOND, 680);
+		Calendar refCal = makeCal(2020, Calendar.OCTOBER, 3, 12, 54, 3, 680);
 		assertEquals("Parsed date and time didn't match.", refCal, cal);
 	}
 
@@ -356,9 +353,7 @@ public class TimeUtilsTest {
 	 */
 	@Test
 	public void calToMs() {
-		Calendar cal = new GregorianCalendar();
-		cal.set(2022, 5, 21, 13, 49, 23);
-		cal.set(Calendar.MILLISECOND, 120);
+		Calendar cal = makeCal(2022, 5, 21, 13, 49, 23, 120);
 		assertEquals("The time of day from the calendar didn't match.", 49763120, TimeUtils.getMsOfDay(cal));
 	}
 
@@ -369,6 +364,25 @@ public class TimeUtilsTest {
 	public void msToDateString() {
 		assertEquals("The from a timestamp generate date string didn't match.", "21.05.2022",
 				TimeUtils.encodeDate(1653095713000l));
+	}
+
+	/**
+	 * Creates a new calendar with the given time and the GMT time zone.
+	 * 
+	 * @param year        The year for the new calendar.
+	 * @param month       The month for the new calendar.
+	 * @param date        The day of month for the new calendar.
+	 * @param hour        The hour of day for the new calendar.
+	 * @param minute      The minute for the new calendar.
+	 * @param second      The second for the new calendar.
+	 * @param millisecond The millisecond for the new calendar.
+	 * @return The newly created calendar.
+	 */
+	private static Calendar makeCal(int year, int month, int date, int hour, int minute, int second, int millisecond) {
+		Calendar cal = new GregorianCalendar(year, month, date, hour, minute, second);
+		cal.setTimeZone(TimeZone.getTimeZone("GMT"));
+		cal.set(Calendar.MILLISECOND, millisecond);
+		return cal;
 	}
 
 }

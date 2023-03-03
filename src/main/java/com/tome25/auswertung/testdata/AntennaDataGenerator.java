@@ -38,8 +38,8 @@ public class AntennaDataGenerator {
 	 * Also calculates how long each turkey should have spent where.<br/>
 	 * This method returns three maps:<br/>
 	 * The format of the first one is {@code turkey -> date -> zone -> time}.<br/>
-	 * The format of the second one is {@code turkey -> date -> zoneChanges}.<br/>
-	 * The format of the third map is {@code turkey -> zoneStays}.
+	 * The format of the second one is {@code turkey -> date -> changes}.<br/>
+	 * The format of the third map is {@code turkey -> [stay]}.
 	 * 
 	 * @param turkeys    The turkeys to move in the example data.
 	 * @param zones      The zones for the turkeys to move in.
@@ -58,9 +58,9 @@ public class AntennaDataGenerator {
 	 * @throws NullPointerException     If one of the arguments is {@code null}.
 	 * @throws IllegalArgumentException If days is less than 1.
 	 */
-	public static Pair<Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>>, Map<String, List<ZoneStay>>> generateAntennaData(
-			List<TurkeyInfo> turkeys, Map<String, List<String>> zones, IOutputStreamHandler output, Arguments args,
-			int days, boolean continuous, boolean complete) throws NullPointerException, IllegalArgumentException {
+	public static TestData generateAntennaData(List<TurkeyInfo> turkeys, Map<String, List<String>> zones,
+			IOutputStreamHandler output, Arguments args, int days, boolean continuous, boolean complete)
+			throws NullPointerException, IllegalArgumentException {
 		Objects.requireNonNull(turkeys, "The turkeys to generate input data for cannot be null.");
 		Objects.requireNonNull(zones, "The zones to use for the generated input can't be null.");
 		Objects.requireNonNull(output, "The output to write the file to can not be null.");
@@ -237,11 +237,7 @@ public class AntennaDataGenerator {
 			}
 		}
 
-		Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>> totals = new Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>>(
-				times, changes);
-
-		return new Pair<Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>>, Map<String, List<ZoneStay>>>(
-				totals, stays);
+		return new TestData(times, changes, stays);
 	}
 
 	/**
@@ -541,5 +537,52 @@ public class AntennaDataGenerator {
 
 		return new Pair<Pair<Map<String, Map<String, Integer>>, Map<String, Integer>>, Map<String, List<ZoneStay>>>(
 				totals, stays);
+	}
+
+	/**
+	 * A class for storing the generated test data.
+	 * 
+	 * @author theodor
+	 */
+	public static class TestData {
+
+		/**
+		 * A map containing the times each turkey spent in each zone each day.<br/>
+		 * Format: {@code turkey -> date -> zone -> time}
+		 */
+		public final Map<String, Map<String, Map<String, Long>>> zoneTimes;
+
+		/**
+		 * A map containing the number of zone changes for each turkey each day.<br/>
+		 * Format: {@code turkey -> date -> zoneChanges}
+		 */
+		public final Map<String, Map<String, Integer>> zoneChanges;
+
+		/**
+		 * A map containing the {@link ZoneStay ZoneStays} for each turkey for each
+		 * day.<br/>
+		 * Format: {@code turkey -> [stay]}
+		 */
+		public final Map<String, List<ZoneStay>> zoneStays;
+
+		/**
+		 * Creates a new TestData object.
+		 * 
+		 * @param zoneTimes   The zone times map.
+		 * @param zoneChanges The zone changes map.
+		 * @param zoneStays   The zone stays map.
+		 * @throws NullPointerException If one of the inputs is {@code null}.
+		 */
+		public TestData(final Map<String, Map<String, Map<String, Long>>> zoneTimes,
+				final Map<String, Map<String, Integer>> zoneChanges, final Map<String, List<ZoneStay>> zoneStays)
+				throws NullPointerException {
+			Objects.requireNonNull(zoneTimes, "The zone times cannot be null.");
+			Objects.requireNonNull(zoneChanges, "The zone changes cannot be null.");
+			Objects.requireNonNull(zoneStays, "The zone stays cannot be null.");
+
+			this.zoneTimes = zoneTimes;
+			this.zoneChanges = zoneChanges;
+			this.zoneStays = zoneStays;
+		}
 	}
 }

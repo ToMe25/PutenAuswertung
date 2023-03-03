@@ -27,6 +27,7 @@ import com.tome25.auswertung.stream.FileOutputStreamHandler;
 import com.tome25.auswertung.stream.IInputStreamHandler;
 import com.tome25.auswertung.stream.IOutputStreamHandler;
 import com.tome25.auswertung.testdata.AntennaDataGenerator;
+import com.tome25.auswertung.testdata.AntennaDataGenerator.TestData;
 import com.tome25.auswertung.testdata.TurkeyGenerator;
 import com.tome25.auswertung.testdata.ZoneGenerator;
 import com.tome25.auswertung.tests.rules.TempFileStreamHandler;
@@ -55,10 +56,10 @@ public class OutputDataTest {
 		final TestMappings mappings = generateTestMappings(100, 5, tempFolder);
 		final Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder
 				.newTempIOFile("antenna.csv");
-		final TestResults results = generateTestValues(mappings, 10, args, true, true, tempFolder,
+		final TestData generated = generateTestValues(mappings, 10, args, true, true, tempFolder,
 				antennaPair.getValue());
-		generateParsedData(mappings, results, args, tempFolder, antennaPair.getKey());
-		validateResults(results, args);
+		final TestData parsed = generateParsedData(mappings, args, tempFolder, antennaPair.getKey());
+		validateResults(generated, parsed, args);
 	}
 
 	/**
@@ -73,10 +74,10 @@ public class OutputDataTest {
 		final TestMappings mappings = generateTestMappings(100, 5, tempFolder);
 		final Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder
 				.newTempIOFile("antenna.csv");
-		final TestResults results = generateTestValues(mappings, 10, args, false, true, tempFolder,
+		final TestData generated = generateTestValues(mappings, 10, args, false, true, tempFolder,
 				antennaPair.getValue());
-		generateParsedData(mappings, results, args, tempFolder, antennaPair.getKey());
-		validateResults(results, args);
+		final TestData parsed = generateParsedData(mappings, args, tempFolder, antennaPair.getKey());
+		validateResults(generated, parsed, args);
 	}
 
 	/**
@@ -91,10 +92,10 @@ public class OutputDataTest {
 		final TestMappings mappings = generateTestMappings(100, 5, tempFolder);
 		final Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder
 				.newTempIOFile("antenna.csv");
-		final TestResults results = generateTestValues(mappings, 10, args, false, true, tempFolder,
+		final TestData generated = generateTestValues(mappings, 10, args, false, true, tempFolder,
 				antennaPair.getValue());
-		generateParsedData(mappings, results, args, tempFolder, antennaPair.getKey());
-		validateResults(results, args);
+		final TestData parsed = generateParsedData(mappings, args, tempFolder, antennaPair.getKey());
+		validateResults(generated, parsed, args);
 	}
 
 	/**
@@ -109,10 +110,10 @@ public class OutputDataTest {
 		final TestMappings mappings = generateTestMappings(100, 5, tempFolder);
 		final Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder
 				.newTempIOFile("antenna.csv");
-		final TestResults results = generateTestValues(mappings, 10, args, false, true, tempFolder,
+		final TestData generated = generateTestValues(mappings, 10, args, false, true, tempFolder,
 				antennaPair.getValue());
-		generateParsedData(mappings, results, args, tempFolder, antennaPair.getKey());
-		validateResults(results, args);
+		final TestData parsed = generateParsedData(mappings, args, tempFolder, antennaPair.getKey());
+		validateResults(generated, parsed, args);
 	}
 
 	/**
@@ -126,10 +127,10 @@ public class OutputDataTest {
 		final TestMappings mappings = generateTestMappings(100, 5, tempFolder);
 		final Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder
 				.newTempIOFile("antenna.csv");
-		final TestResults results = generateTestValues(mappings, 10, args, true, false, tempFolder,
+		final TestData generated = generateTestValues(mappings, 10, args, true, false, tempFolder,
 				antennaPair.getValue());
-		generateParsedData(mappings, results, args, tempFolder, antennaPair.getKey());
-		validateResults(results, args);
+		final TestData parsed = generateParsedData(mappings, args, tempFolder, antennaPair.getKey());
+		validateResults(generated, parsed, args);
 	}
 
 	/**
@@ -143,10 +144,10 @@ public class OutputDataTest {
 		final TestMappings mappings = generateTestMappings(100, 5, tempFolder);
 		final Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder
 				.newTempIOFile("antenna.csv");
-		final TestResults results = generateTestValues(mappings, 10, args, false, false, tempFolder,
+		final TestData generated = generateTestValues(mappings, 10, args, false, false, tempFolder,
 				antennaPair.getValue());
-		generateParsedData(mappings, results, args, tempFolder, antennaPair.getKey());
-		validateResults(results, args);
+		final TestData parsed = generateParsedData(mappings, args, tempFolder, antennaPair.getKey());
+		validateResults(generated, parsed, args);
 	}
 
 	/**
@@ -161,10 +162,10 @@ public class OutputDataTest {
 		final TestMappings mappings = generateTestMappings(100, 5, tempFolder);
 		final Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder
 				.newTempIOFile("antenna.csv");
-		final TestResults results = generateTestValues(mappings, 10, args, true, true, tempFolder,
+		final TestData generated = generateTestValues(mappings, 10, args, true, true, tempFolder,
 				antennaPair.getValue());
-		generateParsedData(mappings, results, args, tempFolder, antennaPair.getKey());
-		validateResults(results, args);
+		final TestData parsed = generateParsedData(mappings, args, tempFolder, antennaPair.getKey());
+		validateResults(generated, parsed, args);
 	}
 
 	/**
@@ -180,10 +181,10 @@ public class OutputDataTest {
 		final TestMappings mappings = generateTestMappings(100, 5, tempFolder);
 		final Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder
 				.newTempIOFile("antenna.csv");
-		final TestResults results = generateTestValues(mappings, 10, args, false, true, tempFolder,
+		final TestData generated = generateTestValues(mappings, 10, args, false, true, tempFolder,
 				antennaPair.getValue());
-		generateParsedData(mappings, results, args, tempFolder, antennaPair.getKey());
-		validateResults(results, args);
+		final TestData parsed = generateParsedData(mappings, args, tempFolder, antennaPair.getKey());
+		validateResults(generated, parsed, args);
 	}
 
 	/**
@@ -200,10 +201,10 @@ public class OutputDataTest {
 		final TestMappings mappings = generateTestMappings(100, 5, tempFolder);
 		final Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder
 				.newTempIOFile("antenna.csv");
-		final TestResults results = generateTestValues(mappings, 10, args, false, true, tempFolder,
+		final TestData generated = generateTestValues(mappings, 10, args, false, true, tempFolder,
 				antennaPair.getValue());
-		generateParsedData(mappings, results, args, tempFolder, antennaPair.getKey());
-		validateResults(results, args);
+		final TestData parsed = generateParsedData(mappings, args, tempFolder, antennaPair.getKey());
+		validateResults(generated, parsed, args);
 	}
 
 	/**
@@ -220,10 +221,10 @@ public class OutputDataTest {
 		final TestMappings mappings = generateTestMappings(100, 5, tempFolder);
 		final Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder
 				.newTempIOFile("antenna.csv");
-		final TestResults results = generateTestValues(mappings, 10, args, false, true, tempFolder,
+		final TestData generated = generateTestValues(mappings, 10, args, false, true, tempFolder,
 				antennaPair.getValue());
-		generateParsedData(mappings, results, args, tempFolder, antennaPair.getKey());
-		validateResults(results, args);
+		final TestData parsed = generateParsedData(mappings, args, tempFolder, antennaPair.getKey());
+		validateResults(generated, parsed, args);
 	}
 
 	/**
@@ -239,10 +240,10 @@ public class OutputDataTest {
 		final TestMappings mappings = generateTestMappings(100, 5, tempFolder);
 		final Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder
 				.newTempIOFile("antenna.csv");
-		final TestResults results = generateTestValues(mappings, 10, args, true, false, tempFolder,
+		final TestData generated = generateTestValues(mappings, 10, args, true, false, tempFolder,
 				antennaPair.getValue());
-		generateParsedData(mappings, results, args, tempFolder, antennaPair.getKey());
-		validateResults(results, args);
+		final TestData parsed = generateParsedData(mappings, args, tempFolder, antennaPair.getKey());
+		validateResults(generated, parsed, args);
 	}
 
 	/**
@@ -259,10 +260,10 @@ public class OutputDataTest {
 		final TestMappings mappings = generateTestMappings(100, 5, tempFolder);
 		final Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder
 				.newTempIOFile("antenna.csv");
-		final TestResults results = generateTestValues(mappings, 10, args, false, false, tempFolder,
+		final TestData generated = generateTestValues(mappings, 10, args, false, false, tempFolder,
 				antennaPair.getValue());
-		generateParsedData(mappings, results, args, tempFolder, antennaPair.getKey());
-		validateResults(results, args);
+		final TestData parsed = generateParsedData(mappings, args, tempFolder, antennaPair.getKey());
+		validateResults(generated, parsed, args);
 	}
 
 	/**
@@ -439,70 +440,68 @@ public class OutputDataTest {
 	 * Compares the theoretical outputs calculated when generating the input files
 	 * with the actual outputs generated by the program.
 	 * 
-	 * @param result The results to verify.
-	 * @param args   The arguments to be used for validation.
+	 * @param generated The generated, expected, results.
+	 * @param parsed    The results from parsing the generated test data.
+	 * @param args      The arguments to be used for validation.
 	 */
-	public static void validateResults(TestResults result, Arguments args) throws NullPointerException {
-		assertNotNull("The results to validate are null.", result);
+	public static void validateResults(final TestData generated, final TestData parsed, Arguments args)
+			throws NullPointerException {
+		assertNotNull("The generated data to validate is null.", generated);
+		assertNotNull("The parsed data to validate is null.", parsed);
 		assertNotNull("The arguments to use for validation are null.", args);
 
-		Map<String, Map<String, Map<String, Long>>> antennaTimes = result.antennaTimes;
-		Map<String, Map<String, Integer>> antennaChanges = result.antennaChanges;
-		Map<String, List<ZoneStay>> antennaStays = result.antennaStays;
-		Map<String, Map<String, Map<String, Long>>> outputTimes = result.outputTimes;
-		Map<String, Map<String, Integer>> outputChanges = result.outputChanges;
-		Map<String, List<ZoneStay>> outputStays = result.outputStays;
-
-		for (String turkey : antennaTimes.keySet()) {
-			assertTrue("The output data is missing turkey \"" + turkey + "\".", outputTimes.containsKey(turkey));
+		for (String turkey : generated.zoneTimes.keySet()) {
+			assertTrue("The output data is missing turkey \"" + turkey + "\".", parsed.zoneTimes.containsKey(turkey));
 		}
 
-		for (String turkey : outputTimes.keySet()) {
+		for (String turkey : parsed.zoneTimes.keySet()) {
 			assertTrue("There was no zone changes count output for the turkey \"" + turkey + "\".",
-					outputChanges.containsKey(turkey));
+					parsed.zoneChanges.containsKey(turkey));
 			assertTrue("There was no zone stays output for the turkey \"" + turkey + "\".",
-					outputStays.containsKey(turkey));
+					parsed.zoneChanges.containsKey(turkey));
 			assertTrue("There are no generated zone times for the turkey \"" + turkey + "\".",
-					antennaTimes.containsKey(turkey));
+					generated.zoneTimes.containsKey(turkey));
 			assertTrue("There are no generated zone changes count for the turkey \"" + turkey + "\".",
-					antennaChanges.containsKey(turkey));
+					generated.zoneChanges.containsKey(turkey));
 			assertTrue("There are no generated stays for the turkey \"" + turkey + "\".",
-					antennaStays.containsKey(turkey));
+					generated.zoneStays.containsKey(turkey));
 
-			Map<String, Map<String, Long>> turkeyOutputTimes = outputTimes.get(turkey);
+			Map<String, Map<String, Long>> turkeyOutputTimes = parsed.zoneTimes.get(turkey);
 			assertEquals("The output dates for turkey \"" + turkey + "\" didn't match.",
-					antennaTimes.get(turkey).keySet(), turkeyOutputTimes.keySet());
+					generated.zoneTimes.get(turkey).keySet(), turkeyOutputTimes.keySet());
 
 			// Compare output totals to calculated totals
 			for (String date : turkeyOutputTimes.keySet()) {
 				assertTrue("Day " + date + " not found in output changes for turkey \"" + turkey + "\".",
-						outputChanges.get(turkey).containsKey(date));
+						parsed.zoneChanges.get(turkey).containsKey(date));
 				assertTrue("Day " + date + " not found in generated times for turkey \"" + turkey + "\".",
-						antennaTimes.get(turkey).containsKey(date));
+						generated.zoneTimes.get(turkey).containsKey(date));
 				assertTrue("Day " + date + " not found in generated changes for turkey \"" + turkey + "\".",
-						antennaChanges.get(turkey).containsKey(date));
+						generated.zoneChanges.get(turkey).containsKey(date));
 
 				assertEquals("Zone changes for turkey \"" + turkey + "\" on day " + date + " didn't match.",
-						antennaChanges.get(turkey).get(date), outputChanges.get(turkey).get(date));
+						generated.zoneChanges.get(turkey).get(date), parsed.zoneChanges.get(turkey).get(date));
 
 				int dayTotal = 0;
 
-				Map<String, Long> antennaZoneTimes = antennaTimes.get(turkey).get(date);
+				Map<String, Long> generatedZoneTimes = generated.zoneTimes.get(turkey).get(date);
 				Map<String, Long> outputZoneTimes = turkeyOutputTimes.get(date);
 
 				for (String zone : outputZoneTimes.keySet()) {
-					long antennaTime = 0;
-					if (antennaZoneTimes.containsKey(zone)) {
-						antennaTime = antennaZoneTimes.get(zone);
+					long generatedTime = 0;
+					if (generatedZoneTimes.containsKey(zone)) {
+						generatedTime = generatedZoneTimes.get(zone);
 					}
 
-					assertEquals("Turkey \"" + turkey + "\" zone \"" + zone + "\" time for day \"" + date
-							+ "\" didn't match the prediction.", antennaTime, (long) outputZoneTimes.get(zone));
+					assertEquals(
+							"Turkey \"" + turkey + "\" zone \"" + zone + "\" time for day \"" + date
+									+ "\" didn't match the prediction.",
+							generatedTime, (long) outputZoneTimes.get(zone));
 
-					dayTotal += antennaTime;
+					dayTotal += generatedTime;
 				}
 
-				for (String zone : antennaZoneTimes.keySet()) {
+				for (String zone : generatedZoneTimes.keySet()) {
 					assertTrue("The output is missing a zone for turkey \"" + turkey + "\".",
 							outputZoneTimes.containsKey(zone));
 				}
@@ -515,12 +514,12 @@ public class OutputDataTest {
 
 			// Compare output stays with calculated stays
 			assertEquals("The number of zone stays for turkey \"" + turkey + "\" didn't match.",
-					antennaStays.get(turkey).size(), outputStays.get(turkey).size());
+					generated.zoneStays.get(turkey).size(), parsed.zoneStays.get(turkey).size());
 
-			Set<ZoneStay> turkeyAntennaStays = new HashSet<ZoneStay>(antennaStays.get(turkey));
+			Set<ZoneStay> generatedTurkeyStays = new HashSet<ZoneStay>(generated.zoneStays.get(turkey));
 			Map<String, Long> stayTotals = new HashMap<String, Long>();
-			for (ZoneStay stay : outputStays.get(turkey)) {
-				assertTrue("The stay " + stay + " did not match a generated one.", turkeyAntennaStays.contains(stay));
+			for (ZoneStay stay : parsed.zoneStays.get(turkey)) {
+				assertTrue("The stay " + stay + " did not match a generated one.", generatedTurkeyStays.contains(stay));
 
 				// Compare zone stay time sum with output total
 				if (stayTotals.containsKey(stay.getZone())) {
@@ -601,7 +600,7 @@ public class OutputDataTest {
 	 *                                  {@code null}.
 	 * @throws IllegalArgumentException If {@code days} is less than 1.
 	 */
-	public static TestResults generateTestValues(final TestMappings mappings, int days, final Arguments args,
+	public static TestData generateTestValues(final TestMappings mappings, int days, final Arguments args,
 			boolean continuous, boolean complete, TempFileStreamHandler tempFolder,
 			final IOutputStreamHandler antennaOut) throws IOException, NullPointerException, IllegalArgumentException {
 		Objects.requireNonNull(mappings, "The mappings to generate valies for cannot be null.");
@@ -613,9 +612,8 @@ public class OutputDataTest {
 			throw new IllegalArgumentException("The days to generate cannot be less than 1.");
 		}
 
-		final TestResults results = new TestResults();
-		results.setAntennaData(AntennaDataGenerator.generateAntennaData(mappings.turkeys, mappings.zones, antennaOut,
-				args, days, continuous, complete));
+		TestData results = AntennaDataGenerator.generateAntennaData(mappings.turkeys, mappings.zones, antennaOut, args,
+				days, continuous, complete);
 		antennaOut.close();
 
 		return results;
@@ -625,22 +623,19 @@ public class OutputDataTest {
 	 * Parses the given input data and returns the parsed results.
 	 * 
 	 * @param mappings   The mappings to use to parse the antenna data.
-	 * @param results    The object to write the parsed results to.
 	 * @param args       The arguments to use for parsing.
 	 * @param tempFolder The temporary folder to create the output files in.
 	 * @param antennaIn  The {@link IInputStreamHandler} to read the antenna records
 	 *                   from.
-	 * @return The modified {@link TestResults} object, now containing the parsed
-	 *         results.
+	 * @return A new {@link TestData} object containing the parsed data.
 	 * @throws IOException          If reading/writing/creating a temporary file
 	 *                              fails.
 	 * @throws NullPointerException If one of the parameters is null.
 	 */
-	public static TestResults generateParsedData(final TestMappings mappings, TestResults results, final Arguments args,
-			TempFileStreamHandler tempFolder, final IInputStreamHandler antennaIn)
+	public static TestData generateParsedData(final TestMappings mappings, final Arguments args,
+			final TempFileStreamHandler tempFolder, final IInputStreamHandler antennaIn)
 			throws IOException, NullPointerException {
 		Objects.requireNonNull(mappings, "The mappings to use for parsing cannot be null.");
-		Objects.requireNonNull(results, "The object to store the results in cannot be null.");
 		Objects.requireNonNull(args, "The arguments to use cannot be null.");
 		Objects.requireNonNull(tempFolder, "The temporary folder to use cannot be null.");
 		Objects.requireNonNull(antennaIn, "The antenna data input cannot be null.");
@@ -659,10 +654,8 @@ public class OutputDataTest {
 		final Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>> outputTotals = CSVHandler
 				.readTotalsCSV(totalsIn);
 		totalsIn.close();
-		results.outputTimes = outputTotals.getKey();
-		results.outputChanges = outputTotals.getValue();
-
-		results.outputStays = CSVHandler.readStaysCSV(staysIn);
+		TestData results = new TestData(outputTotals.getKey(), outputTotals.getValue(),
+				CSVHandler.readStaysCSV(staysIn));
 		staysIn.close();
 
 		return results;
@@ -720,87 +713,6 @@ public class OutputDataTest {
 			this.zonesIn = zonesIn;
 		}
 
-	}
-
-	/**
-	 * A utility class for this unit test to transfer all totals values at once.
-	 * 
-	 * @author theodor
-	 */
-	public static class TestResults {
-
-		/**
-		 * Generated times per zone per day per turkey.
-		 */
-		public Map<String, Map<String, Map<String, Long>>> antennaTimes;
-
-		/**
-		 * Time per zone per day per turkey read from the output file.
-		 */
-		public Map<String, Map<String, Map<String, Long>>> outputTimes;
-
-		/**
-		 * Generated zone change counts.
-		 */
-		public Map<String, Map<String, Integer>> antennaChanges;
-
-		/**
-		 * Zone change counts parsed from the output file.
-		 */
-		public Map<String, Map<String, Integer>> outputChanges;
-
-		/**
-		 * Generated zone stays per turkey.
-		 */
-		public Map<String, List<ZoneStay>> antennaStays;
-
-		/**
-		 * Zone stays per turkey parsed from the output file.
-		 */
-		public Map<String, List<ZoneStay>> outputStays;
-
-		/**
-		 * Creates an empty TestResults object.
-		 */
-		public TestResults() {
-		}
-
-		/**
-		 * Creates a new TestResults object and initializes all final fields.
-		 * 
-		 * @param antennaTimes   Calculated times per turkey per day per zone.
-		 * @param outputTimes    Time per turkey per day per zone parsed from the output
-		 *                       file.
-		 * @param antennaChanges Calculated zone changes per turkey.
-		 * @param outputChanges  Zone changes per turkey parsed from the output file.
-		 * @param antennaStays   A list containing all the generated {@link ZoneStay}.
-		 * @param outputStays    A list containing all the {@link ZoneStay} objects
-		 *                       parsed from the output file.
-		 */
-		public TestResults(final Map<String, Map<String, Map<String, Long>>> antennaTimes,
-				final Map<String, Map<String, Map<String, Long>>> outputTimes,
-				final Map<String, Map<String, Integer>> antennaChanges,
-				final Map<String, Map<String, Integer>> outputChanges, final Map<String, List<ZoneStay>> antennaStays,
-				final Map<String, List<ZoneStay>> outputStays) {
-			this.antennaTimes = antennaTimes;
-			this.outputTimes = outputTimes;
-			this.antennaChanges = antennaChanges;
-			this.outputChanges = outputChanges;
-			this.antennaStays = antennaStays;
-			this.outputStays = outputStays;
-		}
-
-		/**
-		 * Set the generated antenna data values.
-		 * 
-		 * @param antennaData The generated values to be used as antenna data.
-		 */
-		public void setAntennaData(
-				final Pair<Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>>, Map<String, List<ZoneStay>>> antennaData) {
-			antennaTimes = antennaData.getKey().getKey();
-			antennaChanges = antennaData.getKey().getValue();
-			antennaStays = antennaData.getValue();
-		}
 	}
 
 }
