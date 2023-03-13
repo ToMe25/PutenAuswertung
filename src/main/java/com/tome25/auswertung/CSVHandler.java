@@ -755,8 +755,8 @@ public class CSVHandler {
 				if (dateTimes.containsKey(day)) {
 					LogHandler.err_println("Found already parsed turkey date combo. Skipping line.");
 					LogHandler.print_debug_info(
-							"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
-							input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", tokens), line);
+							"Turkey: %s, Date: %s, Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
+							turkey, day, input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", tokens), line);
 					continue;
 				}
 

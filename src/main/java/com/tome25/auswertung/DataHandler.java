@@ -128,7 +128,7 @@ public class DataHandler {
 				for (Pair<Long, Long> downtime : downtimes) {
 					if (recordMs > downtime.getValue()) {
 						// Last record was before the downtime, current one is after.
-						if (lastTimes.get(lastDate).getTimeInMillis() < downtime.getKey()) {
+						if (lastDate != null && lastTimes.get(lastDate).getTimeInMillis() < downtime.getKey()) {
 							downtimeStart = new GregorianCalendar();
 							downtimeStart.setTimeInMillis(downtime.getKey());
 							downtimeEnd = new GregorianCalendar();
@@ -179,29 +179,44 @@ public class DataHandler {
 			}
 
 			if (downtimeStart != null && downtimeEnd != null) {
-				for (TurkeyInfo ti : turkeyInfos.values()) {
+				if (TimeUtils.isSameDay(downtimeStart, downtimeEnd)) {
 					if (!args.fillDays) {
-						if (ti.getCurrentCal().after(startTime) || ti.getCurrentCal().equals(startTime)) {
-							// FIXME what if lastDate isn't the same day as downtimeStart?
-							ti.changeZone(ti.getCurrentZone(), downtimeStart);
-							ti.endDay(lastDate);
+						for (TurkeyInfo ti : turkeyInfos.values()) {
+							if (ti.getCurrentCal().after(startTime) || ti.getCurrentCal().equals(startTime)) {
+								// FIXME what if lastDate isn't the same day as downtimeStart?
+								ti.changeZone(ti.getCurrentZone(), downtimeStart);
+								ti.printCurrentStay(false);
+							}
+							ti.setStartTime(downtimeEnd);
+						}
+					}
+				} else {
+					if (!args.fillDays) {
+						for (TurkeyInfo ti : turkeyInfos.values()) {
+							if (ti.getCurrentCal().after(startTime) || ti.getCurrentCal().equals(startTime)) {
+								// FIXME what if lastDate isn't the same day as downtimeStart?
+								ti.changeZone(ti.getCurrentZone(), downtimeStart);
+								ti.endDay(lastDate);
+								ti.printCurrentStay(false);
+							}
+							ti.setStartTime(downtimeEnd);
+						}
+					} else {
+						for (TurkeyInfo ti : turkeyInfos.values()) {
+							ti.endDay(ti.getCurrentDate());
 							ti.printCurrentStay(false);
 						}
-						ti.setStartTime(downtimeEnd);
-					} else {
-						ti.endDay(ti.getCurrentDate());
-						ti.printCurrentStay(false);
 					}
+
+					startTime = downtimeEnd;
+
+					for (String date : dates) {
+						printDayOutput(totalsStream, turkeyInfos.values(), date, zones.getKey().keySet(), true);
+					}
+					dates.clear();
+
+					dates.add(record.date);
 				}
-
-				startTime = downtimeEnd;
-
-				for (String date : dates) {
-					printDayOutput(totalsStream, turkeyInfos.values(), date, zones.getKey().keySet(), true);
-				}
-				dates.clear();
-
-				dates.add(record.date);
 			}
 
 			if (record.cal.before(lastTimes.get(record.date))) {

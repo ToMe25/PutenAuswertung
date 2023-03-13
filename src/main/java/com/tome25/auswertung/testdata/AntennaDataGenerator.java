@@ -7,11 +7,14 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
+import java.util.Set;
+import java.util.TimeZone;
 
 import com.tome25.auswertung.TurkeyInfo;
 import com.tome25.auswertung.ZoneStay;
@@ -36,47 +39,53 @@ public class AntennaDataGenerator {
 	/**
 	 * Generates example antenna record date and writes it to a file.<br/>
 	 * Also calculates how long each turkey should have spent where.<br/>
-	 * This method returns three maps:<br/>
-	 * The format of the first one is {@code turkey -> date -> zone -> time}.<br/>
-	 * The format of the second one is {@code turkey -> date -> changes}.<br/>
-	 * The format of the third map is {@code turkey -> [stay]}.
+	 * <br/>
+	 * Can also generate a downtimes file.
 	 * 
-	 * @param turkeys    The turkeys to move in the example data.
-	 * @param zones      The zones for the turkeys to move in.
-	 * @param output     The output stream handler to write the data to.
-	 * @param args       The object containing the settings for the data to be
-	 *                   generated.
-	 * @param days       The number of days to generate example data for.
-	 * @param continuous Whether there should be days missing in the example data.
-	 * @param complete   Whether every turkey should get at least one record every
-	 *                   day.<br/>
-	 *                   Note that setting this to {@code true} does not guarantee
-	 *                   that every turkey gets at least one record each day, it is
-	 *                   just very likely.<br/>
-	 *                   {@code false} however guarantees that some are ignored.
-	 * @return The three maps described above.
-	 * @throws NullPointerException     If one of the arguments is {@code null}.
+	 * @param turkeys         The turkeys to move in the example data.
+	 * @param zones           The zones for the turkeys to move in.
+	 * @param antennaOutput   The output stream handler to write the data to.
+	 * @param downtimesOutput The output stream handler to write downtimes to.<br/>
+	 *                        Set to {@code null} to disable the downtimes file.
+	 * @param args            The object containing the settings for the data to be
+	 *                        generated.
+	 * @param days            The number of days to generate example data for.
+	 * @param continuous      Whether there should be days missing in the example
+	 *                        data.
+	 * @param complete        Whether every turkey should get at least one record
+	 *                        every day.<br/>
+	 *                        Note that setting this to {@code true} does not
+	 *                        guarantee that every turkey gets at least one record
+	 *                        each day, it is just very likely.<br/>
+	 *                        {@code false} however guarantees that some are
+	 *                        ignored.
+	 * @return A {@link TestData} object.
+	 * @throws NullPointerException     If one of the arguments, except
+	 *                                  {@code downtimesOutput}, is {@code null}.
 	 * @throws IllegalArgumentException If days is less than 1.
 	 */
-	public static TestData generateAntennaData(List<TurkeyInfo> turkeys, Map<String, List<String>> zones,
-			IOutputStreamHandler output, Arguments args, int days, boolean continuous, boolean complete)
-			throws NullPointerException, IllegalArgumentException {
+	public static TestData generateAntennaData(final List<TurkeyInfo> turkeys, final Map<String, List<String>> zones,
+			IOutputStreamHandler antennaOutput, IOutputStreamHandler downtimesOutput, Arguments args, int days,
+			boolean continuous, boolean complete) throws NullPointerException, IllegalArgumentException {
 		Objects.requireNonNull(turkeys, "The turkeys to generate input data for cannot be null.");
 		Objects.requireNonNull(zones, "The zones to use for the generated input can't be null.");
-		Objects.requireNonNull(output, "The output to write the file to can not be null.");
+		Objects.requireNonNull(antennaOutput, "The antenna data output to write the file to can not be null.");
 		Objects.requireNonNull(args, "The arguments to use cannot be null.");
 
 		if (days < 1) {
 			throw new IllegalArgumentException("Can't generate less than one day of data.");
 		}
 
-		output.println("Transponder;Date;Time;Antenne");
+		TimeZone.setDefault(TimeZone.getTimeZone("GMT"));
+		antennaOutput.println("Transponder;Date;Time;Antenne");
 		// turkey -> date -> zone -> time
 		Map<String, Map<String, Map<String, Long>>> times = new LinkedHashMap<String, Map<String, Map<String, Long>>>();
 		// turkey -> date -> zone changes
 		Map<String, Map<String, Integer>> changes = new LinkedHashMap<String, Map<String, Integer>>();
-		// turkey -> zone stays
+		// turkey -> [zone stay]
 		Map<String, List<ZoneStay>> stays = new LinkedHashMap<String, List<ZoneStay>>();
+		// [start -> end]
+		List<Pair<Long, Long>> downtimes = downtimesOutput == null ? null : new ArrayList<Pair<Long, Long>>();
 
 		Map<String, Long> lastZoneChange = new HashMap<String, Long>();
 		Map<String, String> currentZone = new HashMap<String, String>();
@@ -84,16 +93,49 @@ public class AntennaDataGenerator {
 		Map<String, Long> lastRecord = new HashMap<String, Long>();
 
 		Calendar cal = new GregorianCalendar();
+		cal.setTimeZone(TimeZone.getTimeZone("GMT"));
+		cal.setTimeInMillis(0);
 		cal.set(2022, Calendar.FEBRUARY, 5, 0, 0, 0);
+		long startTime = -1;
 		for (int day = 0; day < days; day++) {
 			String date = TimeUtils.encodeDate(cal);
-			Pair<Pair<Map<String, Map<String, Integer>>, Map<String, Integer>>, Map<String, List<ZoneStay>>> dayData = generateDayAntennaData(
-					turkeys, zones, date, output, lastZoneChange, currentZone, lastZone, lastRecord, args, complete);
+			Pair<Pair<Map<String, Map<String, Integer>>, Map<String, Integer>>, Pair<Map<String, List<ZoneStay>>, Pair<Long, Long>>> dayData = generateDayAntennaData(
+					turkeys, zones, date, antennaOutput, lastZoneChange, currentZone, lastZone, lastRecord, args,
+					startTime, complete, downtimesOutput != null);
 			Map<String, Map<String, Integer>> dayTimes = dayData.getKey().getKey();
 			Map<String, Integer> dayChanges = dayData.getKey().getValue();
-			Map<String, List<ZoneStay>> dayStays = dayData.getValue();
+			Map<String, List<ZoneStay>> dayStays = dayData.getValue().getKey();
+			Pair<Long, Long> downtime = dayData.getValue().getValue();
+			startTime = -1;
+
+			if (downtime != null) {
+				downtimes.add(downtime);
+				StringBuilder line = new StringBuilder();
+				line.append(date);
+				line.append(DEFAULT_SEPARATOR);
+				line.append(TimeUtils.encodeTime(downtime.getKey() - cal.getTimeInMillis()));
+				line.append(DEFAULT_SEPARATOR);
+				line.append(date);
+				line.append(DEFAULT_SEPARATOR);
+				line.append(TimeUtils.encodeTime(downtime.getValue() - cal.getTimeInMillis()));
+				downtimesOutput.println(line.toString());
+			}
 
 			boolean skipNext = !continuous && RANDOM.nextInt(3) == 0;
+
+			long lastChange = 0;
+			for (Long change : lastRecord.values()) {
+				if (change > lastChange) {
+					lastChange = change;
+				}
+			}
+			Calendar lastChangeCal = new GregorianCalendar();
+			lastChangeCal.setTimeInMillis(lastChange);
+
+			long downtimeStart = 0;
+			if (downtimesOutput != null && skipNext) {
+				downtimeStart = lastChange + RANDOM.nextInt(24 * 3600000 - TimeUtils.getMsOfDay(lastChangeCal));
+			}
 
 			for (String turkey : dayTimes.keySet()) {
 				// Times handling below
@@ -117,13 +159,6 @@ public class AntennaDataGenerator {
 						totalTimes.put(zone, totalTimes.get(zone) + dayTimes.get(turkey).get(zone));
 					} else {
 						totalTimes.put(zone, (long) (int) dayTimes.get(turkey).get(zone));
-					}
-				}
-
-				long lastChange = 0;
-				for (Long change : lastRecord.values()) {
-					if (change > lastChange) {
-						lastChange = change;
 					}
 				}
 
@@ -200,12 +235,13 @@ public class AntennaDataGenerator {
 				}
 
 				if (day == days - 1 || skipNext) {
-					Calendar lastChangeCal = new GregorianCalendar();
-					lastChangeCal.setTimeInMillis(lastChange);
 					Calendar endCal = null;
 					if (args.fillDays) {
 						endCal = TimeUtils.parseDate(date);
 						endCal.add(Calendar.DATE, 1);
+					} else if (skipNext && downtimesOutput != null) {
+						endCal = new GregorianCalendar();
+						endCal.setTimeInMillis(downtimeStart);
 					} else {
 						endCal = lastChangeCal;
 					}
@@ -228,6 +264,25 @@ public class AntennaDataGenerator {
 			if (skipNext) {
 				cal.add(Calendar.DATE, 2 + RANDOM.nextInt(5));
 
+				if (downtimesOutput != null) {
+					Calendar dtsCal = new GregorianCalendar();
+					dtsCal.setTimeInMillis(downtimeStart);
+					Calendar dteCal = (Calendar) cal.clone();
+					dteCal.add(Calendar.MILLISECOND, RANDOM.nextInt(2 * 3600000));
+
+					startTime = dteCal.getTimeInMillis() + 1;
+					downtimes.add(new Pair<Long, Long>(downtimeStart, startTime - 1));
+					StringBuilder line = new StringBuilder();
+					line.append(date);
+					line.append(DEFAULT_SEPARATOR);
+					line.append(TimeUtils.encodeTime(TimeUtils.getMsOfDay(dtsCal)));
+					line.append(DEFAULT_SEPARATOR);
+					line.append(TimeUtils.encodeDate(cal));
+					line.append(DEFAULT_SEPARATOR);
+					line.append(TimeUtils.encodeTime(TimeUtils.getMsOfDay(dteCal)));
+					downtimesOutput.println(line.toString());
+				}
+
 				lastZoneChange = new HashMap<String, Long>();
 				currentZone = new HashMap<String, String>();
 				lastZone = new HashMap<String, String>();
@@ -237,17 +292,24 @@ public class AntennaDataGenerator {
 			}
 		}
 
-		return new TestData(times, changes, stays);
+		return new TestData(times, changes, stays, downtimes, turkeys, zones);
 	}
 
 	/**
 	 * Generates example antenna records for a single day, and writes them to a
 	 * file.<br/>
 	 * Also generates reference times for how long each turkey spent where.<br/>
-	 * This methods returns three maps:<br/>
-	 * The first resulting map format is {@code turkey -> zone -> time}.<br/>
-	 * The second resulting map format is {@code turkey -> zoneChanges}.<br/>
-	 * The third map format is {@code turkey -> zoneStays}.<br/>
+	 * This methods returns four values:<br/>
+	 * <ol>
+	 * <li>The time each turkey spent in each zone. Its format is
+	 * {@code turkey -> zone -> time}.</li>
+	 * <li>The number of zone changes for each turkey. With a format of
+	 * {@code turkey -> zoneChanges}.</li>
+	 * <li>The {@link ZoneStay ZoneStays} for each turkey. Its format is
+	 * {@code turkey -> [zoneStay]}.</li>
+	 * <li>A downtime, if one was added for this day. Format:
+	 * {@code start -> end}.</li>
+	 * </ol>
 	 * Writes valid data, not suitable for error handling tests.
 	 * 
 	 * @param turkeys        A list of turkeys to record in the antenna records
@@ -269,19 +331,37 @@ public class AntennaDataGenerator {
 	 *                       Will be mutated to be used as day to day storage.<br/>
 	 *                       A new {@link HashMap} will be used if {@code null}.
 	 * @param args           The arguments to use for the day to be generated.
+	 * @param startTime      The time as of which generated antenna records should
+	 *                       be considered for ouput data.<br/>
+	 *                       For example 1 ms after the end of the last
+	 *                       downtime.<br/>
+	 *                       Set to -1 to use the first antenna record of that day.
 	 * @param complete       Whether every turkey should get at least one record
 	 *                       every day.<br/>
 	 *                       Note that setting this to {@code true} does not
 	 *                       guarantee that every turkey gets at least one record
 	 *                       each day, it is just very likely.<br/>
 	 *                       {@code false} however guarantees that some are ignored.
-	 * @return The times each turkey spent in each zone.
+	 * @param downtime       Whether a downtime should be generated at some point on
+	 *                       this day.<br/>
+	 *                       During this downtime antenna records are still
+	 *                       generated, but not considered for the output data.<br/>
+	 *                       Every turkey is guaranteed to have at least one record
+	 *                       after the downtime.
+	 * @return Four individual values, basically.<br/>
+	 *         <ol>
+	 *         <li>The time each turkey spent in each zone.</li>
+	 *         <li>The number of zone changes for each turkey.</li>
+	 *         <li>The {@link ZoneStay ZoneStays} for each turkey.</li>
+	 *         <li>A downtime, if one was added for this day.</li>
+	 *         </ol>
 	 * @throws NullPointerException If one of the parameters is {@code null}.
 	 */
-	public static Pair<Pair<Map<String, Map<String, Integer>>, Map<String, Integer>>, Map<String, List<ZoneStay>>> generateDayAntennaData(
-			List<TurkeyInfo> turkeys, Map<String, List<String>> zones, String date, IOutputStreamHandler output,
-			Map<String, Long> lastZoneChange, Map<String, String> currentZone, Map<String, String> lastZone,
-			Map<String, Long> lastRecord, Arguments args, boolean complete) throws NullPointerException {
+	public static Pair<Pair<Map<String, Map<String, Integer>>, Map<String, Integer>>, Pair<Map<String, List<ZoneStay>>, Pair<Long, Long>>> generateDayAntennaData(
+			final List<TurkeyInfo> turkeys, final Map<String, List<String>> zones, final String date,
+			IOutputStreamHandler output, Map<String, Long> lastZoneChange, Map<String, String> currentZone,
+			Map<String, String> lastZone, Map<String, Long> lastRecord, final Arguments args, long startTime,
+			final boolean complete, final boolean downtime) throws NullPointerException {
 		Objects.requireNonNull(turkeys, "The turkeys to generate input data for can't be null.");
 		Objects.requireNonNull(zones, "The zones to use for the generated input can't be null.");
 		Objects.requireNonNull(date, "The date to generate data for can't be null.");
@@ -342,9 +422,20 @@ public class AntennaDataGenerator {
 		// distribution.
 		int timePerChange = (23 * 3600000) / numChanges;
 
-		long startTime = -1;
-
 		long lastTime = TimeUtils.parseDate(date).getTimeInMillis();
+
+		Pair<Long, Long> dt = null;
+		if (downtime) {
+			// The downtime should never end after 22:00
+			long start = lastTime + RANDOM.nextInt(20 * 3600000);
+			start = start / 10 * 10;
+			// The downtime should be at least 5 mins long
+			int dur = RANDOM.nextInt(2 * 3600000 - 300) + 300;
+			dur = dur / 10 * 10;
+			dt = new Pair<Long, Long>(start, start + dur);
+		}
+
+		Set<String> recordAfter = new HashSet<String>();
 
 		for (int i = 0; i < numChanges; i++) {
 			TurkeyInfo turkey = usedTurkeys.get(RANDOM.nextInt(usedTurkeys.size()));
@@ -365,7 +456,7 @@ public class AntennaDataGenerator {
 			Calendar changeCal = new GregorianCalendar();
 			changeCal.setTimeInMillis(changeTime);
 
-			if (startTime == -1) {
+			if (!args.fillDays && startTime == -1) {
 				startTime = changeTime;
 				for (String t : ignoredTurkeys) {
 					if (lastRecord.containsKey(t) && lastRecord.get(t) == -1 && !lastZoneChange.containsKey(t)) {
@@ -384,30 +475,118 @@ public class AntennaDataGenerator {
 			line.append(antenna);
 			output.println(line.toString());
 
+			// Completely ignore records during the downtime.
+			if (dt != null && changeTime >= dt.getKey() && changeTime <= dt.getValue()) {
+				if (lastTime < dt.getKey()) {
+					Calendar dtsCal = new GregorianCalendar();
+					dtsCal.setTimeInMillis(dt.getKey());
+					for (TurkeyInfo ti : usedTurkeys) {
+						if (lastZoneChange.containsKey(ti.getId()) && currentZone.containsKey(ti.getId())) {
+							if (lastRecord.containsKey(ti.getId()) && lastRecord.get(ti.getId()) == -1) {
+								continue;
+							}
+
+							if (!stays.containsKey(ti.getId())) {
+								stays.put(ti.getId(), new ArrayList<ZoneStay>());
+							}
+
+							Calendar lastChangeCal = new GregorianCalendar();
+							lastChangeCal.setTimeInMillis(lastZoneChange.get(ti.getId()));
+							if (stays.containsKey(ti.getId())) {
+								if (stays.get(ti.getId()).size() > 0) {
+									if (stays.get(ti.getId()).get(stays.get(ti.getId()).size() - 1)
+											.getZone() == currentZone.get(ti.getId())) {
+										stays.get(ti.getId()).get(stays.get(ti.getId()).size() - 1).setExitTime(dtsCal);
+									} else {
+										stays.get(ti.getId()).get(stays.get(ti.getId()).size() - 1)
+												.setExitTime(lastChangeCal);
+										stays.get(ti.getId()).add(new ZoneStay(ti.getId(), currentZone.get(ti.getId()),
+												lastChangeCal, dtsCal));
+									}
+								} else {
+									stays.get(ti.getId()).add(new ZoneStay(ti.getId(), currentZone.get(ti.getId()),
+											lastChangeCal, dtsCal));
+								}
+							}
+
+							if (!zoneTimes.containsKey(ti.getId())) {
+								zoneTimes.put(ti.getId(), new HashMap<String, Integer>());
+							}
+
+							if (zoneTimes.containsKey(ti.getId())) {
+								String cZone = currentZone.get(ti.getId());
+								if (TimeUtils.isSameDay(lastChangeCal, changeCal)) {
+									if (zoneTimes.get(ti.getId()).containsKey(cZone)) {
+										zoneTimes.get(ti.getId()).put(cZone, (int) (zoneTimes.get(ti.getId()).get(cZone)
+												+ dt.getKey() - lastZoneChange.get(ti.getId())));
+									} else {
+										zoneTimes.get(ti.getId()).put(cZone,
+												(int) (dt.getKey() - lastZoneChange.get(ti.getId())));
+									}
+								} else {
+									if (zoneTimes.get(ti.getId()).containsKey(cZone)) {
+										zoneTimes.get(ti.getId()).put(cZone, (int) (zoneTimes.get(ti.getId()).get(cZone)
+												+ TimeUtils.getMsOfDay(dtsCal)));
+									} else {
+										zoneTimes.get(ti.getId()).put(cZone, (int) TimeUtils.getMsOfDay(dtsCal));
+									}
+								}
+							}
+						}
+					}
+				}
+				lastTime = changeTime;
+				continue;
+			}
+
+			if (changeTime < startTime) {
+				lastTime = changeTime;
+				continue;
+			}
+
+			if (dt != null && changeTime > dt.getValue() && !recordAfter.contains(turkeyName)) {
+				recordAfter.add(turkeyName);
+				currentZone.remove(turkeyName);
+			}
+
 			int zoneTime = -1;
 			// If this is the first record of this turkey
 			if (!currentZone.containsKey(turkeyName)) {
 				lastZoneChange.put(turkeyName, changeCal.getTimeInMillis());
 
-				zoneTimes.put(turkeyName, new HashMap<String, Integer>());
-				stays.put(turkeyName, new ArrayList<ZoneStay>());
-
-				if (args.fillDays) {
-					zoneTimes.get(turkeyName).put(zone, TimeUtils.getMsOfDay(changeCal));
-					stays.get(turkeyName).add(new ZoneStay(turkeyName, zone, TimeUtils.parseDate(date)));
+				Calendar startCal;
+				if (startTime == -1) {
+					startCal = TimeUtils.parseDate(date);
 				} else {
-					zoneTimes.get(turkeyName).put(zone, (int) (changeTime - startTime));
-					Calendar startCal = new GregorianCalendar();
+					startCal = new GregorianCalendar();
 					startCal.setTimeInMillis(startTime);
-					stays.get(turkeyName).add(new ZoneStay(turkeyName, zone, startCal));
 				}
+
+				if (!zoneTimes.containsKey(turkeyName)) {
+					zoneTimes.put(turkeyName, new HashMap<String, Integer>());
+				}
+
+				if (!stays.containsKey(turkeyName)) {
+					stays.put(turkeyName, new ArrayList<ZoneStay>());
+				} else if (dt != null) {
+					startCal = new GregorianCalendar();
+					startCal.setTimeInMillis(dt.getValue());
+				}
+
+				if (zoneTimes.get(turkeyName).containsKey(zone)) {
+					zoneTimes.get(turkeyName).put(zone,
+							zoneTimes.get(turkeyName).get(zone) + (int) (changeTime - startCal.getTimeInMillis()));
+				} else {
+					zoneTimes.get(turkeyName).put(zone, (int) (changeTime - startCal.getTimeInMillis()));
+				}
+				stays.get(turkeyName).add(new ZoneStay(turkeyName, zone, startCal, changeCal));
 
 				currentZone.put(turkeyName, zone);
 				lastZone.put(turkeyName, zone);
 				if (!zoneChanges.containsKey(turkeyName)) {
 					zoneChanges.put(turkeyName, 0);
 				} else {
-					zoneChanges.put(turkeyName, zoneChanges.get(turkeyName) + 1);
+					// Since this only happens after a downtime, the zoneChanges shouldn't change.
 				}
 				lastRecord.put(turkeyName, changeTime);
 			} else {
@@ -519,28 +698,73 @@ public class AntennaDataGenerator {
 					entryCal.setTimeInMillis(lastZoneChange.get(turkey));
 					if (lastRecord.containsKey(turkey) && lastRecord.get(turkey) == -1
 							&& TimeUtils.isSameDay(startCal, entryCal)) {
-						zoneTimes.get(turkey).put(currentZone.get(turkey), (int) (lastTime - startTime));
-						stays.put(turkey, new ArrayList<ZoneStay>(
-								Arrays.asList(new ZoneStay(turkey, currentZone.get(turkey), startCal, lastCal))));
+						if (dt == null) {
+							zoneTimes.get(turkey).put(currentZone.get(turkey),
+									(int) (lastTime - Math.max(0, startTime)));
+							stays.put(turkey, new ArrayList<ZoneStay>(
+									Arrays.asList(new ZoneStay(turkey, currentZone.get(turkey), startCal, lastCal))));
+						} else {
+							// FIXME what if the turkey is ignored for every day after the downtime?
+							// FIXME Or if the downtime is on the last day?
+							Calendar dtsCal = new GregorianCalendar();
+							dtsCal.setTimeInMillis(dt.getKey());
+							Calendar dteCal = new GregorianCalendar();
+							dteCal.setTimeInMillis(dt.getValue());
+							zoneTimes.get(turkey).put(currentZone.get(turkey),
+									(int) (lastTime - dt.getKey() + dt.getValue() - Math.max(0, startTime)));
+							stays.put(turkey,
+									new ArrayList<ZoneStay>(Arrays.asList(
+											new ZoneStay(turkey, currentZone.get(turkey), startCal, dtsCal),
+											new ZoneStay(turkey, currentZone.get(turkey), dteCal, lastCal))));
+						}
 					} else {
-						zoneTimes.get(turkey).put(currentZone.get(turkey), TimeUtils.getMsOfDay(lastCal));
-						stays.put(turkey, new ArrayList<ZoneStay>(
-								Arrays.asList(new ZoneStay(turkey, currentZone.get(turkey), entryCal, lastCal))));
+						if (dt == null) {
+							zoneTimes.get(turkey).put(currentZone.get(turkey), TimeUtils.getMsOfDay(lastCal));
+							stays.put(turkey, new ArrayList<ZoneStay>(
+									Arrays.asList(new ZoneStay(turkey, currentZone.get(turkey), entryCal, lastCal))));
+						} else {
+							// FIXME what if the turkey is ignored for every day after the downtime?
+							// FIXME Or if the downtime is on the last day?
+							zoneTimes.get(turkey).put(currentZone.get(turkey),
+									(int) (TimeUtils.getMsOfDay(lastCal) + dt.getKey() - dt.getValue()));
+							Calendar dtsCal = new GregorianCalendar();
+							dtsCal.setTimeInMillis(dt.getKey());
+							Calendar dteCal = new GregorianCalendar();
+							dteCal.setTimeInMillis(dt.getValue());
+							stays.put(turkey,
+									new ArrayList<ZoneStay>(Arrays.asList(
+											new ZoneStay(turkey, currentZone.get(turkey), entryCal, dtsCal),
+											new ZoneStay(turkey, currentZone.get(turkey), dteCal, lastCal))));
+						}
 					}
 					lastZoneChange.put(turkey, lastTime);
 				}
 			}
 		}
 
+		if (downtime && !args.fillDays) {
+			for (TurkeyInfo ti : usedTurkeys) {
+				if (!recordAfter.contains(ti.getId())) {
+					lastZoneChange.put(ti.getId(), dt.getValue());
+					lastRecord.put(ti.getId(), -1l);
+					currentZone.put(ti.getId(), zoneNames.get(RANDOM.nextInt(zoneNames.size())));
+				}
+			}
+		}
+
 		Pair<Map<String, Map<String, Integer>>, Map<String, Integer>> totals = new Pair<Map<String, Map<String, Integer>>, Map<String, Integer>>(
 				zoneTimes, zoneChanges);
+		Pair<Map<String, List<ZoneStay>>, Pair<Long, Long>> other = new Pair<Map<String, List<ZoneStay>>, Pair<Long, Long>>(
+				stays, dt);
 
-		return new Pair<Pair<Map<String, Map<String, Integer>>, Map<String, Integer>>, Map<String, List<ZoneStay>>>(
-				totals, stays);
+		return new Pair<Pair<Map<String, Map<String, Integer>>, Map<String, Integer>>, Pair<Map<String, List<ZoneStay>>, Pair<Long, Long>>>(
+				totals, other);
 	}
 
 	/**
-	 * A class for storing the generated test data.
+	 * A class for storing the generated test data.<br/>
+	 * This object contains all data relevant to the test, except the individual
+	 * antenna records, and except the file paths.
 	 * 
 	 * @author theodor
 	 */
@@ -566,23 +790,52 @@ public class AntennaDataGenerator {
 		public final Map<String, List<ZoneStay>> zoneStays;
 
 		/**
+		 * A list containing the downtimes contained in the downtimes file.<br/>
+		 * If no donwtimes file is used this is {@code null}.<br/>
+		 * Format: {@code [start -> end]}
+		 */
+		public final List<Pair<Long, Long>> downtimes;
+
+		/**
+		 * A list containing the turkeys used as part of this test.<br/>
+		 * Format: {@code [turkey]}
+		 */
+		public final List<TurkeyInfo> turkeys;
+
+		/**
+		 * A map containing the zones used for this test.<br/>
+		 * Format: {@code zone -> [antenna]}
+		 */
+		public final Map<String, List<String>> zones;
+
+		/**
 		 * Creates a new TestData object.
 		 * 
 		 * @param zoneTimes   The zone times map.
 		 * @param zoneChanges The zone changes map.
 		 * @param zoneStays   The zone stays map.
-		 * @throws NullPointerException If one of the inputs is {@code null}.
+		 * @param downtimes   The values of the downtimes file. Can be {@code null}.
+		 * @param turkeys     The turkeys used in the test.
+		 * @param zones       The zones used for this test.
+		 * @throws NullPointerException If one of the inputs, except {@code downtimes},
+		 *                              is {@code null}.
 		 */
 		public TestData(final Map<String, Map<String, Map<String, Long>>> zoneTimes,
-				final Map<String, Map<String, Integer>> zoneChanges, final Map<String, List<ZoneStay>> zoneStays)
-				throws NullPointerException {
+				final Map<String, Map<String, Integer>> zoneChanges, final Map<String, List<ZoneStay>> zoneStays,
+				final List<Pair<Long, Long>> downtimes, final List<TurkeyInfo> turkeys,
+				final Map<String, List<String>> zones) throws NullPointerException {
 			Objects.requireNonNull(zoneTimes, "The zone times cannot be null.");
 			Objects.requireNonNull(zoneChanges, "The zone changes cannot be null.");
 			Objects.requireNonNull(zoneStays, "The zone stays cannot be null.");
+			Objects.requireNonNull(turkeys, "The turkeys cannot be null.");
+			Objects.requireNonNull(zones, "The zones cannot be null.");
 
 			this.zoneTimes = zoneTimes;
 			this.zoneChanges = zoneChanges;
 			this.zoneStays = zoneStays;
+			this.downtimes = downtimes;
+			this.turkeys = turkeys;
+			this.zones = zones;
 		}
 	}
 }

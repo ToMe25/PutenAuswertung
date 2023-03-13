@@ -207,8 +207,8 @@ public class TurkeyInfo {
 		}
 
 		boolean newRec = !TimeUtils.isSameDay(currentTime, time) && !TimeUtils.isNextDay(currentTime, time);
-		if (startTime != null && currentTime != null && startTime.before(currentTime)) {
-			newRec = false;
+		if (startTime != null && currentTime != null) {
+			newRec = startTime.after(currentTime);
 		}
 
 		long timeMs = time.getTimeInMillis();

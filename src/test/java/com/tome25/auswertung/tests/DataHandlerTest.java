@@ -44,7 +44,7 @@ public class DataHandlerTest {
 	 * Tests how well {@link DataHandler#handleStreams} handles an empty turkeys
 	 * csv.
 	 * 
-	 * @throws IOException
+	 * @throws IOException If reading/writing/creating a temporary file fails.
 	 */
 	@Test
 	public void readEmptyTurkeys() throws IOException {
@@ -64,7 +64,7 @@ public class DataHandlerTest {
 
 		Arguments args = Arguments.empty();
 		args.fillDays = true;
-		AntennaDataGenerator.generateAntennaData(turkeys, zones, dataCSV.getValue(), args, 5, true, true);
+		AntennaDataGenerator.generateAntennaData(turkeys, zones, dataCSV.getValue(), null, args, 5, true, true);
 
 		DataHandler.handleStreams(dataCSV.getKey(), turkeyCSV.getKey(), zoneCSV.getKey(), null, totalsCSV.getKey(),
 				staysCSV.getKey(), args);
@@ -81,7 +81,7 @@ public class DataHandlerTest {
 	/**
 	 * Tests how well {@link DataHandler#handleStreams} handles an empty zones csv.
 	 * 
-	 * @throws IOException
+	 * @throws IOException If reading/writing/creating a temporary file fails.
 	 */
 	@Test
 	public void readEmptyZones() throws IOException {
@@ -100,7 +100,7 @@ public class DataHandlerTest {
 
 		Arguments args = Arguments.empty();
 		args.fillDays = true;
-		AntennaDataGenerator.generateAntennaData(turkeys, zones, dataCSV.getValue(), args, 5, true, true);
+		AntennaDataGenerator.generateAntennaData(turkeys, zones, dataCSV.getValue(), null, args, 5, true, true);
 
 		DataHandler.handleStreams(dataCSV.getKey(), turkeyCSV.getKey(), zoneCSV.getKey(), null, totalsCSV.getKey(),
 				staysCSV.getKey(), args);
@@ -112,6 +112,47 @@ public class DataHandlerTest {
 
 		errorLog.checkLine("Input file did not contain any data.");
 		errorLog.checkLine("Failed to read zone mappings from the input file.");
+	}
+
+	/**
+	 * Test reading an empty downtimes csv.
+	 * 
+	 * @throws IOException If reading/writing/creating a temporary file fails.
+	 */
+	@Test
+	public void readEmptyDowntimes() throws IOException {
+		TestMappings mappings = OutputDataTest.generateTestMappings(5, 2, tempFolder);
+
+		Pair<FileInputStreamHandler, FileOutputStreamHandler> dataCSV = tempFolder
+				.newTempIOFile("empty_downtimes_antennadata.csv");
+
+		Arguments args = Arguments.empty();
+		args.fillDays = true;
+		final TestData generated = AntennaDataGenerator.generateAntennaData(mappings.turkeys, mappings.zones,
+				dataCSV.getValue(), null, args, 5, true, true);
+
+		Pair<FileInputStreamHandler, PrintStream> downtimesCSV = tempFolder
+				.newTempInputFile("empty_downtimes_downtimes.csv");
+		downtimesCSV.getValue().close();
+
+		Pair<FileInputStreamHandler, FileOutputStreamHandler> totalsCSV = tempFolder
+				.newTempIOFile("empty_downtimes_totals.csv");
+		Pair<FileInputStreamHandler, FileOutputStreamHandler> staysCSV = tempFolder
+				.newTempIOFile("empty_downtimes_stays.csv");
+
+		DataHandler.handleStreams(dataCSV.getKey(), mappings.turkeysIn, mappings.zonesIn, downtimesCSV.getKey(),
+				totalsCSV.getValue(), staysCSV.getValue(), args);
+
+		final Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>> outputTotals = CSVHandler
+				.readTotalsCSV(totalsCSV.getKey());
+		final Map<String, List<ZoneStay>> outputStays = CSVHandler.readStaysCSV(staysCSV.getKey());
+		final TestData parsed = new TestData(outputTotals.getKey(), outputTotals.getValue(), outputStays,
+				generated.downtimes, mappings.turkeys, mappings.zones);
+
+		OutputDataTest.validateResults(generated, parsed, args);
+
+		errorLog.checkLine("Input file did not contain any data.");
+		errorLog.checkLine("An Exception occurred while trying to read a downtimes file.");
 	}
 
 	/**
@@ -128,7 +169,7 @@ public class DataHandlerTest {
 		Arguments args = Arguments.empty();
 		args.fillDays = true;
 		final TestData generated = AntennaDataGenerator.generateAntennaData(mappings.turkeys, mappings.zones,
-				dataCSV.getValue(), args, 5, true, true);
+				dataCSV.getValue(), null, args, 5, true, true);
 		dataCSV.getValue().println(null);
 
 		Pair<FileInputStreamHandler, FileOutputStreamHandler> totalsCSV = tempFolder
@@ -142,7 +183,8 @@ public class DataHandlerTest {
 		final Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>> outputTotals = CSVHandler
 				.readTotalsCSV(totalsCSV.getKey());
 		final Map<String, List<ZoneStay>> outputStays = CSVHandler.readStaysCSV(staysCSV.getKey());
-		final TestData parsed = new TestData(outputTotals.getKey(), outputTotals.getValue(), outputStays);
+		final TestData parsed = new TestData(outputTotals.getKey(), outputTotals.getValue(), outputStays,
+				generated.downtimes, mappings.turkeys, mappings.zones);
 
 		OutputDataTest.validateResults(generated, parsed, args);
 
@@ -164,7 +206,7 @@ public class DataHandlerTest {
 		Arguments args = Arguments.empty();
 		args.fillDays = true;
 		final TestData generated = AntennaDataGenerator.generateAntennaData(mappings.turkeys, mappings.zones,
-				dataCSV.getValue(), args, 5, true, true);
+				dataCSV.getValue(), null, args, 5, true, true);
 		dataCSV.getValue().println("Test;Data;Here");
 
 		Pair<FileInputStreamHandler, FileOutputStreamHandler> totalsCSV = tempFolder
@@ -178,7 +220,8 @@ public class DataHandlerTest {
 		final Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>> outputTotals = CSVHandler
 				.readTotalsCSV(totalsCSV.getKey());
 		final Map<String, List<ZoneStay>> outputStays = CSVHandler.readStaysCSV(staysCSV.getKey());
-		final TestData parsed = new TestData(outputTotals.getKey(), outputTotals.getValue(), outputStays);
+		final TestData parsed = new TestData(outputTotals.getKey(), outputTotals.getValue(), outputStays,
+				generated.downtimes, mappings.turkeys, mappings.zones);
 
 		OutputDataTest.validateResults(generated, parsed, args);
 
