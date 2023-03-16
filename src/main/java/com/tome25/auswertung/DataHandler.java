@@ -17,6 +17,7 @@ import com.tome25.auswertung.stream.IInputStreamHandler;
 import com.tome25.auswertung.stream.IOutputStreamHandler;
 import com.tome25.auswertung.utils.IntOrStringComparator;
 import com.tome25.auswertung.utils.Pair;
+import com.tome25.auswertung.utils.StringUtils;
 import com.tome25.auswertung.utils.TimeUtils;
 
 /**
@@ -98,7 +99,7 @@ public class DataHandler {
 			} else {
 				LogHandler.err_println(String.format(
 						"Received antenna record for unknown transponder id \"%s\" on day %s. Considering it a separate turkey.",
-						record.date, record.transponder));
+						record.transponder, record.date));
 				LogHandler.print_debug_info("Antenna Record: %s, Arguments: %s", record, args);
 			}
 
@@ -106,6 +107,7 @@ public class DataHandler {
 				LogHandler.err_println(String.format(
 						"Received antenna record from unknown antenna id \"%s\". Skipping line.", record.antenna));
 				LogHandler.print_debug_info("Antenna Record: %s, Arguments: %s", record, args);
+				continue;
 			}
 
 			if (startTime == null) {
@@ -155,8 +157,20 @@ public class DataHandler {
 			}
 
 			if (!turkeyInfos.containsKey(turkeyId)) {
-				turkeyInfos.put(turkeyId, new TurkeyInfo(turkeyId, turkeys.getKey().get(turkeyId), staysStream,
-						zones.getValue().get(record.antenna), record.cal, args.fillDays ? null : startTime, args));
+				try {
+					turkeyInfos.put(turkeyId, new TurkeyInfo(turkeyId, turkeys.getKey().get(turkeyId), staysStream,
+							zones.getValue().get(record.antenna), record.cal, args.fillDays ? null : startTime, args));
+				} catch (NullPointerException e) {
+					LogHandler.err_println("Creating a new TurkeyInfo object failed. Terminating.");
+					LogHandler.print_exception(e, "create a new TurkeyInfo",
+							"Turkey id: %s, Transponders: [%s], Stays Stream Handler: %s, Initial Zone: %s, Initial Date: %s, Initial Time: %s, Start Date: %s, Start Time %s, Arguments: %s",
+							turkeyId, StringUtils.collectionToString(", ", turkeys.getKey().get(turkeyId)), staysStream,
+							zones.getValue().get(record.antenna), TimeUtils.encodeDate(record.cal),
+							TimeUtils.encodeTime(TimeUtils.getMsOfDay(record.cal)),
+							startTime == null ? "null" : TimeUtils.encodeDate(startTime),
+							startTime == null ? "null" : TimeUtils.encodeTime(TimeUtils.getMsOfDay(startTime)), args);
+					break;
+				}
 			} else {
 				try {
 					turkeyInfos.get(turkeyId).changeZone(zones.getValue().get(record.antenna), record.cal);
