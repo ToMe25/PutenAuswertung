@@ -5,6 +5,10 @@
 /.settings/
 .project
 .classpath
+.pydevproject
+
+# Python
+__pycache__
 
 # Input
 Puten.csv*

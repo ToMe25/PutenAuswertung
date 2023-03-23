@@ -4,7 +4,10 @@ import static com.tome25.auswertung.testdata.AntennaDataGenerator.RANDOM;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import com.tome25.auswertung.TurkeyInfo;
 import com.tome25.auswertung.args.Arguments;
@@ -87,24 +90,47 @@ public class TurkeyGenerator {
 	 * @return A {@link TurkeyInfo} object representing a not yet recorded turkey.
 	 */
 	public static TurkeyInfo generateTurkey(String id, int maxTransponders, Arguments args) {
-		return generateTurkey(id, maxTransponders, args, null, null);
+		return generateTurkey(id, maxTransponders, args, null);
 	}
 
 	/**
 	 * Generates a {@link TurkeyInfo} object with a random number of at most
 	 * {@code maxTransponders} random transponders, and the given turkey id.
 	 * 
-	 * @param id              The id of the new turkey.
-	 * @param maxTransponders The max number of transponders to give to the new
-	 *                        {@link TurkeyInfo}.
-	 * @param args            The arguments to be used by the new
-	 *                        {@link TurkeyInfo}.
-	 * @param initZone        The initial zone for the new turkey.
-	 * @param initTime        The time of the first record for the new turkey.
+	 * @param id                     The id of the new turkey.
+	 * @param maxTransponders        The max number of transponders to give to the
+	 *                               new {@link TurkeyInfo}.
+	 * @param args                   The arguments to be used by the new
+	 *                               {@link TurkeyInfo}.
+	 * @param transponderIdBlacklist A collection of strings that may not be used as
+	 *                               transponder ids.<br/>
+	 *                               Can be null of no id should be blacklisted.
 	 * @return A {@link TurkeyInfo} object representing a not yet recorded turkey.
 	 */
-	public static TurkeyInfo generateTurkey(String id, int maxTransponders, Arguments args, String initZone,
-			Calendar initTime) {
+	public static TurkeyInfo generateTurkey(String id, int maxTransponders, Arguments args,
+			Collection<String> transponderIdBlacklist) {
+		return generateTurkey(id, maxTransponders, args, transponderIdBlacklist, null, null);
+	}
+
+	/**
+	 * Generates a {@link TurkeyInfo} object with a random number of at most
+	 * {@code maxTransponders} random transponders, and the given turkey id.
+	 * 
+	 * @param id                     The id of the new turkey.
+	 * @param maxTransponders        The max number of transponders to give to the
+	 *                               new {@link TurkeyInfo}.
+	 * @param args                   The arguments to be used by the new
+	 *                               {@link TurkeyInfo}.
+	 * @param transponderIdBlacklist A collection of strings that may not be used as
+	 *                               transponder ids.<br/>
+	 *                               Can be null of no id should be blacklisted.
+	 * @param initZone               The initial zone for the new turkey.
+	 * @param initTime               The time of the first record for the new
+	 *                               turkey.
+	 * @return A {@link TurkeyInfo} object representing a not yet recorded turkey.
+	 */
+	public static TurkeyInfo generateTurkey(String id, int maxTransponders, Arguments args,
+			Collection<String> transponderIdBlacklist, String initZone, Calendar initTime) {
 		if (id == null || id.trim().isEmpty()) {
 			id = Integer.toString(RANDOM.nextInt(MAX_TURKEY_ID));
 		}
@@ -117,13 +143,18 @@ public class TurkeyGenerator {
 			args = EMPTY_ARGS;
 		}
 
+		if (transponderIdBlacklist == null) {
+			transponderIdBlacklist = new HashSet<String>();
+		}
+
 		int nTrans = RANDOM.nextInt(maxTransponders);
 		List<String> transponders = new ArrayList<String>();
 		for (int i = 0; i <= nTrans; i++) {
-			String trans = Integer.toHexString(RANDOM.nextInt(MAX_TRANSPONDER_ID)).toUpperCase();
-			if (!transponders.contains(trans)) {
-				transponders.add(trans);
+			String transponder = Integer.toHexString(RANDOM.nextInt(MAX_TRANSPONDER_ID)).toUpperCase();
+			while (transponders.contains(transponder) || transponderIdBlacklist.contains(transponder)) {
+				transponder = Integer.toHexString(RANDOM.nextInt(MAX_TRANSPONDER_ID)).toUpperCase();
 			}
+			transponders.add(transponder);
 		}
 
 		return new TurkeyInfo(id, transponders, null, initZone, initTime, null, args);
@@ -165,9 +196,11 @@ public class TurkeyGenerator {
 		}
 
 		List<TurkeyInfo> turkeys = new ArrayList<TurkeyInfo>();
-
+		Set<String> transponders = new HashSet<String>();
 		for (int i = 0; i < number; i++) {
-			turkeys.add(generateTurkey(Integer.toString(i), maxTransponders));
+			TurkeyInfo turkey = generateTurkey(Integer.toString(i), maxTransponders, EMPTY_ARGS, transponders);
+			transponders.addAll(turkey.getTransponders());
+			turkeys.add(turkey);
 		}
 
 		return turkeys;

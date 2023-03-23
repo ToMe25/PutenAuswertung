@@ -190,6 +190,7 @@ public class DataHandler {
 							ti.setStartTime(downtimeEnd);
 						}
 					}
+					startTime = downtimeEnd;
 				} else {
 					if (!args.fillDays) {
 						for (TurkeyInfo ti : turkeyInfos.values()) {

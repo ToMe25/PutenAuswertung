@@ -161,7 +161,7 @@ public class TurkeyCSVTest {
 
 		Arguments args = Arguments.empty();
 		args.fillDays = true;
-		TurkeyInfo info = TurkeyGenerator.generateTurkey("0", 5, args, "Z1", TimeUtils.parseTime(day, 10510));
+		TurkeyInfo info = TurkeyGenerator.generateTurkey("0", 5, args, null, "Z1", TimeUtils.parseTime(day, 10510));
 		info.changeZone("Zone 2", TimeUtils.parseTime(day, 20410));
 		info.changeZone("Zone 2", TimeUtils.parseTime(day, 100060));
 		info.changeZone("Z1", TimeUtils.parseTime(day, 599610));

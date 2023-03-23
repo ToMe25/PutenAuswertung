@@ -3,10 +3,12 @@ package com.tome25.auswertung.testdata;
 import static com.tome25.auswertung.testdata.AntennaDataGenerator.RANDOM;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import com.tome25.auswertung.utils.Pair;
 
@@ -70,9 +72,10 @@ public class ZoneGenerator {
 		List<String> antennas = new ArrayList<String>();
 		for (int i = 0; i < nAnt; i++) {
 			String antenna = Integer.toHexString(RANDOM.nextInt(MAX_ANTENNA_ID));
-			if (!antennas.contains(antenna)) {
-				antennas.add(antenna);
+			while (antennas.contains(antenna)) {
+				antenna = Integer.toHexString(RANDOM.nextInt(MAX_ANTENNA_ID));
 			}
+			antennas.add(antenna);
 		}
 
 		return new Pair<String, List<String>>(id, antennas);
@@ -108,9 +111,23 @@ public class ZoneGenerator {
 		}
 
 		Map<String, List<String>> zones = new LinkedHashMap<String, List<String>>();
+		Set<String> antennas = new HashSet<String>();
 		for (int i = 1; i <= number; i++) {
 			Pair<String, List<String>> zone = generateZone("Zone " + i, maxAntennas);
+			for (int j = 0; j < zone.getValue().size(); j++) {
+				String antenna = zone.getValue().get(j);
+				boolean changed = false;
+				while (antennas.contains(antenna) || (changed && zone.getValue().contains(antenna))) {
+					antenna = Integer.toHexString(RANDOM.nextInt(MAX_ANTENNA_ID));
+					changed = true;
+				}
+				
+				if (changed) {
+					zone.getValue().set(j, antenna);
+				}
+			}
 			zones.put(zone.getKey(), zone.getValue());
+			antennas.addAll(zone.getValue());
 		}
 
 		return zones;
