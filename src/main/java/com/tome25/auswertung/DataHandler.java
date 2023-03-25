@@ -137,7 +137,7 @@ public class DataHandler {
 						continue;
 					}
 
-					if (recordMs > downtime.getKey()) {
+					if (recordMs >= downtime.getKey()) {
 						downtimeStart = new GregorianCalendar();
 						downtimeStart.setTimeInMillis(downtime.getKey());
 						downtimeEnd = new GregorianCalendar();
@@ -182,7 +182,7 @@ public class DataHandler {
 				if (TimeUtils.isSameDay(downtimeStart, downtimeEnd)) {
 					if (!args.fillDays) {
 						for (TurkeyInfo ti : turkeyInfos.values()) {
-							if (ti.getCurrentCal().after(startTime) || ti.getCurrentCal().equals(startTime)) {
+							if (!ti.getCurrentCal().before(startTime)) {
 								// FIXME what if lastDate isn't the same day as downtimeStart?
 								ti.changeZone(ti.getCurrentZone(), downtimeStart);
 								ti.printCurrentStay(false);

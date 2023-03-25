@@ -192,7 +192,8 @@ public class TurkeyInfo {
 	 * @param time    The time at which the antenna record was created.
 	 * @throws NullPointerException     If {@code newZone} or {@code date} is
 	 *                                  {@code null}.
-	 * @throws IllegalArgumentException If the new time is before the current time.
+	 * @throws IllegalArgumentException If {@code time} is before the current time
+	 *                                  or the start time.
 	 */
 	public void changeZone(String newZone, Calendar time) throws NullPointerException, IllegalArgumentException {
 		Objects.requireNonNull(newZone, "The zone the turkey moved into cannot be null.");
@@ -200,6 +201,10 @@ public class TurkeyInfo {
 
 		if (currentTime != null && time.before(currentTime)) {
 			throw new IllegalArgumentException("New time was before old time.");
+		}
+
+		if (startTime != null && time.before(startTime)) {
+			throw new IllegalArgumentException("New time was before start time.");
 		}
 
 		if (currentTime != null && !TimeUtils.isSameDay(currentTime, time)) {
@@ -251,15 +256,12 @@ public class TurkeyInfo {
 			addTime(time, newZone, recordTime);
 
 			if (newRec && stayOut != null && lastStay.getExitCal() == null) {
-				if (!currentZone.equals(lastStay.getZone()) && lastZoneChange < currentTime.getTimeInMillis()) {
+				if (lastZoneChange < currentTime.getTimeInMillis()) {
 					Calendar lastCal = new GregorianCalendar();
 					lastCal.setTimeInMillis(lastZoneChange);
 					lastStay.setExitTime(lastCal);
 					stayOut.println(CSVHandler.stayToCsvLine(lastStay));
 					lastStay = new ZoneStay(id, currentZone, lastCal, currentTime);
-					stayOut.println(CSVHandler.stayToCsvLine(lastStay));
-				} else if (currentTime.after(lastStay.getEntryCal())) {
-					lastStay.setExitTime(currentTime);
 					stayOut.println(CSVHandler.stayToCsvLine(lastStay));
 				}
 			}

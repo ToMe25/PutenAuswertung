@@ -1,7 +1,5 @@
 package com.tome25.auswertung.testdata;
 
-import static com.tome25.auswertung.testdata.AntennaDataGenerator.RANDOM;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -20,7 +18,7 @@ import com.tome25.auswertung.utils.Pair;
 public class ZoneGenerator {
 
 	/**
-	 * The max possible id for an antenna.
+	 * The maximum possible id for an antenna.
 	 */
 	private static int MAX_ANTENNA_ID = 0xFFFF;
 
@@ -68,12 +66,12 @@ public class ZoneGenerator {
 			throw new IllegalArgumentException("maxAntennas cannot be <= 0.");
 		}
 
-		int nAnt = RANDOM.nextInt(maxAntennas) + 1;
+		int nAnt = AntennaDataGenerator.nextInt(maxAntennas, 1);
 		List<String> antennas = new ArrayList<String>();
 		for (int i = 0; i < nAnt; i++) {
-			String antenna = Integer.toHexString(RANDOM.nextInt(MAX_ANTENNA_ID));
+			String antenna = Integer.toHexString(AntennaDataGenerator.nextInt(MAX_ANTENNA_ID));
 			while (antennas.contains(antenna)) {
-				antenna = Integer.toHexString(RANDOM.nextInt(MAX_ANTENNA_ID));
+				antenna = Integer.toHexString(AntennaDataGenerator.nextInt(MAX_ANTENNA_ID));
 			}
 			antennas.add(antenna);
 		}
@@ -118,10 +116,10 @@ public class ZoneGenerator {
 				String antenna = zone.getValue().get(j);
 				boolean changed = false;
 				while (antennas.contains(antenna) || (changed && zone.getValue().contains(antenna))) {
-					antenna = Integer.toHexString(RANDOM.nextInt(MAX_ANTENNA_ID));
+					antenna = Integer.toHexString(AntennaDataGenerator.nextInt(MAX_ANTENNA_ID));
 					changed = true;
 				}
-				
+
 				if (changed) {
 					zone.getValue().set(j, antenna);
 				}

@@ -1,7 +1,5 @@
 package com.tome25.auswertung.testdata;
 
-import static com.tome25.auswertung.testdata.AntennaDataGenerator.RANDOM;
-
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -21,9 +19,9 @@ import com.tome25.auswertung.args.Arguments;
 public class TurkeyGenerator {
 
 	/**
-	 * The number of possible turkey ids if a turkey id is to be randomly
+	 * The maximum possible turkey id, for if a turkey id is to be randomly
 	 * generated.<br/>
-	 * Turkey ids can be anything from 0 to {@code MAX_TURKEY_ID-1}.
+	 * Turkey ids can be anything from 0 to {@code MAX_TURKEY_ID}.
 	 */
 	private static final int MAX_TURKEY_ID = 500;
 
@@ -132,7 +130,7 @@ public class TurkeyGenerator {
 	public static TurkeyInfo generateTurkey(String id, int maxTransponders, Arguments args,
 			Collection<String> transponderIdBlacklist, String initZone, Calendar initTime) {
 		if (id == null || id.trim().isEmpty()) {
-			id = Integer.toString(RANDOM.nextInt(MAX_TURKEY_ID));
+			id = Integer.toString(AntennaDataGenerator.nextInt(MAX_TURKEY_ID));
 		}
 
 		if (maxTransponders < 1) {
@@ -147,12 +145,12 @@ public class TurkeyGenerator {
 			transponderIdBlacklist = new HashSet<String>();
 		}
 
-		int nTrans = RANDOM.nextInt(maxTransponders);
+		int nTrans = AntennaDataGenerator.nextInt(maxTransponders, 1);
 		List<String> transponders = new ArrayList<String>();
-		for (int i = 0; i <= nTrans; i++) {
-			String transponder = Integer.toHexString(RANDOM.nextInt(MAX_TRANSPONDER_ID)).toUpperCase();
+		for (int i = 0; i < nTrans; i++) {
+			String transponder = Integer.toHexString(AntennaDataGenerator.nextInt(MAX_TRANSPONDER_ID)).toUpperCase();
 			while (transponders.contains(transponder) || transponderIdBlacklist.contains(transponder)) {
-				transponder = Integer.toHexString(RANDOM.nextInt(MAX_TRANSPONDER_ID)).toUpperCase();
+				transponder = Integer.toHexString(AntennaDataGenerator.nextInt(MAX_TRANSPONDER_ID)).toUpperCase();
 			}
 			transponders.add(transponder);
 		}

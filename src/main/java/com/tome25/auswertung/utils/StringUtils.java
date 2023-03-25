@@ -81,7 +81,7 @@ public class StringUtils {
 		Objects.requireNonNull(c, "Collection to convert cannot be null.");
 		Objects.requireNonNull(separator, "The object separator cannot be null.");
 
-		if (c.size() == 0) {
+		if (c.isEmpty()) {
 			return brackets ? "[]" : "";
 		}
 

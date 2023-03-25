@@ -1,18 +1,18 @@
 package com.tome25.auswertung.tests;
 
+import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -223,40 +223,41 @@ public class OutputDataTest {
 	 * @param parsed    The results from parsing the generated test data.
 	 * @param args      The arguments to be used for validation.
 	 */
-	public static void validateResults(final TestData generated, final TestData parsed, Arguments args)
-			throws NullPointerException {
+	public static void validateResults(final TestData generated, final TestData parsed, Arguments args) {
 		assertNotNull("The generated data to validate is null.", generated);
 		assertNotNull("The parsed data to validate is null.", parsed);
 		assertNotNull("The arguments to use for validation are null.", args);
 
-		for (String turkey : generated.zoneTimes.keySet()) {
-			assertTrue("The output data is missing turkey \"" + turkey + "\".", parsed.zoneTimes.containsKey(turkey));
-		}
+		// Make sure there are no missing turkeys anywhere
+		assertThat("A turkey is missing from the parsed zone times.", parsed.zoneTimes.keySet(),
+				hasItems(generated.zoneTimes.keySet().toArray(new String[0])));
+		assertThat("A turkey is missing from the generated zone times.", generated.zoneTimes.keySet(),
+				hasItems(parsed.zoneTimes.keySet().toArray(new String[0])));
 
-		for (String turkey : parsed.zoneTimes.keySet()) {
-			assertTrue("There was no zone changes count output for the turkey \"" + turkey + "\".",
-					parsed.zoneChanges.containsKey(turkey));
-			assertTrue("There was no zone stays output for the turkey \"" + turkey + "\".",
-					parsed.zoneChanges.containsKey(turkey));
-			assertTrue("There are no generated zone times for the turkey \"" + turkey + "\".",
-					generated.zoneTimes.containsKey(turkey));
-			assertTrue("There are no generated zone changes count for the turkey \"" + turkey + "\".",
-					generated.zoneChanges.containsKey(turkey));
-			assertTrue("There are no generated stays for the turkey \"" + turkey + "\".",
-					generated.zoneStays.containsKey(turkey));
+		assertThat("A turkey is missing from the parsed zone changes.", parsed.zoneChanges.keySet(),
+				hasItems(generated.zoneTimes.keySet().toArray(new String[0])));
+		assertThat("A turkey is missing from the generated zone changes.", generated.zoneChanges.keySet(),
+				hasItems(generated.zoneTimes.keySet().toArray(new String[0])));
+		assertThat("A turkey is missing from the parsed zone stays.", parsed.zoneStays.keySet(),
+				hasItems(generated.zoneTimes.keySet().toArray(new String[0])));
+		assertThat("A turkey is missing from the generates zone stays.", generated.zoneStays.keySet(),
+				hasItems(generated.zoneTimes.keySet().toArray(new String[0])));
 
+		for (final String turkey : parsed.zoneTimes.keySet()) {
 			Map<String, Map<String, Long>> turkeyOutputTimes = parsed.zoneTimes.get(turkey);
-			assertEquals("The output dates for turkey \"" + turkey + "\" didn't match.",
-					generated.zoneTimes.get(turkey).keySet(), turkeyOutputTimes.keySet());
+			assertThat("The generated data for turkey \"" + turkey + "\" is missing a date.",
+					generated.zoneTimes.get(turkey).keySet(),
+					hasItems(turkeyOutputTimes.keySet().toArray(new String[0])));
+			assertThat("The parsed data for turkey \"" + turkey + "\" is missing a date.", turkeyOutputTimes.keySet(),
+					hasItems(generated.zoneTimes.get(turkey).keySet().toArray(new String[0])));
 
 			// Compare output totals to calculated totals
-			for (String date : turkeyOutputTimes.keySet()) {
-				assertTrue("Day " + date + " not found in output changes for turkey \"" + turkey + "\".",
-						parsed.zoneChanges.get(turkey).containsKey(date));
-				assertTrue("Day " + date + " not found in generated times for turkey \"" + turkey + "\".",
-						generated.zoneTimes.get(turkey).containsKey(date));
-				assertTrue("Day " + date + " not found in generated changes for turkey \"" + turkey + "\".",
-						generated.zoneChanges.get(turkey).containsKey(date));
+			Map<String, Long> timeSums = new HashMap<String, Long>();
+			for (final String date : turkeyOutputTimes.keySet()) {
+				assertThat("A date is missing from the parsed zone changes for turkey \"" + turkey + "\".",
+						parsed.zoneChanges.get(turkey).keySet(), hasItem(date));
+				assertThat("A date is missing from the generated zone changes for turkey \"" + turkey + "\".",
+						generated.zoneChanges.get(turkey).keySet(), hasItem(date));
 
 				assertTrue("Zone changes for turkey \"" + turkey + "\" on day " + date + " were less than zero.",
 						parsed.zoneChanges.get(turkey).get(date) >= 0);
@@ -267,25 +268,33 @@ public class OutputDataTest {
 				int dayTotal = 0;
 
 				Map<String, Long> generatedZoneTimes = generated.zoneTimes.get(turkey).get(date);
-				Map<String, Long> outputZoneTimes = turkeyOutputTimes.get(date);
+				Map<String, Long> parsedZoneTimes = turkeyOutputTimes.get(date);
 
-				for (String zone : outputZoneTimes.keySet()) {
+				// Parsed always contains all zones, so not all parsed zones need to exist in
+				// generated data
+				assertThat("Missing zone in parsed data for turkey \"" + turkey + "\" date " + date + ".",
+						parsedZoneTimes.keySet(), hasItems(generatedZoneTimes.keySet().toArray(new String[0])));
+
+				for (String zone : parsedZoneTimes.keySet()) {
 					long generatedTime = 0;
 					if (generatedZoneTimes.containsKey(zone)) {
 						generatedTime = generatedZoneTimes.get(zone);
 					}
 
+					if (!date.equals("total")) {
+						if (!timeSums.containsKey(zone)) {
+							timeSums.put(zone, generatedTime);
+						} else {
+							timeSums.put(zone, timeSums.get(zone) + generatedTime);
+						}
+					}
+
 					assertEquals(
 							"Turkey \"" + turkey + "\" zone \"" + zone + "\" time for day \"" + date
 									+ "\" didn't match the prediction.",
-							generatedTime, (long) outputZoneTimes.get(zone));
+							generatedTime, (long) parsedZoneTimes.get(zone));
 
 					dayTotal += generatedTime;
-				}
-
-				for (String zone : generatedZoneTimes.keySet()) {
-					assertTrue("The output is missing a zone for turkey \"" + turkey + "\".",
-							outputZoneTimes.containsKey(zone));
 				}
 
 				if (args.fillDays && !date.equals("total")) {
@@ -294,16 +303,24 @@ public class OutputDataTest {
 				}
 			}
 
+			for (String zone : timeSums.keySet()) {
+				assertEquals(
+						"The sume of day zone times for turkey \"" + turkey + "\" zone \"" + zone
+								+ "\" does not match its total.",
+						timeSums.get(zone), turkeyOutputTimes.get("total").get(zone));
+			}
+
 			// Compare output stays with calculated stays
+			assertThat("A parsed zone stay did not match a generated one.", generated.zoneStays.get(turkey),
+					hasItems(parsed.zoneStays.get(turkey).toArray(new ZoneStay[0])));
+			assertThat("A generated zone stay did not match a parsed one.", parsed.zoneStays.get(turkey),
+					hasItems(parsed.zoneStays.get(turkey).toArray(new ZoneStay[0])));
 			assertEquals("The number of zone stays for turkey \"" + turkey + "\" didn't match.",
 					generated.zoneStays.get(turkey).size(), parsed.zoneStays.get(turkey).size());
 
-			Set<ZoneStay> generatedTurkeyStays = new HashSet<ZoneStay>(generated.zoneStays.get(turkey));
+			// Compare zone stay time sum with output total
 			Map<String, Long> stayTotals = new HashMap<String, Long>();
 			for (ZoneStay stay : parsed.zoneStays.get(turkey)) {
-				assertTrue("The stay " + stay + " did not match a generated one.", generatedTurkeyStays.contains(stay));
-
-				// Compare zone stay time sum with output total
 				if (stayTotals.containsKey(stay.getZone())) {
 					stayTotals.put(stay.getZone(), stayTotals.get(stay.getZone()) + stay.getStayTime());
 				} else {
@@ -329,8 +346,8 @@ public class OutputDataTest {
 	 *                   the required temporary files.
 	 * @return An object containing the sets of mappings and
 	 *         {@link FileInputStreamHandler FileInputStreamHandlers} to read them.
-	 * @throws IOException              If reading/writing/creating one of the
-	 *                                  temporary files fails.
+	 * @throws IOException              If writing or creating one of the temporary
+	 *                                  files fails.
 	 * @throws NullPointerException     If {@code tempFolder} is {@code null}.
 	 * @throws IllegalArgumentException If {@code turkeys} or {@code zones} is less
 	 *                                  than 1.

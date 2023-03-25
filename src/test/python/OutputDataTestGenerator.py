@@ -15,12 +15,14 @@ FILE_HEADER = """package com.tome25.auswertung.tests.generated;
 
 import java.io.IOException;
 
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
 import com.tome25.auswertung.args.Arguments;
 import com.tome25.auswertung.stream.FileInputStreamHandler;
 import com.tome25.auswertung.stream.FileOutputStreamHandler;
+import com.tome25.auswertung.testdata.AntennaDataGenerator;
 import com.tome25.auswertung.testdata.AntennaDataGenerator.TestData;
 import com.tome25.auswertung.tests.OutputDataTest;
 import com.tome25.auswertung.tests.OutputDataTest.TestMappings;
@@ -45,7 +47,32 @@ public class GeneratedOutputDataTest {
      * the tests.
      */
     @Rule
-    public TempFileStreamHandler tempFolder = new TempFileStreamHandler();"""
+    public TempFileStreamHandler tempFolder = new TempFileStreamHandler();
+
+    /**
+     * An {@link Arguments} to be used for a single test.<br/>
+     * Can be modified since its regenerated in {@link #initialize()} anyway.
+     */
+    public Arguments args;
+
+    /**
+     * A collection of mappings to be used for a single test.<br/>
+     * Can be modified since its regenerated in {@link #initialize()} anyway.
+     */
+    public TestMappings mappings;
+
+    /**
+     * Initializes some common elements required for every test.<br/>
+     * Also resets the seed of the {@link AntennaDataGenerator}.
+     * 
+     * @throws IOException If writing the test mappings fails.
+     */
+    @Before
+    public void initialize() throws IOException {
+        args = Arguments.empty();
+        AntennaDataGenerator.resetSeed();
+        mappings = OutputDataTest.generateTestMappings(100, 5, tempFolder);
+    }"""
 
 
 def main():
@@ -95,7 +122,6 @@ def main():
                             methodName += "NonCont"
                         
                         output.write(("\tpublic void %s() throws IOException {" % methodName) + os.linesep)
-                        output.write("\t\tArguments args = Arguments.empty();" + os.linesep)
                         if type == 'fillDays':
                             output.write("\t\targs.fillDays = true;" + os.linesep)
                         
@@ -104,7 +130,6 @@ def main():
                         elif min_time == '30Min':
                             output.write("\t\targs.minTime = 1800;" + os.linesep)
                         
-                        output.write('\t\tfinal TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, tempFolder);' + os.linesep)
                         output.write('\t\tfinal Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder.newTempIOFile("antenna.csv");' + os.linesep)
                         if type == 'downtimes':
                             output.write('\t\tfinal Pair<FileInputStreamHandler, FileOutputStreamHandler> downtimesPair = tempFolder.newTempIOFile("downtimes.csv");' + os.linesep)

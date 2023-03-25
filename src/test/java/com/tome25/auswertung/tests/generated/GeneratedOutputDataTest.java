@@ -2,12 +2,14 @@ package com.tome25.auswertung.tests.generated;
 
 import java.io.IOException;
 
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
 import com.tome25.auswertung.args.Arguments;
 import com.tome25.auswertung.stream.FileInputStreamHandler;
 import com.tome25.auswertung.stream.FileOutputStreamHandler;
+import com.tome25.auswertung.testdata.AntennaDataGenerator;
 import com.tome25.auswertung.testdata.AntennaDataGenerator.TestData;
 import com.tome25.auswertung.tests.OutputDataTest;
 import com.tome25.auswertung.tests.OutputDataTest.TestMappings;
@@ -34,6 +36,31 @@ public class GeneratedOutputDataTest {
     @Rule
     public TempFileStreamHandler tempFolder = new TempFileStreamHandler();
 
+    /**
+     * An {@link Arguments} to be used for a single test.<br/>
+     * Can be modified since its regenerated in {@link #initialize()} anyway.
+     */
+    public Arguments args;
+
+    /**
+     * A collection of mappings to be used for a single test.<br/>
+     * Can be modified since its regenerated in {@link #initialize()} anyway.
+     */
+    public TestMappings mappings;
+
+    /**
+     * Initializes some common elements required for every test.<br/>
+     * Also resets the seed of the {@link AntennaDataGenerator}.
+     * 
+     * @throws IOException If writing the test mappings fails.
+     */
+    @Before
+    public void initialize() throws IOException {
+        args = Arguments.empty();
+        AntennaDataGenerator.resetSeed();
+        mappings = OutputDataTest.generateTestMappings(100, 5, tempFolder);
+    }
+
 	/**
 	 * A unit test for the default hadling, aka no downtimes file and no fillDays.<br/>
 	 * This unit test uses the default minimum zone stay time.<br/>
@@ -44,8 +71,6 @@ public class GeneratedOutputDataTest {
 	 */
 	@Test
 	public void defaultDefaultMinTime() throws IOException {
-		Arguments args = Arguments.empty();
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, tempFolder);
 		final Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder.newTempIOFile("antenna.csv");
 		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, true, true, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
@@ -62,8 +87,6 @@ public class GeneratedOutputDataTest {
 	 */
 	@Test
 	public void defaultDefaultMinTimeNonCont() throws IOException {
-		Arguments args = Arguments.empty();
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, tempFolder);
 		final Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder.newTempIOFile("antenna.csv");
 		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, false, true, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
@@ -80,8 +103,6 @@ public class GeneratedOutputDataTest {
 	 */
 	@Test
 	public void defaultDefaultMinTimeIncomplete() throws IOException {
-		Arguments args = Arguments.empty();
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, tempFolder);
 		final Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder.newTempIOFile("antenna.csv");
 		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, true, false, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
@@ -98,8 +119,6 @@ public class GeneratedOutputDataTest {
 	 */
 	@Test
 	public void defaultDefaultMinTimeIncompleteNonCont() throws IOException {
-		Arguments args = Arguments.empty();
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, tempFolder);
 		final Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder.newTempIOFile("antenna.csv");
 		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, false, false, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
@@ -116,9 +135,7 @@ public class GeneratedOutputDataTest {
 	 */
 	@Test
 	public void defaultNoMinTime() throws IOException {
-		Arguments args = Arguments.empty();
 		args.minTime = 0;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, tempFolder);
 		final Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder.newTempIOFile("antenna.csv");
 		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, true, true, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
@@ -135,9 +152,7 @@ public class GeneratedOutputDataTest {
 	 */
 	@Test
 	public void defaultNoMinTimeNonCont() throws IOException {
-		Arguments args = Arguments.empty();
 		args.minTime = 0;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, tempFolder);
 		final Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder.newTempIOFile("antenna.csv");
 		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, false, true, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
@@ -154,9 +169,7 @@ public class GeneratedOutputDataTest {
 	 */
 	@Test
 	public void defaultNoMinTimeIncomplete() throws IOException {
-		Arguments args = Arguments.empty();
 		args.minTime = 0;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, tempFolder);
 		final Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder.newTempIOFile("antenna.csv");
 		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, true, false, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
@@ -173,9 +186,7 @@ public class GeneratedOutputDataTest {
 	 */
 	@Test
 	public void defaultNoMinTimeIncompleteNonCont() throws IOException {
-		Arguments args = Arguments.empty();
 		args.minTime = 0;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, tempFolder);
 		final Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder.newTempIOFile("antenna.csv");
 		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, false, false, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
@@ -192,9 +203,7 @@ public class GeneratedOutputDataTest {
 	 */
 	@Test
 	public void default30MinMinTime() throws IOException {
-		Arguments args = Arguments.empty();
 		args.minTime = 1800;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, tempFolder);
 		final Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder.newTempIOFile("antenna.csv");
 		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, true, true, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
@@ -211,9 +220,7 @@ public class GeneratedOutputDataTest {
 	 */
 	@Test
 	public void default30MinMinTimeNonCont() throws IOException {
-		Arguments args = Arguments.empty();
 		args.minTime = 1800;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, tempFolder);
 		final Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder.newTempIOFile("antenna.csv");
 		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, false, true, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
@@ -230,9 +237,7 @@ public class GeneratedOutputDataTest {
 	 */
 	@Test
 	public void default30MinMinTimeIncomplete() throws IOException {
-		Arguments args = Arguments.empty();
 		args.minTime = 1800;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, tempFolder);
 		final Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder.newTempIOFile("antenna.csv");
 		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, true, false, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
@@ -249,9 +254,7 @@ public class GeneratedOutputDataTest {
 	 */
 	@Test
 	public void default30MinMinTimeIncompleteNonCont() throws IOException {
-		Arguments args = Arguments.empty();
 		args.minTime = 1800;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, tempFolder);
 		final Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder.newTempIOFile("antenna.csv");
 		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, false, false, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
@@ -268,8 +271,6 @@ public class GeneratedOutputDataTest {
 	 */
 	@Test
 	public void downtimesDefaultMinTime() throws IOException {
-		Arguments args = Arguments.empty();
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, tempFolder);
 		final Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder.newTempIOFile("antenna.csv");
 		final Pair<FileInputStreamHandler, FileOutputStreamHandler> downtimesPair = tempFolder.newTempIOFile("downtimes.csv");
 		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, true, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
@@ -287,8 +288,6 @@ public class GeneratedOutputDataTest {
 	 */
 	@Test
 	public void downtimesDefaultMinTimeNonCont() throws IOException {
-		Arguments args = Arguments.empty();
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, tempFolder);
 		final Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder.newTempIOFile("antenna.csv");
 		final Pair<FileInputStreamHandler, FileOutputStreamHandler> downtimesPair = tempFolder.newTempIOFile("downtimes.csv");
 		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, false, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
@@ -306,8 +305,6 @@ public class GeneratedOutputDataTest {
 	 */
 	@Test
 	public void downtimesDefaultMinTimeIncomplete() throws IOException {
-		Arguments args = Arguments.empty();
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, tempFolder);
 		final Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder.newTempIOFile("antenna.csv");
 		final Pair<FileInputStreamHandler, FileOutputStreamHandler> downtimesPair = tempFolder.newTempIOFile("downtimes.csv");
 		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, true, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
@@ -325,8 +322,6 @@ public class GeneratedOutputDataTest {
 	 */
 	@Test
 	public void downtimesDefaultMinTimeIncompleteNonCont() throws IOException {
-		Arguments args = Arguments.empty();
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, tempFolder);
 		final Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder.newTempIOFile("antenna.csv");
 		final Pair<FileInputStreamHandler, FileOutputStreamHandler> downtimesPair = tempFolder.newTempIOFile("downtimes.csv");
 		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, false, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
@@ -344,9 +339,7 @@ public class GeneratedOutputDataTest {
 	 */
 	@Test
 	public void downtimesNoMinTime() throws IOException {
-		Arguments args = Arguments.empty();
 		args.minTime = 0;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, tempFolder);
 		final Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder.newTempIOFile("antenna.csv");
 		final Pair<FileInputStreamHandler, FileOutputStreamHandler> downtimesPair = tempFolder.newTempIOFile("downtimes.csv");
 		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, true, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
@@ -364,9 +357,7 @@ public class GeneratedOutputDataTest {
 	 */
 	@Test
 	public void downtimesNoMinTimeNonCont() throws IOException {
-		Arguments args = Arguments.empty();
 		args.minTime = 0;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, tempFolder);
 		final Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder.newTempIOFile("antenna.csv");
 		final Pair<FileInputStreamHandler, FileOutputStreamHandler> downtimesPair = tempFolder.newTempIOFile("downtimes.csv");
 		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, false, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
@@ -384,9 +375,7 @@ public class GeneratedOutputDataTest {
 	 */
 	@Test
 	public void downtimesNoMinTimeIncomplete() throws IOException {
-		Arguments args = Arguments.empty();
 		args.minTime = 0;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, tempFolder);
 		final Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder.newTempIOFile("antenna.csv");
 		final Pair<FileInputStreamHandler, FileOutputStreamHandler> downtimesPair = tempFolder.newTempIOFile("downtimes.csv");
 		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, true, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
@@ -404,9 +393,7 @@ public class GeneratedOutputDataTest {
 	 */
 	@Test
 	public void downtimesNoMinTimeIncompleteNonCont() throws IOException {
-		Arguments args = Arguments.empty();
 		args.minTime = 0;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, tempFolder);
 		final Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder.newTempIOFile("antenna.csv");
 		final Pair<FileInputStreamHandler, FileOutputStreamHandler> downtimesPair = tempFolder.newTempIOFile("downtimes.csv");
 		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, false, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
@@ -424,9 +411,7 @@ public class GeneratedOutputDataTest {
 	 */
 	@Test
 	public void downtimes30MinMinTime() throws IOException {
-		Arguments args = Arguments.empty();
 		args.minTime = 1800;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, tempFolder);
 		final Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder.newTempIOFile("antenna.csv");
 		final Pair<FileInputStreamHandler, FileOutputStreamHandler> downtimesPair = tempFolder.newTempIOFile("downtimes.csv");
 		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, true, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
@@ -444,9 +429,7 @@ public class GeneratedOutputDataTest {
 	 */
 	@Test
 	public void downtimes30MinMinTimeNonCont() throws IOException {
-		Arguments args = Arguments.empty();
 		args.minTime = 1800;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, tempFolder);
 		final Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder.newTempIOFile("antenna.csv");
 		final Pair<FileInputStreamHandler, FileOutputStreamHandler> downtimesPair = tempFolder.newTempIOFile("downtimes.csv");
 		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, false, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
@@ -464,9 +447,7 @@ public class GeneratedOutputDataTest {
 	 */
 	@Test
 	public void downtimes30MinMinTimeIncomplete() throws IOException {
-		Arguments args = Arguments.empty();
 		args.minTime = 1800;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, tempFolder);
 		final Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder.newTempIOFile("antenna.csv");
 		final Pair<FileInputStreamHandler, FileOutputStreamHandler> downtimesPair = tempFolder.newTempIOFile("downtimes.csv");
 		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, true, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
@@ -484,9 +465,7 @@ public class GeneratedOutputDataTest {
 	 */
 	@Test
 	public void downtimes30MinMinTimeIncompleteNonCont() throws IOException {
-		Arguments args = Arguments.empty();
 		args.minTime = 1800;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, tempFolder);
 		final Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder.newTempIOFile("antenna.csv");
 		final Pair<FileInputStreamHandler, FileOutputStreamHandler> downtimesPair = tempFolder.newTempIOFile("downtimes.csv");
 		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, false, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
@@ -504,9 +483,7 @@ public class GeneratedOutputDataTest {
 	 */
 	@Test
 	public void fillDaysDefaultMinTime() throws IOException {
-		Arguments args = Arguments.empty();
 		args.fillDays = true;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, tempFolder);
 		final Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder.newTempIOFile("antenna.csv");
 		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, true, true, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
@@ -523,9 +500,7 @@ public class GeneratedOutputDataTest {
 	 */
 	@Test
 	public void fillDaysDefaultMinTimeNonCont() throws IOException {
-		Arguments args = Arguments.empty();
 		args.fillDays = true;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, tempFolder);
 		final Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder.newTempIOFile("antenna.csv");
 		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, false, true, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
@@ -542,9 +517,7 @@ public class GeneratedOutputDataTest {
 	 */
 	@Test
 	public void fillDaysDefaultMinTimeIncomplete() throws IOException {
-		Arguments args = Arguments.empty();
 		args.fillDays = true;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, tempFolder);
 		final Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder.newTempIOFile("antenna.csv");
 		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, true, false, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
@@ -561,9 +534,7 @@ public class GeneratedOutputDataTest {
 	 */
 	@Test
 	public void fillDaysDefaultMinTimeIncompleteNonCont() throws IOException {
-		Arguments args = Arguments.empty();
 		args.fillDays = true;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, tempFolder);
 		final Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder.newTempIOFile("antenna.csv");
 		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, false, false, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
@@ -580,10 +551,8 @@ public class GeneratedOutputDataTest {
 	 */
 	@Test
 	public void fillDaysNoMinTime() throws IOException {
-		Arguments args = Arguments.empty();
 		args.fillDays = true;
 		args.minTime = 0;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, tempFolder);
 		final Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder.newTempIOFile("antenna.csv");
 		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, true, true, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
@@ -600,10 +569,8 @@ public class GeneratedOutputDataTest {
 	 */
 	@Test
 	public void fillDaysNoMinTimeNonCont() throws IOException {
-		Arguments args = Arguments.empty();
 		args.fillDays = true;
 		args.minTime = 0;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, tempFolder);
 		final Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder.newTempIOFile("antenna.csv");
 		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, false, true, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
@@ -620,10 +587,8 @@ public class GeneratedOutputDataTest {
 	 */
 	@Test
 	public void fillDaysNoMinTimeIncomplete() throws IOException {
-		Arguments args = Arguments.empty();
 		args.fillDays = true;
 		args.minTime = 0;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, tempFolder);
 		final Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder.newTempIOFile("antenna.csv");
 		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, true, false, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
@@ -640,10 +605,8 @@ public class GeneratedOutputDataTest {
 	 */
 	@Test
 	public void fillDaysNoMinTimeIncompleteNonCont() throws IOException {
-		Arguments args = Arguments.empty();
 		args.fillDays = true;
 		args.minTime = 0;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, tempFolder);
 		final Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder.newTempIOFile("antenna.csv");
 		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, false, false, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
@@ -660,10 +623,8 @@ public class GeneratedOutputDataTest {
 	 */
 	@Test
 	public void fillDays30MinMinTime() throws IOException {
-		Arguments args = Arguments.empty();
 		args.fillDays = true;
 		args.minTime = 1800;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, tempFolder);
 		final Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder.newTempIOFile("antenna.csv");
 		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, true, true, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
@@ -680,10 +641,8 @@ public class GeneratedOutputDataTest {
 	 */
 	@Test
 	public void fillDays30MinMinTimeNonCont() throws IOException {
-		Arguments args = Arguments.empty();
 		args.fillDays = true;
 		args.minTime = 1800;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, tempFolder);
 		final Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder.newTempIOFile("antenna.csv");
 		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, false, true, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
@@ -700,10 +659,8 @@ public class GeneratedOutputDataTest {
 	 */
 	@Test
 	public void fillDays30MinMinTimeIncomplete() throws IOException {
-		Arguments args = Arguments.empty();
 		args.fillDays = true;
 		args.minTime = 1800;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, tempFolder);
 		final Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder.newTempIOFile("antenna.csv");
 		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, true, false, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
@@ -720,10 +677,8 @@ public class GeneratedOutputDataTest {
 	 */
 	@Test
 	public void fillDays30MinMinTimeIncompleteNonCont() throws IOException {
-		Arguments args = Arguments.empty();
 		args.fillDays = true;
 		args.minTime = 1800;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, tempFolder);
 		final Pair<FileInputStreamHandler, FileOutputStreamHandler> antennaPair = tempFolder.newTempIOFile("antenna.csv");
 		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, false, false, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
