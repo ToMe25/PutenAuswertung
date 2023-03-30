@@ -139,7 +139,8 @@ public class CSVHandler {
 				List<String> list = new ArrayList<>();
 				for (int i = 1; i < tokens.length; i++) {
 					if (second.containsKey(tokens[i])) {
-						LogHandler.err_println("Found duplicate id \"" + tokens[i] + "\". Ignoring this occurrence.");
+						LogHandler.err_println("Found duplicate id \"" + tokens[i]
+								+ "\". Ignoring the occurrence for entity \"" + tokens[0] + "\".");
 						LogHandler.print_debug_info(
 								"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
 								input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", tokens), line);

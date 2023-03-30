@@ -212,16 +212,16 @@ public class PutenAuswertung {
 
 		boolean usingDowntimes = false;
 		File downtimeFile = null;
-		if (argHandler.downtimesInput != null && argHandler.downtimesInput.isPresent()) {
+		if (argHandler.hasDowntimesInput && argHandler.downtimesInput != null) {
 			usingDowntimes = true;
-			downtimeFile = new File(argHandler.downtimesInput.get());
+			downtimeFile = new File(argHandler.downtimesInput);
 
 			if (!downtimeFile.exists() || !downtimeFile.isFile()) {
 				downtimeFile = null;
-				LogHandler.err_println("The downtime input file \"" + argHandler.downtimesInput.get()
-						+ "\" doesn't exist or isn't a file.");
+				LogHandler.err_println(
+						"The downtime input file \"" + argHandler.downtimesInput + "\" doesn't exist or isn't a file.");
 			}
-		} else if (argHandler.downtimesInput == null) {
+		} else if (argHandler.hasDowntimesInput && argHandler.downtimesInput == null) {
 			usingDowntimes = true;
 			downtimeFile = new File(DEFAULT_AUSFÄLLE_FILE);
 			if (!downtimeFile.exists() || !downtimeFile.isFile()) {

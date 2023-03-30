@@ -295,7 +295,7 @@ public class ReadMappingsCSVTest {
 		assertEquals("The size of the second map of the duplicate value mappings did not match.", 5,
 				pair.getValue().size());
 		assertEquals("The result of parsing the duplicate value mappings csv did not match.", refPair, pair);
-		errorLog.checkLine("Found duplicate id \"Value 2\". Ignoring this occurrence.", 0);
+		errorLog.checkLine("Found duplicate id \"Value 2\". Ignoring the occurrence for entity \"Key 3\".", 0);
 	}
 
 	/**

@@ -14,6 +14,12 @@ import java.util.TimeZone;
 public class TimeUtils {
 
 	/**
+	 * The minimum number of digits a year number should have.<br/>
+	 * A year is prefixed with zeros until its long enough.
+	 */
+	public static final short YEAR_MIN_DIGITS = 4;
+
+	/**
 	 * Converts the given time in the format "HH:MM:SS.2" to time of day in
 	 * milliseconds.<br/>
 	 * Hours do not have to be two digits, they can be 1+.<br/>
@@ -105,8 +111,12 @@ public class TimeUtils {
 			throw new IllegalArgumentException("Date string \"" + date + "\" does not match required format.");
 		}
 
-		if (dateSplit[0].isEmpty() || dateSplit[1].isEmpty() || dateSplit[2].isEmpty()) {
-			throw new IllegalArgumentException("Date string \"" + date + "\" has an empty day, month, or year.");
+		if (dateSplit[0].isEmpty()) {
+			throw new IllegalArgumentException("Date string \"" + date + "\" has an empty day component.");
+		} else if (dateSplit[1].isEmpty()) {
+			throw new IllegalArgumentException("Date string \"" + date + "\" has an empty month component.");
+		} else if (dateSplit[2].isEmpty()) {
+			throw new IllegalArgumentException("Date string \"" + date + "\" has an empty year component.");
 		}
 
 		Calendar c = new GregorianCalendar();
@@ -243,15 +253,9 @@ public class TimeUtils {
 		result.append(month);
 		result.append('.');
 
-		int year = date.get(Calendar.YEAR);
-		if (year < 1000) {
+		String year = Integer.toString(date.get(Calendar.YEAR));
+		for (int i = year.length(); i < YEAR_MIN_DIGITS; i++) {
 			result.append('0');
-			if (year < 100) {
-				result.append('0');
-				if (year < 10) {
-					result.append('0');
-				}
-			}
 		}
 		result.append(year);
 

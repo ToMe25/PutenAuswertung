@@ -44,12 +44,16 @@ public class AntennaRecord {
 	 * 
 	 * @param transponder The string id of the transponder that was recorded.
 	 * @param date        The date at which this data was recorded. Format
-	 *                    "DD.MM.YYYY"
+	 *                    "DD.MM.YYYY".<br/>
+	 *                    Shorter date, month, or year components will be prefixed
+	 *                    with zeros.
 	 * @param time        The time of day at which this record was created. Format
 	 *                    "HH:MM:SS.2".
 	 * @param antenna     The antenna that recorded this data set.
 	 * @throws NullPointerException     If one of the arguments if {@code null}.
-	 * @throws IllegalArgumentException If parsing the time of day or date fails.
+	 * @throws IllegalArgumentException If one of the arguments is empty, or the
+	 *                                  {@code date} or {@code time} doesn't match
+	 *                                  the required format.
 	 */
 	public AntennaRecord(String transponder, String date, String time, String antenna)
 			throws NullPointerException, IllegalArgumentException {
@@ -58,11 +62,60 @@ public class AntennaRecord {
 		Objects.requireNonNull(time, "The time at which the record was created cannot be null.");
 		Objects.requireNonNull(antenna, "The antenna that recorded the record can't be null.");
 
+		if (transponder.isEmpty()) {
+			throw new IllegalArgumentException("The given transponder id was empty.");
+		}
 		this.transponder = transponder;
-		this.date = date;
+
+		if (date.isEmpty()) {
+			throw new IllegalArgumentException("The given date string was empty.");
+		}
+		String dateSplit[] = date.split("\\.");
+		if (dateSplit.length != 3) {
+			throw new IllegalArgumentException("The date \"" + date + "\" did not match the required format.");
+		} else if (dateSplit[0].isEmpty()) {
+			throw new IllegalArgumentException("The day component of the date \"" + date + "\" was empty.");
+		} else if (dateSplit[1].isEmpty()) {
+			throw new IllegalArgumentException("The month component of the date \"" + date + "\" was empty.");
+		} else if (dateSplit[2].isEmpty()) {
+			throw new IllegalArgumentException("The year component of the date \"" + date + "\" was empty.");
+		}
+
+		StringBuilder dateBuilder = new StringBuilder();
+		if (dateSplit[0].length() < 2) {
+			dateBuilder.append('0');
+		}
+		dateBuilder.append(dateSplit[0]);
+		dateBuilder.append('.');
+		if (dateSplit[1].length() < 2) {
+			dateBuilder.append('0');
+		}
+		dateBuilder.append(dateSplit[1]);
+		dateBuilder.append('.');
+		for (int i = dateSplit[2].length(); i < TimeUtils.YEAR_MIN_DIGITS; i++) {
+			dateBuilder.append('0');
+		}
+		dateBuilder.append(dateSplit[2]);
+		this.date = dateBuilder.toString();
+
+		if (time.isEmpty()) {
+			throw new IllegalArgumentException("The given time string was empty.");
+		}
 		this.time = time;
+
+		if (antenna.isEmpty()) {
+			throw new IllegalArgumentException("The given antenna id was empty.");
+		}
 		this.antenna = antenna;
+
 		tod = (int) TimeUtils.parseTime(time);
+		if (tod < 0) {
+			throw new IllegalArgumentException("The time \"" + time + "\" represents the negative time of day " + tod
+					+ ". Time of Day cannot be negative.");
+		} else if (tod >= 24 * 3600000) {
+			throw new IllegalArgumentException(
+					"The time \"" + time + "\" is more than 23:59:59.99, which is not allowed.");
+		}
 		cal = TimeUtils.parseTime(date, tod);
 	}
 

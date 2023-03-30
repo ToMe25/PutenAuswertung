@@ -194,7 +194,7 @@ public class DataHandler {
 				} else {
 					if (!args.fillDays) {
 						for (TurkeyInfo ti : turkeyInfos.values()) {
-							if (ti.getCurrentCal().after(startTime) || ti.getCurrentCal().equals(startTime)) {
+							if (!ti.getCurrentCal().before(startTime)) {
 								// FIXME what if lastDate isn't the same day as downtimeStart?
 								ti.changeZone(ti.getCurrentZone(), downtimeStart);
 								ti.endDay(lastDate);
@@ -220,18 +220,29 @@ public class DataHandler {
 				}
 			}
 
-			if (record.cal.before(lastTimes.get(record.date))) {
-				LogHandler.err_println("New antenna record is before the last one. Skipping line.");
-				LogHandler.print_debug_info(
-						"Antenna Record: %s, New Time of Day: %s, New Date: %s, Current Time of Day: %s, Current Date: %s, Arguments: %s",
-						record, record.time, record.date,
-						TimeUtils.encodeTime(TimeUtils.getMsOfDay(lastTimes.get(record.date))), lastDate, args);
-				continue;
-			}
-
 			if (!record.date.equals(lastDate)) {
-				if (totalsStream.printsTemporary() && lastDate != null) {
-					printDayOutput(totalsStream, turkeyInfos.values(), lastDate, zones.getKey().keySet(), false);
+				if (lastDate != null) {
+					if (TimeUtils.parseDate(lastDate).after(record.cal)) {
+						LogHandler.err_println("New antenna record on date " + record.date
+								+ " is on a day before the previous date " + lastDate + ". Skipping line.");
+						LogHandler.print_debug_info(
+								"New Antenna Record: %s, New Time of Day: %s, New Date: %s, Current Time of Day: %s, Current Date: %s, Arguments: %s",
+								record, record.time, record.date,
+								TimeUtils.encodeTime(TimeUtils.getMsOfDay(lastTimes.get(record.date))), lastDate, args);
+						continue;
+					}
+
+					for (TurkeyInfo ti : turkeyInfos.values()) {
+						if (!args.fillDays && !ti.getCurrentCal().before(startTime)) {
+							ti.endDay(lastDate);
+						} else if (args.fillDays && ti.hasDay(lastDate)) {
+							ti.endDay(lastDate);
+						}
+					}
+
+					if (totalsStream.printsTemporary()) {
+						printDayOutput(totalsStream, turkeyInfos.values(), lastDate, zones.getKey().keySet(), false);
+					}
 				}
 
 				lastDate = record.date;
@@ -262,13 +273,13 @@ public class DataHandler {
 				try {
 					turkeyInfos.get(turkeyId).changeZone(zones.getValue().get(record.antenna), record.cal);
 				} catch (IllegalArgumentException e) {
-					LogHandler.err_println(
-							"New antenna record is before the last one for the same turkey. Skipping line.");
+					LogHandler.err_println("New antenna record at " + record.date + ' ' + record.time + " for turkey \""
+							+ turkeyId + "\" is before the last one for the same turkey. Skipping line.");
 					LogHandler.print_exception(e, "update turkey zone",
-							"Antenna Record: %s, New Time of Day: %s, New Date: %s, Current Time of Day: %s, Current Date: %s, Arguments: %s",
+							"New Antenna Record: %s, New Time of Day: %s, New Date: %s, Current Time of Day: %s, Current Date: %s, Turkey: %s, Arguments: %s",
 							record, record.time, record.date,
 							TimeUtils.encodeTime(turkeyInfos.get(turkeyId).getCurrentTime()),
-							turkeyInfos.get(turkeyId).getCurrentDate(), args);
+							turkeyInfos.get(turkeyId).getCurrentDate(), turkeyId, args);
 				}
 			}
 		}

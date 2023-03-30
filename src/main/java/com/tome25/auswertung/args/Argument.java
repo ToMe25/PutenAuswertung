@@ -7,7 +7,6 @@ import java.net.URL;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.jar.Manifest;
 
 import com.tome25.auswertung.log.LogHandler;
@@ -180,9 +179,11 @@ public enum Argument {
 		public void onReceived(Arguments inst, String val) throws IllegalArgumentException {
 			if (val == null || val.trim().isEmpty()) {
 				LogHandler.out_println("Downtimes argument without value received, disabling downtimes file.");
-				inst.downtimesInput = Optional.empty();
+				inst.downtimesInput = null;
+				inst.hasDowntimesInput = false;
 			} else {
-				inst.downtimesInput = Optional.of(val);
+				inst.downtimesInput = val;
+				inst.hasDowntimesInput = true;
 			}
 		}
 

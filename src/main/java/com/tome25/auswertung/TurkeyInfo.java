@@ -219,7 +219,7 @@ public class TurkeyInfo {
 		long timeMs = time.getTimeInMillis();
 
 		if (currentZone != null && !newRec) {
-			int recordTime = (int) (timeMs - currentTime.getTimeInMillis());
+			long recordTime = timeMs - currentTime.getTimeInMillis();
 			addTime(time, currentZone, recordTime);
 		} else if (args.fillDays) {
 			addTime(time, newZone, TimeUtils.getMsOfDay(time));
@@ -252,7 +252,7 @@ public class TurkeyInfo {
 			lastZoneChange = dayStart.getTimeInMillis();
 			lastStay = new ZoneStay(id, newZone, dayStart);
 		} else {
-			int recordTime = (int) (timeMs - startTime.getTimeInMillis());
+			long recordTime = timeMs - startTime.getTimeInMillis();
 			addTime(time, newZone, recordTime);
 
 			if (newRec && stayOut != null && lastStay.getExitCal() == null) {
@@ -273,7 +273,7 @@ public class TurkeyInfo {
 
 		currentTime = time;
 
-		int zoneTime = (int) (timeMs - lastZoneChange);
+		long zoneTime = timeMs - lastZoneChange;
 		if (currentZone != null && !newZone.equals(currentZone)) {
 			if (args.minTime > 0 && zoneTime < args.minTime * 1000) {
 				addTime(time, currentZone, -zoneTime);
@@ -339,7 +339,7 @@ public class TurkeyInfo {
 	 * @param time The amount of time that was spent in the given zone.
 	 * @throws NullPointerException if {@code day} or {@code zone} is {@code null}.
 	 */
-	private void addTime(Calendar now, String zone, int time) throws NullPointerException {
+	private void addTime(Calendar now, String zone, long time) throws NullPointerException {
 		Objects.requireNonNull(now, "The day to add zone time to cannot be null.");
 		Objects.requireNonNull(zone, "The zone to add time to cannot be null.");
 
@@ -352,9 +352,9 @@ public class TurkeyInfo {
 		if (time > 0) {
 			if (time <= TimeUtils.getMsOfDay(now)) {
 				if (dayZoneTimes.get(date).containsKey(zone)) {
-					dayZoneTimes.get(date).put(zone, dayZoneTimes.get(date).get(zone) + time);
+					dayZoneTimes.get(date).put(zone, dayZoneTimes.get(date).get(zone) + (int) time);
 				} else {
-					dayZoneTimes.get(date).put(zone, time);
+					dayZoneTimes.get(date).put(zone, (int) time);
 				}
 			} else {
 				if (dayZoneTimes.get(date).containsKey(zone)) {
@@ -364,21 +364,21 @@ public class TurkeyInfo {
 				}
 
 				Calendar previousDay = (Calendar) now.clone();
-				int previousTime = time - TimeUtils.getMsOfDay(now);
+				long previousTime = time - TimeUtils.getMsOfDay(now);
 				while (previousTime > 0) {
 					previousDay.add(Calendar.DATE, -1);
 					String previousDate = TimeUtils.encodeDate(previousDay);
 
 					if (dayZoneTimes.containsKey(previousDate)) {
 						if (dayZoneTimes.get(previousDate).containsKey(zone)) {
-							dayZoneTimes.get(previousDate).put(zone,
-									dayZoneTimes.get(previousDate).get(zone) + Math.min(DAY_END + 1, previousTime));
+							dayZoneTimes.get(previousDate).put(zone, dayZoneTimes.get(previousDate).get(zone)
+									+ (int) Math.min(DAY_END + 1, previousTime));
 						} else {
-							dayZoneTimes.get(previousDate).put(zone, Math.min(DAY_END + 1, previousTime));
+							dayZoneTimes.get(previousDate).put(zone, (int) Math.min(DAY_END + 1, previousTime));
 						}
 					} else {
 						dayZoneTimes.put(previousDate, new HashMap<String, Integer>());
-						dayZoneTimes.get(previousDate).put(zone, Math.min(DAY_END + 1, previousTime));
+						dayZoneTimes.get(previousDate).put(zone, (int) Math.min(DAY_END + 1, previousTime));
 						if (!dayZoneChanges.containsKey(previousDate)) {
 							dayZoneChanges.put(previousDate, 0);
 						}
@@ -390,7 +390,7 @@ public class TurkeyInfo {
 		} else if (time < 0) {
 			if (-time <= TimeUtils.getMsOfDay(now)) {
 				if (dayZoneTimes.get(date).containsKey(zone)) {
-					dayZoneTimes.get(date).put(zone, Math.max(0, dayZoneTimes.get(date).get(zone) + time));
+					dayZoneTimes.get(date).put(zone, Math.max(0, dayZoneTimes.get(date).get(zone) + (int) time));
 				} else {
 					dayZoneTimes.get(date).put(zone, 0);
 				}
@@ -404,14 +404,14 @@ public class TurkeyInfo {
 
 				Calendar yesterday = (Calendar) now.clone();
 				yesterday.add(Calendar.DATE, -1);
-				int yesterdayTime = time + TimeUtils.getMsOfDay(now);
+				long yesterdayTime = time + TimeUtils.getMsOfDay(now);
 				String yesterdayDate = TimeUtils.encodeDate(yesterday);
 
-				// FIXME not sure how to handle if it isn't
+				// FIXME not sure how to handle if it doesn't
 				if (dayZoneTimes.containsKey(yesterdayDate)) {
 					if (dayZoneTimes.get(yesterdayDate).containsKey(zone)) {
 						dayZoneTimes.get(yesterdayDate).put(zone,
-								Math.max(0, dayZoneTimes.get(yesterdayDate).get(zone) + yesterdayTime));
+								(int) Math.max(0, dayZoneTimes.get(yesterdayDate).get(zone) + yesterdayTime));
 					} else {
 						dayZoneTimes.get(yesterdayDate).put(zone, 0);
 					}
@@ -427,14 +427,12 @@ public class TurkeyInfo {
 	}
 
 	/**
-	 * Sets the current time for this object to the end of the current day, or the
-	 * beginning of the given day if {@code fillDay} is {@code true}.<br/>
-	 * Does not do anything if {@code fillDay} is {@code false}.<br/>
-	 * 
-	 * If time is on the current day it sets the time to the end of that day.<br/>
-	 * Otherwise sets it to the start of the given day.<br/>
-	 * 
-	 * Adds the remaining time of the old day to the current zones zone time.
+	 * If {@link Arguments#fillDays args.fillDays} is {@code true}: Sets the time to
+	 * the end of the current day, and adds the remaining time of the day to the
+	 * current zone.<br/>
+	 * <br/>
+	 * If the given day is not the current day: Initializes some things for the new
+	 * day.
 	 * 
 	 * @param date The date to which this object should be set.
 	 * @throws NullPointerException if {@code date} is {@code null}.
@@ -444,13 +442,12 @@ public class TurkeyInfo {
 	}
 
 	/**
-	 * Sets the current time for this object to the end of the current day, or the
-	 * beginning of the given day if {@code fillDay} is {@code true}.<br/>
-	 * 
-	 * If time is on the current day it sets the time to the end of that day.<br/>
-	 * Otherwise sets it to the start of the given day.<br/>
-	 * 
-	 * Adds the remaining time of the old day to the current zones zone time.
+	 * If {@link Arguments#fillDays args.fillDays} is {@code true}: Sets the time to
+	 * the end of the current day, and adds the remaining time of the day to the
+	 * current zone.<br/>
+	 * <br/>
+	 * If the given day is not the current day: Initializes some things for the new
+	 * day.
 	 * 
 	 * @param time The date to which this object should be set.
 	 * @throws NullPointerException if {@code time} is {@code null}.
@@ -469,7 +466,13 @@ public class TurkeyInfo {
 		}
 
 		if (!TimeUtils.isSameDay(currentTime, time)) {
-			dayZoneChanges.put(TimeUtils.encodeDate(currentTime), todayZoneChanges);
+			String today = TimeUtils.encodeDate(currentTime);
+			if (!dayZoneChanges.containsKey(today)) {
+				dayZoneChanges.put(today, todayZoneChanges);
+			} else {
+				dayZoneChanges.put(today, dayZoneChanges.get(today) + todayZoneChanges);
+			}
+
 			String date = TimeUtils.encodeDate(time);
 			if (!dayZoneTimes.containsKey(date)) {
 				dayZoneTimes.put(date, new HashMap<String, Integer>());
@@ -607,6 +610,8 @@ public class TurkeyInfo {
 			return dayZoneChanges.get(date);
 		} else if (TimeUtils.isSameDay(currentTime, TimeUtils.parseDate(date))) {
 			return todayZoneChanges;
+		} else if (hasDay(date)) {
+			return 0;
 		} else {
 			return -1;
 		}

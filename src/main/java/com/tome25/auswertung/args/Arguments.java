@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Optional;
 
 import com.tome25.auswertung.PutenAuswertung;
 import com.tome25.auswertung.args.Argument.ArgumentValue;
@@ -52,11 +51,25 @@ public class Arguments {
 	public String zonesInput = null;
 
 	/**
-	 * The specified downtimes input file.<br/>
-	 * An empty optional if no downtimes file should be used.<br/>
-	 * Or {@code null} if not specified.
+	 * Whether a downtimes input file should be used.<br/>
+	 * If {@code true} the file location is specified by
+	 * {@link #downtimesInput}.<br/>
+	 * <b>WARNING:</b> {@link #downtimesInput} MAY be {@code null} even if this is
+	 * {@code true}.
+	 * 
+	 * @see #downtimesInput
 	 */
-	public Optional<String> downtimesInput = null;
+	public boolean hasDowntimesInput = true;
+
+	/**
+	 * The specified downtimes input file.<br/>
+	 * Or {@code null} if not specified or disabled.<br/>
+	 * Check {@link #hasDowntimesInput} to check whether a downtimes file should be
+	 * used.
+	 * 
+	 * @see #hasDowntimesInput
+	 */
+	public String downtimesInput = null;
 
 	/**
 	 * The specified totals output file.<br/>
@@ -474,12 +487,12 @@ public class Arguments {
 		builder.append(", zonesInput=");
 		builder.append(zonesInput);
 		builder.append(", downtimesInput=");
-		if (downtimesInput == null) {
-			builder.append("null");
-		} else if (!downtimesInput.isPresent()) {
+		if (!hasDowntimesInput) {
 			builder.append("none");
+		} else if (downtimesInput == null) {
+			builder.append("null");
 		} else {
-			builder.append(downtimesInput.get());
+			builder.append(downtimesInput);
 		}
 		builder.append(", totalsOutput=");
 		builder.append(totalsOutput);

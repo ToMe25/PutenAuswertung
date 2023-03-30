@@ -53,7 +53,7 @@ public class OutputDataTest {
 	 */
 	@Test
 	public void shortCrossDate() throws IOException {
-		TestMappings mappings = generateTestMappings(2, 3, tempFolder);
+		final TestMappings mappings = generateTestMappings(2, 3, tempFolder);
 		List<TurkeyInfo> turkeys = mappings.turkeys;
 		Map<String, List<String>> zones = mappings.zones;
 		FileInputStreamHandler turkeysIn = mappings.turkeysIn;
@@ -211,6 +211,259 @@ public class OutputDataTest {
 				staysData.get("1").size());
 
 		for (int i = 0; i < staysData.get("1").size() && i < t2Stays.size(); i++) {
+			assertEquals("A zone stay for turkey \"1\" didn't match.", t2Stays.get(i), staysData.get("1").get(i));
+		}
+	}
+
+	/**
+	 * A manually written unit test containing a stay with a length of one month.
+	 * 
+	 * @throws IOException If reading/writing/creating a temp file fails.
+	 */
+	@Test
+	public void oneMonthStay() throws IOException {
+		final TestMappings mappings = generateTestMappings(2, 2, tempFolder);
+		List<TurkeyInfo> turkeys = mappings.turkeys;
+		Map<String, List<String>> zones = mappings.zones;
+		FileInputStreamHandler turkeysIn = mappings.turkeysIn;
+		FileInputStreamHandler zonesIn = mappings.zonesIn;
+		String t1 = turkeys.get(0).getTransponders().get(0);
+		String t2 = turkeys.get(1).getTransponders().get(0);
+		String a1 = zones.get("Zone 1").get(0);
+		String a2 = zones.get("Zone 2").get(0);
+
+		Pair<FileInputStreamHandler, PrintStream> antennaPair = tempFolder.newTempInputFile("antenna.csv");
+		FileInputStreamHandler antennaIn = antennaPair.getKey();
+		PrintStream aps = antennaPair.getValue();
+		aps.printf("%s;06.05.2023;02:05:42.59;%s%n", t1, a2);
+		aps.printf("%s;06.05.2023;02:17:19.38;%s%n", t1, a1);
+		aps.printf("%s;06.05.2023;03:00:54.07;%s%n", t2, a1);
+		aps.printf("%s;06.05.2023;03:59:37.72;%s%n", t1, a1);
+		aps.printf("%s;06.05.2023;05:01:08.21;%s%n", t1, a2);
+		aps.printf("%s;06.05.2023;11:29:46.41;%s%n", t2, a2);
+		aps.printf("%s;07.05.2023;16:53:43.60;%s%n", t1, a2);
+		aps.printf("%s;08.05.2023;13:46:11.77;%s%n", t1, a2);
+		aps.printf("%s;09.05.2023;09:36:59.97;%s%n", t1, a2);
+		aps.printf("%s;10.05.2023;16:48:43.51;%s%n", t1, a2);
+		aps.printf("%s;11.05.2023;07:04:23.84;%s%n", t1, a2);
+		aps.printf("%s;12.05.2023;15:44:31.99;%s%n", t1, a1);
+		aps.printf("%s;13.05.2023;09:51:38.84;%s%n", t1, a1);
+		aps.printf("%s;14.05.2023;19:34:29.19;%s%n", t1, a1);
+		aps.printf("%s;15.05.2023;22:20:57.74;%s%n", t1, a1);
+		aps.printf("%s;16.05.2023;15:38:36.63;%s%n", t1, a1);
+		aps.printf("%s;17.05.2023;01:24:08.00;%s%n", t1, a1);
+		aps.printf("%s;18.05.2023;23:59:01.00;%s%n", t1, a1);
+		aps.printf("%s;19.05.2023;13:37:46.71;%s%n", t1, a1);
+		aps.printf("%s;20.05.2023;21:18:53.08;%s%n", t1, a1);
+		aps.printf("%s;21.05.2023;02:35:20.83;%s%n", t1, a2);
+		aps.printf("%s;22.05.2023;12:09:33.41;%s%n", t1, a2);
+		aps.printf("%s;23.05.2023;03:43:18.32;%s%n", t1, a2);
+		aps.printf("%s;24.05.2023;20:52:44.79;%s%n", t1, a2);
+		aps.printf("%s;25.05.2023;18:16:02.09;%s%n", t1, a2);
+		aps.printf("%s;26.05.2023;05:46:57.63;%s%n", t1, a2);
+		aps.printf("%s;27.05.2023;02:53:03.76;%s%n", t1, a2);
+		aps.printf("%s;28.05.2023;12:06:15.25;%s%n", t1, a2);
+		aps.printf("%s;29.05.2023;15:44:18.36;%s%n", t1, a2);
+		aps.printf("%s;30.05.2023;22:27:23.31;%s%n", t1, a2);
+		aps.printf("%s;31.05.2023;18:00:48.21;%s%n", t1, a1);
+		aps.printf("%s;01.06.2023;00:58:23.54;%s%n", t1, a1);
+		aps.printf("%s;02.06.2023;16:21:22.61;%s%n", t1, a1);
+		aps.printf("%s;03.06.2023;18:03:20.43;%s%n", t1, a1);
+		aps.printf("%s;04.06.2023;06:59:23.48;%s%n", t1, a1);
+		aps.printf("%s;05.06.2023;16:48:21.16;%s%n", t1, a1);
+		aps.printf("%s;06.06.2023;03:08:27.44;%s%n", t1, a2);
+		aps.printf("%s;06.06.2023;12:31:00.53;%s%n", t2, a1);
+		aps.printf("%s;06.06.2023;13:55:41.00;%s%n", t1, a1);
+		aps.printf("%s;06.06.2023;13:55:41.55;%s%n", t2, a2);
+		aps.printf("%s;07.06.2023;03:12:51.00;%s%n", t2, a1);
+		aps.printf("%s;07.06.2023;05:08:38.63;%s%n", t1, a1);
+		aps.close();
+
+		Pair<FileInputStreamHandler, FileOutputStreamHandler> totalsPair = tempFolder.newTempIOFile("totals.csv");
+		FileOutputStreamHandler totalsOut = totalsPair.getValue();
+		FileInputStreamHandler totalsIn = totalsPair.getKey();
+
+		Pair<FileInputStreamHandler, FileOutputStreamHandler> staysPair = tempFolder.newTempIOFile("stays.csv");
+		FileOutputStreamHandler staysOut = staysPair.getValue();
+		FileInputStreamHandler staysIn = staysPair.getKey();
+		DataHandler.handleStreams(antennaIn, turkeysIn, zonesIn, null, totalsOut, staysOut, Arguments.empty());
+		totalsOut.close();
+		staysOut.close();
+
+		Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>> totalsData = CSVHandler
+				.readTotalsCSV(totalsIn);
+		totalsIn.close();
+
+		Map<String, Map<String, Map<String, Long>>> outputTimes = totalsData.getKey();
+		Map<String, Map<String, Integer>> outputChanges = totalsData.getValue();
+
+		assertEquals("Zone changes for turkey \"0\" on date 06.05.2023 didn't match.", 2,
+				(int) outputChanges.get("0").get("06.05.2023"));
+		assertEquals("Zone 1 time for turkey \"0\" on date 06.05.2023 didn't match.",
+				TimeUtils.parseTime("02:43:48.83"), (long) outputTimes.get("0").get("06.05.2023").get("Zone 1"));
+		assertEquals("Zone 2 time for turkey \"0\" on date 06.05.2023 didn't match.",
+				TimeUtils.parseTime("19:10:28.58"), (long) outputTimes.get("0").get("06.05.2023").get("Zone 2"));
+
+		assertEquals("Zone changes for turkey \"1\" on date 06.05.2023 didn't match.", 1,
+				(int) outputChanges.get("1").get("06.05.2023"));
+		assertEquals("Zone 1 time for turkey \"1\" on date 06.05.2023 didn't match.",
+				TimeUtils.parseTime("09:24:03.82"), (long) outputTimes.get("1").get("06.05.2023").get("Zone 1"));
+		assertEquals("Zone 2 time for turkey \"1\" on date 06.05.2023 didn't match.",
+				TimeUtils.parseTime("12:30:13.59"), (long) outputTimes.get("1").get("06.05.2023").get("Zone 2"));
+
+		for (int date = 7; date < 12; date++) {
+			String dateStr = String.format("%02d.05.2023", date);
+			assertEquals("Zone changes for turkey \"0\" on date " + dateStr + " didn't match.", 0,
+					(int) outputChanges.get("0").get(dateStr));
+			assertEquals("Zone 1 time for turkey \"0\" on date " + dateStr + " didn't match.", 0,
+					(long) outputTimes.get("0").get(dateStr).get("Zone 1"));
+			assertEquals("Zone 2 time for turkey \"0\" on date " + dateStr + " didn't match.", 24 * 3600000,
+					(long) outputTimes.get("0").get(dateStr).get("Zone 2"));
+		}
+
+		assertEquals("Zone changes for turkey \"0\" on date 12.05.2023 didn't match.", 1,
+				(int) outputChanges.get("0").get("12.05.2023"));
+		assertEquals("Zone 1 time for turkey \"0\" on date 12.05.2023 didn't match.",
+				TimeUtils.parseTime("08:15:28.01"), (long) outputTimes.get("0").get("12.05.2023").get("Zone 1"));
+		assertEquals("Zone 2 time for turkey \"0\" on date 12.05.2023 didn't match.",
+				TimeUtils.parseTime("15:44:31.99"), (long) outputTimes.get("0").get("12.05.2023").get("Zone 2"));
+
+		for (int date = 13; date < 21; date++) {
+			String dateStr = String.format("%d.05.2023", date);
+			assertEquals("Zone changes for turkey \"0\" on date " + dateStr + " didn't match.", 0,
+					(int) outputChanges.get("0").get(dateStr));
+			assertEquals("Zone 1 time for turkey \"0\" on date " + dateStr + " didn't match.", 24 * 3600000,
+					(long) outputTimes.get("0").get(dateStr).get("Zone 1"));
+			assertEquals("Zone 2 time for turkey \"0\" on date " + dateStr + " didn't match.", 0,
+					(long) outputTimes.get("0").get(dateStr).get("Zone 2"));
+		}
+
+		assertEquals("Zone changes for turkey \"0\" date 21.05.2023 didn't match.", 1,
+				(int) outputChanges.get("0").get("21.05.2023"));
+		assertEquals("Zone 1 time for turkey \"0\" on date 21.05.2023 didn't match.",
+				TimeUtils.parseTime("02:35:20.83"), (long) outputTimes.get("0").get("21.05.2023").get("Zone 1"));
+		assertEquals("Zone 2 time for turkey \"0\" on date 21.05.2023 didn't match.",
+				TimeUtils.parseTime("21:24:39.17"), (long) outputTimes.get("0").get("21.05.2023").get("Zone 2"));
+
+		for (int date = 22; date < 31; date++) {
+			String dateStr = String.format("%d.05.2023", date);
+			assertEquals("Zone changes for turkey \"0\" on date " + dateStr + " didn't match.", 0,
+					(int) outputChanges.get("0").get(dateStr));
+			assertEquals("Zone 1 time for turkey \"0\" on date " + dateStr + " didn't match.", 0,
+					(long) outputTimes.get("0").get(dateStr).get("Zone 1"));
+			assertEquals("Zone 2 time for turkey \"0\" on date " + dateStr + " didn't match.", 24 * 3600000,
+					(long) outputTimes.get("0").get(dateStr).get("Zone 2"));
+		}
+
+		assertEquals("Zone changes for turkey \"0\" date 31.05.2023 didn't match.", 1,
+				(int) outputChanges.get("0").get("31.05.2023"));
+		assertEquals("Zone 1 time for turkey \"0\" on date 31.05.2023 didn't match.",
+				TimeUtils.parseTime("05:59:11.79"), (long) outputTimes.get("0").get("31.05.2023").get("Zone 1"));
+		assertEquals("Zone 2 time for turkey \"0\" on date 31.05.2023 didn't match.",
+				TimeUtils.parseTime("18:00:48.21"), (long) outputTimes.get("0").get("31.05.2023").get("Zone 2"));
+
+		for (int date = 7; date <= 31; date++) {
+			String dateStr = String.format("%02d.05.2023", date);
+			assertEquals("Zone changes for turkey \"1\" on date " + dateStr + " didn't match.", 0,
+					(int) outputChanges.get("1").get(dateStr));
+			assertEquals("Zone 1 time for turkey \"1\" on date " + dateStr + " didn't match.", 0,
+					(long) outputTimes.get("1").get(dateStr).get("Zone 1"));
+			assertEquals("Zone 2 time for turkey \"1\" on date " + dateStr + " didn't match.", 24 * 3600000,
+					(long) outputTimes.get("1").get(dateStr).get("Zone 2"));
+		}
+
+		for (int date = 1; date < 6; date++) {
+			String dateStr = String.format("%02d.06.2023", date);
+			assertEquals("Zone changes for turkey \"0\" on date " + dateStr + " didn't match.", 0,
+					(int) outputChanges.get("0").get(dateStr));
+			assertEquals("Zone 1 time for turkey \"0\" on date " + dateStr + " didn't match.", 24 * 3600000,
+					(long) outputTimes.get("0").get(dateStr).get("Zone 1"));
+			assertEquals("Zone 2 time for turkey \"0\" on date " + dateStr + " didn't match.", 0,
+					(long) outputTimes.get("0").get(dateStr).get("Zone 2"));
+		}
+
+		for (int date = 1; date < 6; date++) {
+			String dateStr = String.format("%02d.06.2023", date);
+			assertEquals("Zone changes for turkey \"1\" on date " + dateStr + " didn't match.", 0,
+					(int) outputChanges.get("1").get(dateStr));
+			assertEquals("Zone 1 time for turkey \"1\" on date " + dateStr + " didn't match.", 0,
+					(long) outputTimes.get("1").get(dateStr).get("Zone 1"));
+			assertEquals("Zone 2 time for turkey \"1\" on date " + dateStr + " didn't match.", 24 * 3600000,
+					(long) outputTimes.get("1").get(dateStr).get("Zone 2"));
+		}
+
+		assertEquals("Zone changes for turkey \"0\" date 06.06.2023 didn't match.", 2,
+				(int) outputChanges.get("0").get("06.06.2023"));
+		assertEquals("Zone 1 time for turkey \"0\" on date 06.06.2023 didn't match.",
+				TimeUtils.parseTime("13:12:46.44"), (long) outputTimes.get("0").get("06.06.2023").get("Zone 1"));
+		assertEquals("Zone 2 time for turkey \"0\" on date 06.06.2023 didn't match.",
+				TimeUtils.parseTime("10:47:13.56"), (long) outputTimes.get("0").get("06.06.2023").get("Zone 2"));
+
+		assertEquals("Zone changes for turkey \"1\" date 06.06.2023 didn't match.", 2,
+				(int) outputChanges.get("1").get("06.06.2023"));
+		assertEquals("Zone 1 time for turkey \"1\" on date 06.06.2023 didn't match.",
+				TimeUtils.parseTime("01:24:41.02"), (long) outputTimes.get("1").get("06.06.2023").get("Zone 1"));
+		assertEquals("Zone 2 time for turkey \"1\" on date 06.06.2023 didn't match.",
+				TimeUtils.parseTime("22:35:18.98"), (long) outputTimes.get("1").get("06.06.2023").get("Zone 2"));
+
+		assertEquals("Zone changes for turkey \"0\" date 07.06.2023 didn't match.", 0,
+				(int) outputChanges.get("0").get("07.06.2023"));
+		assertEquals("Zone 1 time for turkey \"0\" on date 07.06.2023 didn't match.",
+				TimeUtils.parseTime("05:08:38.63"), (long) outputTimes.get("0").get("07.06.2023").get("Zone 1"));
+		assertEquals("Zone 2 time for turkey \"0\" on date 07.06.2023 didn't match.", 0,
+				(long) outputTimes.get("0").get("07.06.2023").get("Zone 2"));
+
+		assertEquals("Zone changes for turkey \"1\" date 07.06.2023 didn't match.", 1,
+				(int) outputChanges.get("1").get("07.06.2023"));
+		assertEquals("Zone 1 time for turkey \"1\" on date 07.06.2023 didn't match.",
+				TimeUtils.parseTime("01:55:47.63"), (long) outputTimes.get("1").get("07.06.2023").get("Zone 1"));
+		assertEquals("Zone 2 time for turkey \"1\" on date 07.06.2023 didn't match.",
+				TimeUtils.parseTime("03:12:51.00"), (long) outputTimes.get("1").get("07.06.2023").get("Zone 2"));
+
+		Map<String, List<ZoneStay>> staysData = CSVHandler.readStaysCSV(staysIn);
+		staysIn.close();
+
+		List<ZoneStay> t1Stays = new ArrayList<ZoneStay>();
+		t1Stays.add(new ZoneStay("0", "Zone 2", TimeUtils.parseTime("06.05.2023", "02:05:42.59"),
+				TimeUtils.parseTime("06.05.2023", "02:17:19.38")));
+		t1Stays.add(new ZoneStay("0", "Zone 1", TimeUtils.parseTime("06.05.2023", "02:17:19.38"),
+				TimeUtils.parseTime("06.05.2023", "05:01:08.21")));
+		t1Stays.add(new ZoneStay("0", "Zone 2", TimeUtils.parseTime("06.05.2023", "05:01:08.21"),
+				TimeUtils.parseTime("12.05.2023", "15:44:31.99")));
+		t1Stays.add(new ZoneStay("0", "Zone 1", TimeUtils.parseTime("12.05.2023", "15:44:31.99"),
+				TimeUtils.parseTime("21.05.2023", "02:35:20.83")));
+		t1Stays.add(new ZoneStay("0", "Zone 2", TimeUtils.parseTime("21.05.2023", "02:35:20.83"),
+				TimeUtils.parseTime("31.05.2023", "18:00:48.21")));
+		t1Stays.add(new ZoneStay("0", "Zone 1", TimeUtils.parseTime("31.05.2023", "18:00:48.21"),
+				TimeUtils.parseTime("06.06.2023", "03:08:27.44")));
+		t1Stays.add(new ZoneStay("0", "Zone 2", TimeUtils.parseTime("06.06.2023", "03:08:27.44"),
+				TimeUtils.parseTime("06.06.2023", "13:55:41.00")));
+		t1Stays.add(new ZoneStay("0", "Zone 1", TimeUtils.parseTime("06.06.2023", "13:55:41.00"),
+				TimeUtils.parseTime("07.06.2023", "05:08:38.63")));
+
+		assertEquals("The number of zone stays for turkey \"0\" didn't match.", t1Stays.size(),
+				staysData.get("0").size());
+
+		for (int i = 0; i < t1Stays.size(); i++) {
+			assertEquals("A zone stay for turkey \"0\" didn't match.", t1Stays.get(i), staysData.get("0").get(i));
+		}
+
+		List<ZoneStay> t2Stays = new ArrayList<ZoneStay>();
+		t2Stays.add(new ZoneStay("1", "Zone 1", TimeUtils.parseTime("06.05.2023", "02:05:42.59"),
+				TimeUtils.parseTime("06.05.2023", "11:29:46.41")));
+		t2Stays.add(new ZoneStay("1", "Zone 2", TimeUtils.parseTime("06.05.2023", "11:29:46.41"),
+				TimeUtils.parseTime("06.06.2023", "12:31:00.53")));
+		t2Stays.add(new ZoneStay("1", "Zone 1", TimeUtils.parseTime("06.06.2023", "12:31:00.53"),
+				TimeUtils.parseTime("06.06.2023", "13:55:41.55")));
+		t2Stays.add(new ZoneStay("1", "Zone 2", TimeUtils.parseTime("06.06.2023", "13:55:41.55"),
+				TimeUtils.parseTime("07.06.2023", "03:12:51.00")));
+		t2Stays.add(new ZoneStay("1", "Zone 1", TimeUtils.parseTime("07.06.2023", "03:12:51.00"),
+				TimeUtils.parseTime("07.06.2023", "05:08:38.63")));
+
+		assertEquals("The number of zone stays for turkey \"1\" didn't match.", t2Stays.size(),
+				staysData.get("1").size());
+
+		for (int i = 0; i < t2Stays.size(); i++) {
 			assertEquals("A zone stay for turkey \"1\" didn't match.", t2Stays.get(i), staysData.get("1").get(i));
 		}
 	}
