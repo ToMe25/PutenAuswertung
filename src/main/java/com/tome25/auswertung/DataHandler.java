@@ -94,6 +94,8 @@ public class DataHandler {
 		List<String> dates = new ArrayList<String>();
 		short[] tokenOrder = new short[] { 0, 1, 2, 3 };
 		Calendar startTime = null;
+		Calendar prevStartTime = null;
+		Calendar lastDts = null;
 
 		read_loop: while (!antennaStream.done()) {
 			AntennaRecord record = CSVHandler.readAntennaRecord(antennaStream, tokenOrder);
@@ -180,36 +182,45 @@ public class DataHandler {
 
 			if (downtimeStart != null && downtimeEnd != null) {
 				if (TimeUtils.isSameDay(downtimeStart, downtimeEnd)) {
-					if (!args.fillDays) {
-						for (TurkeyInfo ti : turkeyInfos.values()) {
-							if (!ti.getCurrentCal().before(startTime)) {
-								// FIXME what if lastDate isn't the same day as downtimeStart?
-								ti.changeZone(ti.getCurrentZone(), downtimeStart);
-								ti.printCurrentStay(false);
-							}
-							ti.setStartTime(downtimeEnd);
-						}
-					}
-					startTime = downtimeEnd;
-				} else {
-					if (!args.fillDays) {
-						for (TurkeyInfo ti : turkeyInfos.values()) {
-							if (!ti.getCurrentCal().before(startTime)) {
-								// FIXME what if lastDate isn't the same day as downtimeStart?
-								ti.changeZone(ti.getCurrentZone(), downtimeStart);
-								ti.endDay(lastDate);
-								ti.printCurrentStay(false);
-							}
-							ti.setStartTime(downtimeEnd);
-						}
-					} else {
-						for (TurkeyInfo ti : turkeyInfos.values()) {
-							ti.endDay(ti.getCurrentDate());
+					for (TurkeyInfo ti : turkeyInfos.values()) {
+						if (!args.fillDays && !ti.getCurrentCal().before(startTime)) {
+							// FIXME what if lastDate isn't the same day as downtimeStart?
+							ti.changeZone(ti.getCurrentZone(), downtimeStart);
 							ti.printCurrentStay(false);
+						} else if (args.fillDays && ti.hasDay(record.date) && !ti.getCurrentCal().before(startTime)) {
+							ti.changeZone(ti.getCurrentZone(), downtimeStart);
+							ti.printCurrentStay(false);
+						}
+						ti.setStartTime(downtimeEnd);
+					}
+					prevStartTime = startTime;
+					startTime = downtimeEnd;
+					lastDts = downtimeStart;
+				} else {
+					for (TurkeyInfo ti : turkeyInfos.values()) {
+						if (!args.fillDays && !ti.getCurrentCal().before(startTime)) {
+							// FIXME what if lastDate isn't the same day as downtimeStart?
+							ti.changeZone(ti.getCurrentZone(), downtimeStart);
+							ti.endDay(lastDate);
+							ti.printCurrentStay(false);
+						} else if (args.fillDays) {
+							if (downtimes != null && ti.hasDay(lastDate) && !ti.getCurrentCal().before(startTime)) {
+								ti.changeZone(ti.getCurrentZone(), downtimeStart);
+								ti.endDay(downtimeStart, false);
+							} else if (downtimes == null) {
+								ti.endDay(ti.getCurrentCal());
+							}
+							ti.printCurrentStay(false);
+						}
+
+						if (!args.fillDays || downtimes != null) {
+							ti.setStartTime(downtimeEnd);
 						}
 					}
 
+					prevStartTime = startTime;
 					startTime = downtimeEnd;
+					lastDts = downtimeStart;
 
 					for (String date : dates) {
 						printDayOutput(totalsStream, turkeyInfos.values(), date, zones.getKey().keySet(), true);
@@ -236,7 +247,7 @@ public class DataHandler {
 						if (!args.fillDays && !ti.getCurrentCal().before(startTime)) {
 							ti.endDay(lastDate);
 						} else if (args.fillDays && ti.hasDay(lastDate)) {
-							ti.endDay(lastDate);
+							ti.endDay(ti.getCurrentCal(), downtimes == null || !ti.getCurrentCal().before(startTime));
 						}
 					}
 
@@ -271,7 +282,15 @@ public class DataHandler {
 				}
 			} else {
 				try {
-					turkeyInfos.get(turkeyId).changeZone(zones.getValue().get(record.antenna), record.cal);
+					TurkeyInfo ti = turkeyInfos.get(turkeyId);
+					if (args.fillDays && lastDts != null && TimeUtils.isNextDay(ti.getCurrentCal(), lastDts)
+							&& TimeUtils.isSameDay(lastDts, record.cal) && prevStartTime != null
+							&& !ti.getCurrentCal().before(prevStartTime)) {
+						ti.setStartTime(prevStartTime);
+						ti.changeZone(ti.getCurrentZone(), lastDts);
+						ti.setStartTime(startTime);
+					}
+					ti.changeZone(zones.getValue().get(record.antenna), record.cal);
 				} catch (IllegalArgumentException e) {
 					LogHandler.err_println("New antenna record at " + record.date + ' ' + record.time + " for turkey \""
 							+ turkeyId + "\" is before the last one for the same turkey. Skipping line.");

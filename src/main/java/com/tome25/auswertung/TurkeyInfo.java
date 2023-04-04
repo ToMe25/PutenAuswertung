@@ -208,11 +208,12 @@ public class TurkeyInfo {
 		}
 
 		if (currentTime != null && !TimeUtils.isSameDay(currentTime, time)) {
-			endDay(time);
+			endDay(time, args.fillDays && (startTime == null || currentTime.after(startTime)));
 		}
 
 		boolean newRec = !TimeUtils.isSameDay(currentTime, time) && !TimeUtils.isNextDay(currentTime, time);
-		if (startTime != null && currentTime != null) {
+		if (startTime != null && currentTime != null
+				&& (!args.fillDays || TimeUtils.isSameDay(startTime, time) || TimeUtils.isNextDay(startTime, time))) {
 			newRec = startTime.after(currentTime);
 		}
 
@@ -221,10 +222,10 @@ public class TurkeyInfo {
 		if (currentZone != null && !newRec) {
 			long recordTime = timeMs - currentTime.getTimeInMillis();
 			addTime(time, currentZone, recordTime);
-		} else if (args.fillDays) {
+		} else if (args.fillDays && !(startTime != null && TimeUtils.isSameDay(startTime, time))) {
 			addTime(time, newZone, TimeUtils.getMsOfDay(time));
 
-			if (newRec && stayOut != null && lastStay.getExitCal() == null) {
+			if (newRec && stayOut != null && !lastStay.hasLeft()) {
 				Calendar lastCal = new GregorianCalendar();
 				lastCal.setTimeInMillis(lastZoneChange);
 				// FIXME probably produces 1ms offsets
@@ -255,13 +256,18 @@ public class TurkeyInfo {
 			long recordTime = timeMs - startTime.getTimeInMillis();
 			addTime(time, newZone, recordTime);
 
-			if (newRec && stayOut != null && lastStay.getExitCal() == null) {
-				if (lastZoneChange < currentTime.getTimeInMillis()) {
+			if (newRec && stayOut != null && !lastStay.hasLeft()) {
+				if (!currentZone.equals(lastStay.getZone()) && lastZoneChange < currentTime.getTimeInMillis()) {
 					Calendar lastCal = new GregorianCalendar();
 					lastCal.setTimeInMillis(lastZoneChange);
-					lastStay.setExitTime(lastCal);
-					stayOut.println(CSVHandler.stayToCsvLine(lastStay));
+					if (!lastCal.equals(lastStay.getEntryCal())) {
+						lastStay.setExitTime(lastCal);
+						stayOut.println(CSVHandler.stayToCsvLine(lastStay));
+					}
 					lastStay = new ZoneStay(id, currentZone, lastCal, currentTime);
+					stayOut.println(CSVHandler.stayToCsvLine(lastStay));
+				} else if (currentTime.after(lastStay.getEntryCal())) {
+					lastStay.setExitTime(currentTime);
 					stayOut.println(CSVHandler.stayToCsvLine(lastStay));
 				}
 			}
@@ -284,7 +290,7 @@ public class TurkeyInfo {
 					yesterday.add(Calendar.DATE, -1);
 					String yesterdayDate = TimeUtils.encodeDate(yesterday);
 
-					// FIXME not sure how to handle if it isn't
+					// FIXME not sure how to handle if it doesn't
 					if (dayZoneChanges.containsKey(yesterdayDate)) {
 						dayZoneChanges.put(yesterdayDate, Math.max(0, dayZoneChanges.get(yesterdayDate) - 1));
 						todayZoneChanges++;
@@ -453,16 +459,34 @@ public class TurkeyInfo {
 	 * @throws NullPointerException if {@code time} is {@code null}.
 	 */
 	public void endDay(Calendar time) throws NullPointerException {
+		endDay(time, args.fillDays);
+	}
+
+	/**
+	 * If {@code changeTime} is {@code true}: Sets the time to the end of the
+	 * current day, and adds the remaining time of the day to the current zone.<br/>
+	 * <br/>
+	 * If the given day is not the current day: Initializes some things for the new
+	 * day.
+	 * 
+	 * @param time       The date to which this object should be set.
+	 * @param changeTime Whether a zone change at the end of the current day should
+	 *                   be simulated.
+	 * @throws NullPointerException if {@code time} is {@code null}.
+	 */
+	public void endDay(Calendar time, boolean changeTime) throws NullPointerException {
 		Objects.requireNonNull(time, "Time can't be null.");
 
-		if (args.fillDays) {
+		if (changeTime) {
 			// FIXME probably produces 1ms offsets
 			Calendar cal = (Calendar) currentTime.clone();
 			cal.set(Calendar.HOUR_OF_DAY, 23);
 			cal.set(Calendar.MINUTE, 59);
 			cal.set(Calendar.SECOND, 59);
 			cal.set(Calendar.MILLISECOND, 999);
-			changeZone(currentZone, cal);
+			if (cal.after(currentTime)) {
+				changeZone(currentZone, cal);
+			}
 		}
 
 		if (!TimeUtils.isSameDay(currentTime, time)) {

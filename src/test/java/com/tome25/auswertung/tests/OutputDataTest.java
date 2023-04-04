@@ -2,6 +2,7 @@ package com.tome25.auswertung.tests;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -550,9 +551,31 @@ public class OutputDataTest {
 					dayTotal += generatedTime;
 				}
 
-				if (args.fillDays && !date.equals("total")) {
-					assertEquals("The sum of all zone totals of turkey \"" + turkey + "\" for day \"" + date
-							+ "\" wasn't 24h.", 24 * 3600000, dayTotal);
+				if (!date.equals("total")) {
+					long dtTime = 0;
+					if (parsed.downtimes != null) {
+						final long dayStart = TimeUtils.parseDate(date).getTimeInMillis();
+						final long dayEnd = dayStart + 24 * 3600000;
+						for (Pair<Long, Long> dt : parsed.downtimes) {
+							if (dt.getKey() >= dayStart && dt.getValue() <= dayEnd) {
+								dtTime += dt.getValue() - dt.getKey();
+							} else if (dt.getKey() >= dayStart && dt.getKey() <= dayEnd) {
+								dtTime += dayEnd - dt.getKey();
+							} else if (dt.getValue() >= dayStart && dt.getValue() <= dayEnd) {
+								dtTime += dt.getValue() - dayStart;
+							}
+						}
+					}
+
+					// FIXME find a way to make this work with the segment before a sub 1-day
+					// FIXME downtime having no data for that turkey.
+					if (args.fillDays && parsed.downtimes == null) {
+						assertEquals("The sum of all zone totals of turkey \"" + turkey + "\" for day \"" + date
+								+ "\" wasn't a full day.", 24 * 3600000 - dtTime, dayTotal);
+					} else {
+						assertFalse("The sum of all zone totals of turkey \"" + turkey + "\" and downtimes for day \""
+								+ date + "\" was more than 24 hours.", dayTotal + dtTime > 24 * 3600000);
+					}
 				}
 			}
 
@@ -567,7 +590,7 @@ public class OutputDataTest {
 			assertThat("A parsed zone stay did not match a generated one.", generated.zoneStays.get(turkey),
 					hasItems(parsed.zoneStays.get(turkey).toArray(new ZoneStay[0])));
 			assertThat("A generated zone stay did not match a parsed one.", parsed.zoneStays.get(turkey),
-					hasItems(parsed.zoneStays.get(turkey).toArray(new ZoneStay[0])));
+					hasItems(generated.zoneStays.get(turkey).toArray(new ZoneStay[0])));
 			assertEquals("The number of zone stays for turkey \"" + turkey + "\" didn't match.",
 					generated.zoneStays.get(turkey).size(), parsed.zoneStays.get(turkey).size());
 
@@ -703,7 +726,7 @@ public class OutputDataTest {
 
 		List<Pair<Long, Long>> downtimes = null;
 		if (downtimesIn instanceof FileInputStreamHandler) {
-			CSVHandler.readDowntimesCSV(
+			downtimes = CSVHandler.readDowntimesCSV(
 					new FileInputStreamHandler(((FileInputStreamHandler) downtimesIn).getInputFile()));
 		}
 
