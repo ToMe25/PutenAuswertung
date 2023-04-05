@@ -404,4 +404,32 @@ public class ReadDowntimesCSVTest {
 		assertEquals("The fifth downtime from a csv with overlapping downtimes didn't match.",
 				new Pair<Long, Long>(1682976510870l, 1683084462880l), downtimes.get(4));
 	}
+
+	/**
+	 * A test parsing a downtimes csv with commas as both element separator, as well
+	 * as decimal separator.
+	 * 
+	 * @throws IOException If reading, writing, or creating the temp file fails.
+	 */
+	@Test
+	public void readDecimalComma() throws IOException {
+		Pair<FileInputStreamHandler, PrintStream> tempFile = tempFolder.newTempInputFile("overlapping_downtimes.csv");
+		FileInputStreamHandler fiin = tempFile.getKey();
+		PrintStream pout = tempFile.getValue();
+
+		pout.println("07.05.2023,03:05:54,12,08.05.2023,17:12:00,99");
+		pout.println("08.05.2023,18:00:01,75,08.05.2023,19:52:23.12");
+		pout.println("09.05.2023,12:17:37.01,09.05.2023,16:12:55,70");
+
+		List<Pair<Long, Long>> downtimes = CSVHandler.readDowntimesCSV(fiin);
+		assertNotNull("Parsing a downtimes csv with overlapping downtimes returned null.", downtimes);
+		assertEquals("The number of downtimes parsed from a csv with overlapping downtimes didn't match.", 3,
+				downtimes.size());
+		assertEquals("The first downtime from a csv with decimal comma didn't match.",
+				new Pair<Long, Long>(1683428754120l, 1683565920990l), downtimes.get(0));
+		assertEquals("The second downtime from a csv with decimal comma didn't match.",
+				new Pair<Long, Long>(1683568801750l, 1683575543120l), downtimes.get(1));
+		assertEquals("The third downtime from a csv with decimal comma didn't match.",
+				new Pair<Long, Long>(1683634657010l, 1683648775700l), downtimes.get(2));
+	}
 }

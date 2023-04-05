@@ -8,16 +8,29 @@ import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.TimeZone;
 
+import org.junit.After;
 import org.junit.Test;
 
 import com.tome25.auswertung.utils.TimeUtils;
+
+import net.jcip.annotations.NotThreadSafe;
 
 /**
  * The class containing the unit tests related to {@link TimeUtils}.
  * 
  * @author theodor
  */
+@NotThreadSafe
 public class TimeUtilsTest {
+
+	/**
+	 * Resets the decimal separator after every test, to make sure test failures
+	 * don't affect other tests.
+	 */
+	@After
+	public void resetDecimalSeparator() {
+		TimeUtils.setDecimalSeparator('.');
+	}
 
 	/**
 	 * Tests converting a basic time in milliseconds to a string.<br/>
@@ -89,6 +102,18 @@ public class TimeUtilsTest {
 				TimeUtils.parseTime("1:2:3.4"));// 3.4 seconds are 3 seconds and 400 ms
 		assertEquals("Parsing a time with single digit components with padding didn't match.", 3723400,
 				TimeUtils.parseTime("01:02:03.40"));
+	}
+
+	/**
+	 * Test parsing a time string with a comma as a decimal separator.
+	 */
+	@Test
+	public void commaStringToMs() {
+		assertEquals(
+				"Parsing the string representation of a time with a decimal comma didn't return the expected result.",
+				18871230, TimeUtils.parseTime("05:14:31,23"));
+		assertEquals("Parsing a single digit time string with a decimal comma didn't match.", 18243200,
+				TimeUtils.parseTime("5:4:3,2"));
 	}
 
 	/**
@@ -364,6 +389,28 @@ public class TimeUtilsTest {
 	public void msToDateString() {
 		assertEquals("The from a timestamp generate date string didn't match.", "21.05.2022",
 				TimeUtils.encodeDate(1653095713000l));
+	}
+
+	/**
+	 * Test setting the decimal separator used by {@link TimeUtils}.
+	 */
+	@Test
+	public void setDecimalSeparator() {
+		assertEquals("The initial decimal separator didn't match.", '.', TimeUtils.getDecimalSeparator());
+		TimeUtils.setDecimalSeparator(',');
+		assertEquals("The decimal separator after setting it didn't match.", ',', TimeUtils.getDecimalSeparator());
+		assertEquals("The string encoded with a comma separator didn't match.", "17:45:04,73",
+				TimeUtils.encodeTime(63904730));
+	}
+
+	/**
+	 * A test attempting to set the decimal separator to an invalid value.
+	 * 
+	 * @throws IllegalArgumentException Always.
+	 */
+	@Test(expected = IllegalArgumentException.class)
+	public void setInvalidDecimalSeparator() throws IllegalArgumentException {
+		TimeUtils.setDecimalSeparator('0');
 	}
 
 	/**

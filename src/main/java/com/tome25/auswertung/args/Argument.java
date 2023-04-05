@@ -11,6 +11,7 @@ import java.util.jar.Manifest;
 
 import com.tome25.auswertung.log.LogHandler;
 import com.tome25.auswertung.utils.FileUtils;
+import com.tome25.auswertung.utils.TimeUtils;
 
 /**
  * The enum specifying the possible arguments that this program can handle.
@@ -290,6 +291,7 @@ public enum Argument {
 		@Override
 		public void onReceived(Arguments inst, String val) throws IllegalArgumentException {
 			inst.overrideOutput = true;
+			LogHandler.out_println("Override argument received, overriding output files without confirmation.", true);
 		}
 
 		@Override
@@ -298,6 +300,28 @@ public enum Argument {
 					"If this argument is not specified the program will ask what to do if output files already exist.",
 					"If the program is run non-interactively(in a script or by double-clicking) it overrides output files even without this argument." };
 		}
+	},
+	DECIMALSEPARATOR('c', ArgumentValue.REQUIRED, "SEPARATOR", (short) 5, "decimal-separator", "decimalseparator",
+			"decimal-comma", "decimalcomma", "comma") {
+		@Override
+		public void onReceived(Arguments inst, String val) throws IllegalArgumentException {
+			if (val.length() != 1) {
+				throw new IllegalArgumentException("Decimal Separator has to be a single character.");
+			}
+
+			TimeUtils.setDecimalSeparator(val.charAt(0));
+			inst.decimal_separator = val.charAt(0);
+			LogHandler.out_println("Using decimal separator '" + inst.decimal_separator + "' for output.");
+		}
+
+		@Override
+		public String[] getDescription() {
+			return new String[] {
+					"Sets the character to be used to separate the seconds from houndredth in output times.",
+					"This character will be used in both the output files, and log messages.",
+					"Can only be either a dot or a comma." };
+		}
+
 	};
 
 	/**

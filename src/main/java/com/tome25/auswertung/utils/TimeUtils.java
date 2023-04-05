@@ -20,6 +20,12 @@ public class TimeUtils {
 	public static final short YEAR_MIN_DIGITS = 4;
 
 	/**
+	 * The character to be used to separate the integer part from the fractional
+	 * part of a decimal.
+	 */
+	private static volatile char decimal_separator = '.';
+
+	/**
 	 * Converts the given time in the format "HH:MM:SS.2" to time of day in
 	 * milliseconds.<br/>
 	 * Hours do not have to be two digits, they can be 1+.<br/>
@@ -47,7 +53,7 @@ public class TimeUtils {
 		result += Integer.parseInt(split[0]) * 3600000l; // milliseconds per hour
 		result += Integer.parseInt(split[1]) * 60000l; // milliseconds per minute
 
-		String seconds_split[] = split[2].split("\\.");
+		String seconds_split[] = split[2].split("[\\.,]");
 
 		if (seconds_split.length == 0 || seconds_split.length > 2) {
 			throw new IllegalArgumentException("Time string \"" + time + "\" does not match format.");
@@ -204,7 +210,7 @@ public class TimeUtils {
 			result.append('0');
 		}
 		result.append(seconds);
-		result.append('.');
+		result.append(getDecimalSeparator());
 
 		if (hundredths < 10) {
 			result.append('0');
@@ -337,5 +343,32 @@ public class TimeUtils {
 		return first.get(Calendar.YEAR) == second.get(Calendar.YEAR)
 				&& first.get(Calendar.MONTH) == second.get(Calendar.MONTH)
 				&& first.get(Calendar.DATE) == second.get(Calendar.DATE);
+	}
+
+	/**
+	 * Sets the character used by {@link #encodeTime} to separate the integer part
+	 * and the fractional part of seconds.
+	 * 
+	 * @param separator The new decimal separator to use.
+	 * @throws IllegalArgumentException If {@code separator} is neither a dot nor a
+	 *                                  comma.
+	 * @see #getDecimalSeparator()
+	 */
+	public static synchronized void setDecimalSeparator(char separator) throws IllegalArgumentException {
+		if (separator != '.' && separator != ',') {
+			throw new IllegalArgumentException("Can only use dot or comma as decimal separator.");
+		}
+		decimal_separator = separator;
+	}
+
+	/**
+	 * Gets the character used by {@link #encodeTime} to separate the integer part
+	 * and the fractional part of the seconds.
+	 * 
+	 * @return The decimal separator used by this class.
+	 * @see #setDecimalSeparator(char)
+	 */
+	public static synchronized char getDecimalSeparator() {
+		return decimal_separator;
 	}
 }

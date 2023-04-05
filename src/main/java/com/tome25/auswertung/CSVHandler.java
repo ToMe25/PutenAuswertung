@@ -334,12 +334,25 @@ public class CSVHandler {
 
 				tokens = SEPARATOR_REGEX.split(line.trim());
 				if (tokens.length != 4) {
-					LogHandler.err_println(
-							"Input line \"" + line + "\" did not contain exactly four tokens. Skipping line.");
-					LogHandler.print_debug_info(
-							"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
-							input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", tokens), line);
-					continue;
+					if (tokens.length == 6 && line.contains(",") && !tokens[1].contains(".")
+							&& StringUtils.isInteger(tokens[2]) && !tokens[4].contains(".")
+							&& StringUtils.isInteger(tokens[5])) {
+						tokens = new String[] { tokens[0], tokens[1] + ',' + tokens[2], tokens[3],
+								tokens[4] + ',' + tokens[5] };
+					} else if (tokens.length == 5 && line.contains(",") && !tokens[1].contains(".")
+							&& StringUtils.isInteger(tokens[2])) {
+						tokens = new String[] { tokens[0], tokens[1] + ',' + tokens[2], tokens[3], tokens[4] };
+					} else if (tokens.length == 5 && line.contains(",") && !tokens[3].contains(".")
+							&& StringUtils.isInteger(tokens[4])) {
+						tokens = new String[] { tokens[0], tokens[1], tokens[2], tokens[3] + ',' + tokens[4] };
+					} else {
+						LogHandler.err_println(
+								"Input line \"" + line + "\" did not contain exactly four tokens. Skipping line.");
+						LogHandler.print_debug_info(
+								"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
+								input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", tokens), line);
+						continue;
+					}
 				}
 
 				if (tokens[0].toLowerCase().startsWith("start")) {
@@ -487,12 +500,28 @@ public class CSVHandler {
 
 				tokens = SEPARATOR_REGEX.split(line.trim());
 				if (tokens.length != 4) {
-					LogHandler.err_println(
-							"Input line \"" + line + "\" did not contain exactly four tokens. Skipping line.");
-					LogHandler.print_debug_info(
-							"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
-							input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", tokens), line);
-					continue;
+					// Assume this is a time with a comma decimal separator
+					if (tokens.length == 5 && line.contains(",") && !tokens[tokenOrder[2]].contains(".")
+							&& StringUtils.isInteger(tokens[tokenOrder[2] + 1])) {
+						String oldTokens[] = tokens;
+						tokens = new String[4];
+						for (int i = 0; i < 4; i++) {
+							if (i < tokenOrder[2]) {
+								tokens[i] = oldTokens[i];
+							} else if (i == tokenOrder[2]) {
+								tokens[i] = oldTokens[i] + ',' + oldTokens[i + 1];
+							} else {
+								tokens[i] = oldTokens[i + 1];
+							}
+						}
+					} else {
+						LogHandler.err_println(
+								"Input line \"" + line + "\" did not contain exactly four tokens. Skipping line.");
+						LogHandler.print_debug_info(
+								"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
+								input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", tokens), line);
+						continue;
+					}
 				}
 
 				if (tokens[0].equalsIgnoreCase("transponder") || tokens[1].equalsIgnoreCase("transponder")

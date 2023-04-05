@@ -24,13 +24,13 @@ public class LogHandler {
 	/**
 	 * Whether debug information should be written to the system output.
 	 */
-	private static boolean debug = true;
+	private static volatile boolean debug = true;
 
 	/**
 	 * Whether anything, besides potentially the output data, should be written to
 	 * the error and output stream.
 	 */
-	private static boolean silent = false;
+	private static volatile boolean silent = false;
 
 	/**
 	 * The {@link PrintStream} to write system output messages to.<br/>
@@ -401,7 +401,7 @@ public class LogHandler {
 	 * 
 	 * @return {@code true} if debug messages are printed.
 	 */
-	public static boolean isDebug() {
+	public static synchronized boolean isDebug() {
 		return debug;
 	}
 
@@ -410,7 +410,7 @@ public class LogHandler {
 	 * 
 	 * @param debug Whether the log handler should print debug messages.
 	 */
-	public static void setDebug(boolean debug) {
+	public static synchronized void setDebug(boolean debug) {
 		LogHandler.debug = debug;
 	}
 
@@ -419,7 +419,7 @@ public class LogHandler {
 	 * 
 	 * @return {@code true} if the log handler does not print anything at all.
 	 */
-	public static boolean isSilent() {
+	public static synchronized boolean isSilent() {
 		return silent;
 	}
 
@@ -429,7 +429,7 @@ public class LogHandler {
 	 * 
 	 * @param silent Whether the log handler should be silent.
 	 */
-	public static void setSilent(boolean silent) {
+	public static synchronized void setSilent(boolean silent) {
 		LogHandler.silent = silent;
 	}
 

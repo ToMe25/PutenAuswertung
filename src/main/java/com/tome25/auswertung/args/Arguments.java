@@ -13,6 +13,7 @@ import com.tome25.auswertung.log.LogHandler;
 import com.tome25.auswertung.utils.MapUtils;
 import com.tome25.auswertung.utils.Pair;
 import com.tome25.auswertung.utils.StringUtils;
+import com.tome25.auswertung.utils.TimeUtils;
 
 /**
  * The class handling the parsing of command line arguments.<br/>
@@ -30,7 +31,7 @@ public class Arguments {
 	/**
 	 * Whether an argument disabling all system output was given.
 	 */
-	public boolean silent = false;
+	public boolean silent = LogHandler.isSilent();
 
 	/**
 	 * The specified antenna data input file.<br/>
@@ -110,6 +111,12 @@ public class Arguments {
 	 * Set to 0 to disable minimum completely.
 	 */
 	public int minTime = 300;
+
+	/**
+	 * The character to be used to separate the integer part from the fractional
+	 * part of output decimals.
+	 */
+	public char decimal_separator = TimeUtils.getDecimalSeparator();
 
 	/**
 	 * A set containing all the specified arguments, in case one argument needs to

@@ -422,10 +422,28 @@ public class ReadAntennaRecordTest {
 
 		AntennaRecord rec = CSVHandler.readAntennaRecord(fiin, null);
 		AntennaRecord refRec = new AntennaRecord("Trans2", "01.01.2022", "17:41:32.59", "Ant2");
-		assertEquals("Reading a line with invalid transponder didn't correctly read the next line.", refRec, rec);
+		assertEquals("Reading a line with invalid antenna didn't correctly read the next line.", refRec, rec);
 		errorLog.checkLine(
 				"Input line \"Trans1;01.01.2022;05:53:17.71;Antenna #1\" contains invalid antenna id \"Antenna #1\". Skipping line.",
 				0);
+	}
+
+	/**
+	 * Tests reading a data file with a time with a decimal comma.
+	 * 
+	 * @throws IOException If reading/writing/creating the temp file fails.
+	 */
+	@Test
+	public void readDecimalComma() throws IOException {
+		Pair<FileInputStreamHandler, PrintStream> tempFile = tempFolder.newTempInputFile("decimal_comma_data.csv");
+		PrintStream pout = tempFile.getValue();
+		FileInputStreamHandler fiin = tempFile.getKey();
+
+		pout.println("Trans2;02.02.2022;05:12:00,17;Ant1");
+
+		AntennaRecord rec = CSVHandler.readAntennaRecord(fiin, null);
+		AntennaRecord refRec = new AntennaRecord("Trans2", "02.02.2022", "05:12:00,17", "Ant1");
+		assertEquals("Reading a line with a decimal comma didn't correctly read the line.", refRec, rec);
 	}
 
 }
