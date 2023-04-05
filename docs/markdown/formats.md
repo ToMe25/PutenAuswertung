@@ -32,7 +32,10 @@ Diese werden als Teil des Wertes verarbeitet, und die Zeile die diese enthält w
 Zeiten können sowohl Uhrzeiten als auch Zeiten zwischen zwei Ereignissen sein.  
 Dieses Format ist sowohl das Format das für Uhrzeiten in [Input-Dateien] verwendet werden muss, als auch das Format der Uhrzeiten und Aufenthaltszeiten in Ergebnissen.
 
-Das Grundlegende Format ist `Stunden:Minuten:Sekunden.Hundertstel`.
+Das Grundlegende Format ist `Stunden:Minuten:Sekunden.Hundertstel`.  
+An stelle des Punktes vor den Hundertsteln kann auch ein Komma verwendet werden.  
+In [Input-Dateien] kann beides, auch gemischt, einfach verwendet werden.  
+Ob ein Punkt oder ein Komma in Ergebnissen verwendet werden soll kann mittels dem `-c` [Argument](arugments.md) bestimmt werden.
 
 In Ergebnissen ist Stunden zwei oder mehr Ziffern.  
 Ergebnis-Zeiten haben immer zwei stellen für Minuten, Sekunden und Hundertstel.

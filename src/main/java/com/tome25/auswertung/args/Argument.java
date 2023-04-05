@@ -287,7 +287,7 @@ public enum Argument {
 					"The value is in seconds.", "The default is 300 seconds, aka 5 minutes." };
 		}
 	},
-	OVERRIDE('O', (short) 5, "override", "override-outputs") {
+	OVERRIDE('O', (short) 5, "override", "override-outputs", "overrideoutputs") {
 		@Override
 		public void onReceived(Arguments inst, String val) throws IllegalArgumentException {
 			inst.overrideOutput = true;
@@ -317,7 +317,7 @@ public enum Argument {
 		@Override
 		public String[] getDescription() {
 			return new String[] {
-					"Sets the character to be used to separate the seconds from houndredth in output times.",
+					"Sets the character to be used to separate the seconds from hundredth in output times.",
 					"This character will be used in both the output files, and log messages.",
 					"Can only be either a dot or a comma." };
 		}
