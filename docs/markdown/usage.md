@@ -26,12 +26,13 @@ Die Logdatei kann mittels eines [Arguments](arguments.md) geändert werden.
 Diese Datei könnte zum Beispiel so aussehen wenn es keine Probleme gab:
 
 ```
-Reading antenna records input file "/path/to/AntennenDaten.csv".
-Reading turkey mappings input file "/path/to/Puten.csv".
-Reading zone mappings input file "/path/to/Bereiche.csv".
+Using antenna records input file "/path/to/AntennenDaten.csv".
+Using turkey mappings input file "/path/to/Puten.csv".
+Using zone mappings input file "/path/to/Bereiche.csv".
+Using downtimes input file "/path/to/Ausfälle.csv".
 Writing totals to file "/path/to/PutenAuswertungZeiten.csv".
 Writing zone stays to file "/path/to/PutenAuswertungAufenthalte.csv".
-Valid header line "Transponder	Date	Time	Antenne" found. Reordering columns.
+Valid header line "Transponder  Date    Time    Antenna" found. Reordering columns.
 Finished data analysis. Exiting.
 ```
 

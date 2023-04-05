@@ -21,6 +21,7 @@ Es erzeugt Aufenthaltszeiten pro Bereich pro Tag, und eine Liste der Aufenthalte
     * [Allgemein](input.md#allgemein)
     * [Puten.csv](input.md#puten-csv)
     * [Bereiche.csv](input.md#bereiche-csv)
+    * [Ausfälle.csv](input.md#ausfaelle-csv)
     * [AntennenDaten.csv](input.md#antennendaten-csv)
  * [Ergebnis-Dateien](output.md)
     * [Allgemein](output.md#allgemein)

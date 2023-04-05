@@ -1,5 +1,5 @@
 # Formate
-Diese Datei enthält Informationen über die Input-/Ergebnis- Formate die dieses Programm verwendet.  
+Diese Datei enthält Informationen über die Input-/Ergebnis-Formate die dieses Programm verwendet.  
 Diese Formate sind häufige Formate, da allerdings verschieden Versionen des selben Formats existieren können, ist hier eine Erklärung der Version die dieses Programm verwendet.
 
 Erklärte Formate:
@@ -7,10 +7,10 @@ Erklärte Formate:
  * [Zeit(Uhrzeit/vergangene Zeit)](#zeit)
  * [Datum](#datum)
 
-[Input-Dateien]: input.md
+[Input-Dateien]: input.md "Input Dateien"
 
 ## CSV
-Dieses Programm verwendet eine [CSV](https://de.wikipedia.org/wiki/CSV_(Dateiformat)) Version für seine Input-/Ergebnis- Dateien.  
+Dieses Programm verwendet eine [CSV](https://de.wikipedia.org/wiki/CSV_(Dateiformat)) Version für seine [Input-][Input-Dateien]/[Ergebnis-](output.md)Dateien.  
 Das CSV Format das dieses Programm verwendet ist darauf ausgelegt die notwendigen Funktionen für dieses Programm zu haben, und möglichst universell einlesbar zu sein, nicht auf eine offizielle Spezifikation.
 
 **Achtung:** Dieses CSV Format ist **NICHT VOLLSTÄNDIG [RFC 4180](https://www.rfc-editor.org/rfc/rfc4180) KONFORM**.
@@ -19,7 +19,7 @@ In [Ergebnis-Dateien](output.md) verwendet dieses Programm Semikolons als Werte-
 In [Input-Dateien] für dieses Programm können Kommas, Semikolons und Tabulatoren als Trennzeichen verwendet werden.  
 Diese können in der selben Datei gemischt sein.
 
-In Ergebnissen dieses Programms haben alle Zeilen die selbe Anzahl Spalten.  
+In [Ergebniss-Dateien](output.md) dieses Programms haben alle Zeilen die selbe Anzahl Spalten.  
 In [Input-Dateien] können Zeilen in der selben Datei verschieden viele Spalten haben.
 
 [Ergebnis-Dateien](output.md) haben eine Titel-Zeile mit Namen für alle Spalten.  
@@ -46,6 +46,7 @@ Wenn Hundertstel nur eine Stelle hat wird diese als Zehntel verarbeitet.
 Das Datumsformat dieses Programms, sowohl für [Input-Dateien], als auch für Ergebnisse ist `DD.MM.YYYY`.
 
 In Ergebnissen hat das Format immer zwei Ziffern für Tag und Monat, und vier\* für das Jahr.  
-In Inputs kann ein Datum ein oder zwei Ziffern für den Tag und Monat, und ein oder mehr für das Jahr haben.
+In Inputs kann ein Datum ein oder zwei Ziffern für den Tag und Monat, und ein oder mehr für das Jahr haben.  
+Wenn Daten im Input weniger als vier Ziffern für das Jahr haben, werden Nullen vor diesen in die Ergebnisse geschrieben.
 
 \* Außer wenn Inputs ein Datum mit mehr als vier Ziffern enthalten.
