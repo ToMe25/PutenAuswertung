@@ -23,13 +23,13 @@ public interface IInputStreamHandler extends Closeable {
 
 	/**
 	 * Checks whether more content is available on this input.<br/>
-	 * While {@link done} only checks whether there will be input eventually this
+	 * While {@link #done} only checks whether there will be input eventually this
 	 * checks whether input is available right now.<br/>
 	 * {@code false} if this stream handler has already been closed.
 	 * 
 	 * @return {@code true} if more input is available right now, without blocking.
 	 * 
-	 * @see done
+	 * @see #done
 	 */
 	boolean available();
 
@@ -49,7 +49,7 @@ public interface IInputStreamHandler extends Closeable {
 	 * @return {@code true} If more content is to be read from this input, now or
 	 *         later.
 	 * 
-	 * @see available
+	 * @see #available
 	 */
 	boolean done();
 

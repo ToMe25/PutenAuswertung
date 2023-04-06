@@ -270,8 +270,8 @@ public class LogHandler {
 	 * Prints the given debug information to the system error stream.<br/>
 	 * Prints an error message if given an empty or {@code null} info arg.
 	 * 
-	 * @param info     The debug info string to print. Can contain formatting args.
-	 * @param info_arg The formatting args from info.
+	 * @param info      The debug info string to print. Can contain formatting args.
+	 * @param info_args The formatting args from info.
 	 */
 	public static void print_debug_info(String info, Object... info_args) {
 		if (!debug || silent) {

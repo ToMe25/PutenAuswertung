@@ -223,8 +223,8 @@ public class TimeUtils {
 	/**
 	 * Converts the given time to a date string of the format "DD.MM.YYYY".
 	 * 
-	 * @param date Time time to encode.
-	 * @return The date string representing the given date.
+	 * @param time The time to encode.
+	 * @return The date string representing the given time.
 	 * @throws NullPointerException If {@code date} is {@code null}.
 	 */
 	public static String encodeDate(long time) {
