@@ -111,14 +111,14 @@ public class DataHandler {
 			} else {
 				LogHandler.err_println(String.format(
 						"Received antenna record for unknown transponder id \"%s\" on day %s at %s. Considering it a separate turkey.",
-						record.transponder, record.date, TimeUtils.encodeTime(record.tod)));
+						record.transponder, record.date, record.getTime()));
 				LogHandler.print_debug_info("Antenna Record: %s, Arguments: %s", record, args);
 			}
 
 			if (!zones.getValue().containsKey(record.antenna)) {
 				LogHandler.err_println(String.format(
 						"Received antenna record from unknown antenna id \"%s\" on day %s at %s. Skipping line.",
-						record.antenna, record.date, TimeUtils.encodeTime(record.tod)));
+						record.antenna, record.date, record.getTime()));
 				LogHandler.print_debug_info("Antenna Record: %s, Arguments: %s", record, args);
 				continue;
 			}
@@ -146,7 +146,7 @@ public class DataHandler {
 						downtimeEnd.setTimeInMillis(downtime.getValue());
 						LogHandler.err_println(String.format(
 								"Received antenna record for time %s %s, which is during the downtime from %s %s to %s %s. Skipping record.",
-								record.date, TimeUtils.encodeTime(record.tod), TimeUtils.encodeDate(downtimeStart),
+								record.date, record.getTime(), TimeUtils.encodeDate(downtimeStart),
 								TimeUtils.encodeTime(TimeUtils.getMsOfDay(downtimeStart)),
 								TimeUtils.encodeDate(downtimeEnd),
 								TimeUtils.encodeTime(TimeUtils.getMsOfDay(downtimeEnd))));
@@ -170,7 +170,7 @@ public class DataHandler {
 				downtimeEnd = record.cal;
 				LogHandler.out_println(String.format("Skipping days from %s %s to %s %s because there are no records.",
 						TimeUtils.encodeDate(downtimeStart), TimeUtils.encodeTime(TimeUtils.getMsOfDay(downtimeStart)),
-						record.date, TimeUtils.encodeTime(record.tod)), true);
+						record.date, record.getTime()), true);
 				LogHandler.print_debug_info("Antenna Record: %s, Last Date: %s, Last Time: %s, Arguments: %s", record,
 						TimeUtils.encodeDate(downtimeStart), TimeUtils.encodeTime(TimeUtils.getMsOfDay(downtimeStart)),
 						args);
@@ -238,7 +238,7 @@ public class DataHandler {
 								+ " is on a day before the previous date " + lastDate + ". Skipping line.");
 						LogHandler.print_debug_info(
 								"New Antenna Record: %s, New Time of Day: %s, New Date: %s, Current Time of Day: %s, Current Date: %s, Arguments: %s",
-								record, record.time, record.date,
+								record, record.getTime(), record.date,
 								TimeUtils.encodeTime(TimeUtils.getMsOfDay(lastTimes.get(record.date))), lastDate, args);
 						continue;
 					}
@@ -274,8 +274,7 @@ public class DataHandler {
 					LogHandler.print_exception(e, "create a new TurkeyInfo",
 							"Turkey id: %s, Transponders: [%s], Stays Stream Handler: %s, Initial Zone: %s, Initial Date: %s, Initial Time: %s, Start Date: %s, Start Time %s, Arguments: %s",
 							turkeyId, StringUtils.collectionToString(", ", turkeys.getKey().get(turkeyId)), staysStream,
-							zones.getValue().get(record.antenna), TimeUtils.encodeDate(record.cal),
-							TimeUtils.encodeTime(TimeUtils.getMsOfDay(record.cal)),
+							zones.getValue().get(record.antenna), record.date, record.getTime(),
 							startTime == null ? "null" : TimeUtils.encodeDate(startTime),
 							startTime == null ? "null" : TimeUtils.encodeTime(TimeUtils.getMsOfDay(startTime)), args);
 					break;
@@ -292,11 +291,12 @@ public class DataHandler {
 					}
 					ti.changeZone(zones.getValue().get(record.antenna), record.cal);
 				} catch (IllegalArgumentException e) {
-					LogHandler.err_println("New antenna record at " + record.date + ' ' + record.time + " for turkey \""
-							+ turkeyId + "\" is before the last one for the same turkey. Skipping line.");
+					LogHandler.err_println(
+							"New antenna record at " + record.date + ' ' + record.getTime() + " for turkey \""
+									+ turkeyId + "\" is before the last one for the same turkey. Skipping line.");
 					LogHandler.print_exception(e, "update turkey zone",
 							"New Antenna Record: %s, New Time of Day: %s, New Date: %s, Current Time of Day: %s, Current Date: %s, Turkey: %s, Arguments: %s",
-							record, record.time, record.date,
+							record, record.getClass(), record.date,
 							TimeUtils.encodeTime(turkeyInfos.get(turkeyId).getCurrentTime()),
 							turkeyInfos.get(turkeyId).getCurrentDate(), turkeyId, args);
 				}

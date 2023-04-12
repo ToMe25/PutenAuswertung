@@ -595,10 +595,10 @@ public class TurkeyInfo {
 	 * Returns the time the turkey spent in each zone on the given day.<br/>
 	 * Returns {@code null} if there are no records for the given date.<br/>
 	 * Might not return the full day in one of these two cases:<br/>
-	 * 1. fillDay is set to true but this object is not yet set to the next
-	 * day.<br/>
-	 * 2. fillDay is not set and this object did not receive a record of the next
-	 * day.
+	 * 1. {@link Arguments#fillDays args.fillDays} is set to true but this object is
+	 * not yet set to the next day.<br/>
+	 * 2. {@link Arguments#fillDays args.fillDays} is not set and this object did
+	 * not receive a record of the next day.
 	 * 
 	 * @param date The date for which to get the zone times.
 	 * @return The zone times for the given date.

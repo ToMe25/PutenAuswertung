@@ -25,7 +25,6 @@ public class AntennaRecordTest {
 		AntennaRecord record = new AntennaRecord("Transponder", "02.11.2045", "15:04:22.87", "Antenna 1");
 		assertEquals("The transponder id didn't match.", "Transponder", record.transponder);
 		assertEquals("The date string didn't match.", "02.11.2045", record.date);
-		assertEquals("The time string didn't match.", "15:04:22.87", record.time);
 		assertEquals("The antenna id didn't match.", "Antenna 1", record.antenna);
 		assertEquals("The time of day didn't match.", 54262870, record.tod);
 		GregorianCalendar cal = new GregorianCalendar(2045, Calendar.NOVEMBER, 2, 15, 04, 22);
@@ -122,7 +121,6 @@ public class AntennaRecordTest {
 		AntennaRecord record = new AntennaRecord("Trans #2", "1.5.21", "00:05:43.00", "Ant #3");
 		assertEquals("The transponder id didn't match.", "Trans #2", record.transponder);
 		assertEquals("The date string didn't match.", "01.05.0021", record.date);
-		assertEquals("The time string didn't match.", "00:05:43.00", record.time);
 		assertEquals("The antenna id didn't match.", "Ant #3", record.antenna);
 		assertEquals("The time of day didn't match.", 343000, record.tod);
 		GregorianCalendar cal = new GregorianCalendar(21, Calendar.MAY, 1, 0, 05, 43);

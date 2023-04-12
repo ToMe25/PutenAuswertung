@@ -25,12 +25,6 @@ public class AntennaRecord {
 	public final String date;
 
 	/**
-	 * The time of day at which this record was recorded.<br/>
-	 * The format is HH:MM:SS.2, aka up to hundredths of a second.
-	 */
-	public final String time;
-
-	/**
 	 * The numerical id of the antenna in string form.
 	 */
 	public final String antenna;
@@ -107,7 +101,6 @@ public class AntennaRecord {
 		if (time.isEmpty()) {
 			throw new IllegalArgumentException("The given time string was empty.");
 		}
-		this.time = time;
 
 		if (antenna.isEmpty()) {
 			throw new IllegalArgumentException("The given antenna id was empty.");
@@ -125,17 +118,41 @@ public class AntennaRecord {
 		cal = TimeUtils.parseTime(date, tod);
 	}
 
+	/**
+	 * Returns the string representation of the time of day at which this record was
+	 * created.<br/>
+	 * The format is HH:MM:SS.2, aka up to hundredths of a second.
+	 * 
+	 * @return The newly created time string.
+	 */
+	public String getTime() {
+		return TimeUtils.encodeTime(tod);
+	}
+
 	@Override
 	public String toString() {
-		return String.format(
-				"AntennaRecord[transponder=%s, date=%s, time=%s, antenna=%s, time of day=%d, cal date=%s, cal time=%s]",
-				transponder, date, time, antenna, tod, TimeUtils.encodeDate(cal),
-				TimeUtils.encodeTime(TimeUtils.getMsOfDay(cal)));
+		StringBuilder builder = new StringBuilder();
+		builder.append("AntennaRecord[transponder=");
+		builder.append(transponder);
+		builder.append(", antenna=");
+		builder.append(antenna);
+		builder.append(", date=");
+		builder.append(date);
+		builder.append(", tod ms=");
+		builder.append(tod);
+		builder.append(", tod=");
+		builder.append(getTime());
+		builder.append(", cal date=");
+		builder.append(TimeUtils.encodeDate(cal));
+		builder.append(", cal time=");
+		builder.append(TimeUtils.encodeTime(TimeUtils.getMsOfDay(cal)));
+		builder.append("]");
+		return builder.toString();
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(antenna, date, time, tod, transponder, cal);
+		return Objects.hash(antenna, date, tod, transponder, cal);
 	}
 
 	@Override
@@ -165,7 +182,7 @@ public class AntennaRecord {
 			return false;
 		}
 
-		if (!Objects.equals(time, other.time) || tod != other.tod) {
+		if (tod != other.tod) {
 			return false;
 		}
 
