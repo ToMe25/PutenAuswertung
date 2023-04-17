@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import com.tome25.auswertung.PutenAuswertung;
 import com.tome25.auswertung.args.Argument.ArgumentValue;
@@ -116,7 +117,7 @@ public class Arguments {
 	 * The character to be used to separate the integer part from the fractional
 	 * part of output decimals.
 	 */
-	public char decimal_separator = TimeUtils.getDecimalSeparator();
+	public char decimalSeparator = TimeUtils.getDecimalSeparator();
 
 	/**
 	 * A set containing all the specified arguments, in case one argument needs to
@@ -511,7 +512,9 @@ public class Arguments {
 		builder.append(fillDays);
 		builder.append(", minTime=");
 		builder.append(minTime);
-		builder.append(", arguments=");
+		builder.append(", decimalSeparator='");
+		builder.append(decimalSeparator);
+		builder.append("', arguments=");
 		builder.append(arguments);
 		builder.append("]");
 		return builder.toString();
@@ -523,13 +526,52 @@ public class Arguments {
 	 * 
 	 * @return A newly created empty {@link Arguments} instance.
 	 */
-	public static Arguments empty() {
+	public static synchronized Arguments empty() {
 		boolean oldDbg = LogHandler.isDebug();
 		boolean oldSlt = LogHandler.isSilent();
 		Arguments args = new Arguments();
 		LogHandler.setDebug(oldDbg);
 		LogHandler.setSilent(oldSlt);
 		return args;
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(antennaDataInput, arguments, debug, decimalSeparator, downtimesInput, fillDays,
+				hasDowntimesInput, logFile, minTime, overrideOutput, silent, staysOutput, totalsOutput, turkeysInput,
+				zonesInput);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+
+		if (getClass() != obj.getClass()) {
+			return false;
+		}
+
+		Arguments other = (Arguments) obj;
+		if (!Objects.equals(arguments, other.arguments)) {
+			return false;
+		}
+
+		if (debug != other.debug || silent != other.silent) {
+			return false;
+		}
+
+		if (hasDowntimesInput != other.hasDowntimesInput || overrideOutput != other.overrideOutput
+				|| fillDays != other.fillDays || minTime != other.minTime
+				|| decimalSeparator != other.decimalSeparator) {
+			return false;
+		}
+
+		return Objects.equals(antennaDataInput, other.antennaDataInput)
+				&& Objects.equals(downtimesInput, other.downtimesInput) && Objects.equals(logFile, other.logFile)
+				&& Objects.equals(staysOutput, other.staysOutput) && Objects.equals(totalsOutput, other.totalsOutput)
+				&& Objects.equals(turkeysInput, other.turkeysInput) && Objects.equals(zonesInput, other.zonesInput);
 	}
 
 }

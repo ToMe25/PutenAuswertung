@@ -4,21 +4,19 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.TreeMap;
 
 import com.tome25.auswertung.args.Arguments;
 import com.tome25.auswertung.log.LogHandler;
 import com.tome25.auswertung.stream.FileInputStreamHandler;
 import com.tome25.auswertung.stream.IInputStreamHandler;
 import com.tome25.auswertung.stream.IOutputStreamHandler;
-import com.tome25.auswertung.utils.IntOrStringComparator;
 import com.tome25.auswertung.utils.Pair;
-import com.tome25.auswertung.utils.StringUtils;
 import com.tome25.auswertung.utils.TimeUtils;
 
 /**
@@ -59,13 +57,13 @@ public class DataHandler {
 		Objects.requireNonNull(staysStream, "The stream handler to write stays to can't be null.");
 		Objects.requireNonNull(args, "The arguments to use cannot be null.");
 
-		Pair<Map<String, List<String>>, Map<String, String>> zones = CSVHandler.readMappingCSV(zonesStream);
+		Pair<Map<String, List<String>>, Map<String, String>> zones = CSVHandler.readZonesCSV(zonesStream);
 		if (zones == null) {
 			LogHandler.err_println("Failed to read zone mappings from the input file.");
 			LogHandler.print_debug_info("Zones Input Stream Handler: %s", zonesStream);
 		}
 
-		Pair<Map<String, List<String>>, Map<String, String>> turkeys = CSVHandler.readMappingCSV(turkeyStream);
+		Pair<Map<String, TurkeyInfo>, Map<String, String>> turkeys = CSVHandler.readTurkeyCSV(turkeyStream, args);
 		if (turkeys == null) {
 			LogHandler.err_println("Failed to read turkey mappings from the input file.");
 			LogHandler.print_debug_info("Turkey Input Stream Handler: %s", turkeyStream);
@@ -88,7 +86,13 @@ public class DataHandler {
 					"Started reading file " + ((FileInputStreamHandler) antennaStream).getInputFile().getPath(), true);
 		}
 
-		Map<String, TurkeyInfo> turkeyInfos = new TreeMap<>(IntOrStringComparator.INSTANCE);
+		Map<String, TurkeyInfo> turkeyInfos = turkeys.getKey();
+		if (staysStream != null) {
+			for (TurkeyInfo turkey : turkeyInfos.values()) {
+				turkey.setStayOut(staysStream);
+			}
+		}
+
 		String lastDate = null;
 		Map<String, Calendar> lastTimes = new HashMap<String, Calendar>();
 		List<String> dates = new ArrayList<String>();
@@ -178,16 +182,22 @@ public class DataHandler {
 
 			if (startTime == null) {
 				startTime = record.cal;
+				if (!args.fillDays) {
+					for (TurkeyInfo ti : turkeyInfos.values()) {
+						ti.setStartTime(startTime);
+					}
+				}
 			}
 
 			if (downtimeStart != null && downtimeEnd != null) {
 				if (TimeUtils.isSameDay(downtimeStart, downtimeEnd)) {
 					for (TurkeyInfo ti : turkeyInfos.values()) {
-						if (!args.fillDays && !ti.getCurrentCal().before(startTime)) {
+						if (!args.fillDays && ti.getCurrentCal() != null && !ti.getCurrentCal().before(startTime)) {
 							// FIXME what if lastDate isn't the same day as downtimeStart?
 							ti.changeZone(ti.getCurrentZone(), downtimeStart);
 							ti.printCurrentStay(false);
-						} else if (args.fillDays && ti.hasDay(record.date) && !ti.getCurrentCal().before(startTime)) {
+						} else if (args.fillDays && ti.hasDay(record.date) && ti.getCurrentCal() != null
+								&& !ti.getCurrentCal().before(startTime)) {
 							ti.changeZone(ti.getCurrentZone(), downtimeStart);
 							ti.printCurrentStay(false);
 						}
@@ -198,12 +208,12 @@ public class DataHandler {
 					lastDts = downtimeStart;
 				} else {
 					for (TurkeyInfo ti : turkeyInfos.values()) {
-						if (!args.fillDays && !ti.getCurrentCal().before(startTime)) {
+						if (!args.fillDays && ti.getCurrentCal() != null && !ti.getCurrentCal().before(startTime)) {
 							// FIXME what if lastDate isn't the same day as downtimeStart?
 							ti.changeZone(ti.getCurrentZone(), downtimeStart);
 							ti.endDay(lastDate);
 							ti.printCurrentStay(false);
-						} else if (args.fillDays) {
+						} else if (args.fillDays && ti.getCurrentCal() != null) {
 							if (downtimes != null && ti.hasDay(lastDate) && !ti.getCurrentCal().before(startTime)) {
 								ti.changeZone(ti.getCurrentZone(), downtimeStart);
 								ti.endDay(downtimeStart, false);
@@ -244,7 +254,7 @@ public class DataHandler {
 					}
 
 					for (TurkeyInfo ti : turkeyInfos.values()) {
-						if (!args.fillDays && !ti.getCurrentCal().before(startTime)) {
+						if (!args.fillDays && ti.getCurrentCal() != null && !ti.getCurrentCal().before(startTime)) {
 							ti.endDay(lastDate);
 						} else if (args.fillDays && ti.hasDay(lastDate)) {
 							ti.endDay(ti.getCurrentCal(), downtimes == null || !ti.getCurrentCal().before(startTime));
@@ -265,24 +275,28 @@ public class DataHandler {
 				lastTimes.put(record.date, record.cal);
 			}
 
+			// Only happens if the transponder is unknown.
 			if (!turkeyInfos.containsKey(turkeyId)) {
 				try {
-					turkeyInfos.put(turkeyId, new TurkeyInfo(turkeyId, turkeys.getKey().get(turkeyId), staysStream,
-							zones.getValue().get(record.antenna), record.cal, args.fillDays ? null : startTime, args));
+					LogHandler.out_println("Creating a TurkeyInfo object for unknown id \"" + turkeyId + "\".", true);
+					turkeyInfos.put(turkeyId,
+							new TurkeyInfo(turkeyId, Collections.singletonList(record.transponder), staysStream,
+									zones.getValue().get(record.antenna), record.cal, args.fillDays ? null : startTime,
+									args));
 				} catch (NullPointerException e) {
 					LogHandler.err_println("Creating a new TurkeyInfo object failed. Terminating.");
 					LogHandler.print_exception(e, "create a new TurkeyInfo",
-							"Turkey id: %s, Transponders: [%s], Stays Stream Handler: %s, Initial Zone: %s, Initial Date: %s, Initial Time: %s, Start Date: %s, Start Time %s, Arguments: %s",
-							turkeyId, StringUtils.collectionToString(", ", turkeys.getKey().get(turkeyId)), staysStream,
-							zones.getValue().get(record.antenna), record.date, record.getTime(),
-							startTime == null ? "null" : TimeUtils.encodeDate(startTime),
+							"Turkey id: \"%s\", Transponder: \"%s\", Stays Stream Handler: %s, Initial Zone: \"%s\", Initial Date: %s, Initial Time: %s, Start Date: %s, Start Time %s, Arguments: %s",
+							turkeyId, record.transponder, staysStream, zones.getValue().get(record.antenna),
+							record.date, record.getTime(), startTime == null ? "null" : TimeUtils.encodeDate(startTime),
 							startTime == null ? "null" : TimeUtils.encodeTime(TimeUtils.getMsOfDay(startTime)), args);
 					break;
 				}
 			} else {
 				try {
 					TurkeyInfo ti = turkeyInfos.get(turkeyId);
-					if (args.fillDays && lastDts != null && TimeUtils.isNextDay(ti.getCurrentCal(), lastDts)
+					if (args.fillDays && lastDts != null && ti.getCurrentCal() != null
+							&& TimeUtils.isNextDay(ti.getCurrentCal(), lastDts)
 							&& TimeUtils.isSameDay(lastDts, record.cal) && prevStartTime != null
 							&& !ti.getCurrentCal().before(prevStartTime)) {
 						ti.setStartTime(prevStartTime);

@@ -310,8 +310,8 @@ public enum Argument {
 			}
 
 			TimeUtils.setDecimalSeparator(val.charAt(0));
-			inst.decimal_separator = val.charAt(0);
-			LogHandler.out_println("Using decimal separator '" + inst.decimal_separator + "' for output.");
+			inst.decimalSeparator = val.charAt(0);
+			LogHandler.out_println("Using decimal separator '" + inst.decimalSeparator + "' for output.");
 		}
 
 		@Override

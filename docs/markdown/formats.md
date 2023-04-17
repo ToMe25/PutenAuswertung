@@ -19,7 +19,7 @@ In [Ergebnis-Dateien](output.md) verwendet dieses Programm Semikolons als Werte-
 In [Input-Dateien] für dieses Programm können Kommas, Semikolons und Tabulatoren als Trennzeichen verwendet werden.  
 Diese können in der selben Datei gemischt sein.
 
-In [Ergebniss-Dateien](output.md) dieses Programms haben alle Zeilen die selbe Anzahl Spalten.  
+In [Ergebnis-Dateien](output.md) dieses Programms haben alle Zeilen die selbe Anzahl Spalten.  
 In [Input-Dateien] können Zeilen in der selben Datei verschieden viele Spalten haben.
 
 [Ergebnis-Dateien](output.md) haben eine Titel-Zeile mit Namen für alle Spalten.  

@@ -3,18 +3,24 @@ package com.tome25.auswertung;
 import java.io.EOFException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.tome25.auswertung.args.Arguments;
 import com.tome25.auswertung.log.LogHandler;
 import com.tome25.auswertung.stream.FileInputStreamHandler;
 import com.tome25.auswertung.stream.IInputStreamHandler;
@@ -49,6 +55,17 @@ public class CSVHandler {
 	private static final Pattern ID_REGEX = Pattern.compile("[A-Za-z0-9\\s]+");
 
 	/**
+	 * The {@link Comparator} used to compare downtimes for sorting.<br/>
+	 * Downtimes are sorted by their start time.
+	 */
+	private static final Comparator<Pair<Long, Long>> DOWNTIME_COMPARATOR = new Comparator<Pair<Long, Long>>() {
+		@Override
+		public int compare(Pair<Long, Long> o1, Pair<Long, Long> o2) {
+			return (int) Math.min(Integer.MAX_VALUE, Math.max(Integer.MIN_VALUE, o1.getKey() - o2.getKey()));
+		}
+	};
+
+	/**
 	 * Makes sure the given input stream is non-null and non-empty.<br/>
 	 * Also prints a debug message about starting to read the input file.
 	 * 
@@ -73,6 +90,97 @@ public class CSVHandler {
 	}
 
 	/**
+	 * Splits the given input line into its separate tokens.<br/>
+	 * Attempts to re-join hundredth separated from a time using a comma.
+	 * 
+	 * @param line       The input line to split.
+	 * @param min_tokens The minimum number of tokens expected.
+	 * @param times      The indices of time values.
+	 * @return A string array containing the separate tokens.
+	 * @throws NullPointerException     If {@code line} is {@code null}.
+	 * @throws IllegalArgumentException If {@code line} is empty or contains less
+	 *                                  than {@code min_tokens} tokens.
+	 */
+	private static String[] splitLine(String line, int min_tokens, Collection<Integer> times)
+			throws NullPointerException, IllegalArgumentException {
+		Objects.requireNonNull(line, "The line to split cannot be null.");
+		line = line.trim();
+		if (line.isEmpty()) {
+			throw new IllegalArgumentException("The given line is empty.");
+		}
+
+		if (times == null) {
+			times = new HashSet<Integer>();
+		}
+
+		List<String> tokens = new ArrayList<String>();
+		Matcher match = SEPARATOR_REGEX.matcher(line);
+		int separators = 0;
+		int end = 0;
+		while (match.find()) {
+			separators++;
+			end = match.end();
+		}
+		if (end == line.length()) {
+			separators--;
+		}
+		match.reset();
+
+		if (separators + 1 < min_tokens) {
+			throw new IllegalArgumentException(
+					"The line \"" + line + "\" did not contain at least " + min_tokens + " tokens.");
+		}
+
+		int index = 0;
+		while (match.find()) {
+			String subString = line.substring(index, match.start());
+			if (times.contains(tokens.size()) && !subString.contains(".") && line.charAt(match.start()) == ','
+					&& separators >= min_tokens) {
+				end = match.end();
+				if (match.find()) {
+					if (match.start() - end <= 2) {
+						boolean failed = false;
+						for (int i = end; i < match.start(); i++) {
+							if (!Character.isDigit(line.charAt(i))) {
+								failed = true;
+								break;
+							}
+						}
+
+						if (!failed) {
+							tokens.add(line.substring(index, match.start()));
+							index = match.end();
+							separators--;
+						} else {
+							tokens.add(subString);
+							tokens.add(line.substring(end, match.start()));
+							index = match.end();
+						}
+					} else {
+						tokens.add(subString);
+						tokens.add(line.substring(end, match.start()));
+						index = match.end();
+					}
+				}
+			} else {
+				tokens.add(subString);
+				index = match.end();
+			}
+		}
+
+		if (index < line.length()) {
+			tokens.add(line.substring(index));
+		}
+
+		if (tokens.size() < min_tokens) {
+			throw new IllegalArgumentException(
+					"The line \"" + line + "\" did not contain at least " + min_tokens + " tokens.");
+		}
+
+		return tokens.toArray(new String[tokens.size()]);
+	}
+
+	/**
 	 * Reads the data from the stream handler as a CSV file and converts it to a two
 	 * maps.<br/>
 	 * The format of the first map is
@@ -85,13 +193,13 @@ public class CSVHandler {
 	 *         there was no valid data in the input.
 	 * @throws NullPointerException if input is null.
 	 */
-	public static Pair<Map<String, List<String>>, Map<String, String>> readMappingCSV(IInputStreamHandler input)
+	public static Pair<Map<String, List<String>>, Map<String, String>> readZonesCSV(IInputStreamHandler input)
 			throws NullPointerException {
 		try {
 			checkInput(input);
 		} catch (EOFException e) {
 			LogHandler.err_println("Input file did not contain any data.");
-			LogHandler.print_exception(e, "read a mappings file", "Input Stream Handler: %s", input);
+			LogHandler.print_exception(e, "read a zones file", "Input Stream Handler: %s", input);
 			return null;
 		}
 
@@ -107,29 +215,31 @@ public class CSVHandler {
 					continue;
 				}
 
-				String tokens[] = SEPARATOR_REGEX.split(line.trim());
-				if (tokens.length < 2) {
+				String tokens[] = null;
+				try {
+					tokens = splitLine(line, 2, null);
+				} catch (IllegalArgumentException e) {
 					LogHandler.err_println(
 							"Input line \"" + line + "\" did not contain at least two tokens. Skipping line.");
-					LogHandler.print_debug_info(
-							"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
-							input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", tokens), line);
+					LogHandler.print_exception(e, "split input line",
+							"Input Stream Handler: %s, Separator Chars: %s, Line: \"%s\"", input.toString(),
+							SEPARATOR_REGEX.toString(), line);
 					continue;
 				}
 
-				if (tokens[0].equalsIgnoreCase("bereich") || tokens[0].equalsIgnoreCase("tier")) {
+				if (tokens[0].equalsIgnoreCase("bereich")) {
 					LogHandler.out_println("Read header line \"" + line + "\".", true);
 					continue;
 				}
 
 				if (first.containsKey(tokens[0])) {
-					LogHandler.err_println("Found duplicate entity id \"" + tokens[0] + "\". Skipping line.");
+					LogHandler.err_println("Found duplicate zone id \"" + tokens[0] + "\". Skipping line.");
 					LogHandler.print_debug_info(
 							"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
 							input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", tokens), line);
 					continue;
 				} else if (!ID_REGEX.matcher(tokens[0]).matches()) {
-					LogHandler.err_println("Found invalid entity id \"" + tokens[0] + "\". Skipping line.");
+					LogHandler.err_println("Found invalid zone id \"" + tokens[0] + "\". Skipping line.");
 					LogHandler.print_debug_info(
 							"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
 							input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", tokens), line);
@@ -140,7 +250,7 @@ public class CSVHandler {
 				for (int i = 1; i < tokens.length; i++) {
 					if (second.containsKey(tokens[i])) {
 						LogHandler.err_println("Found duplicate id \"" + tokens[i]
-								+ "\". Ignoring the occurrence for entity \"" + tokens[0] + "\".");
+								+ "\". Ignoring the occurrence for zone \"" + tokens[0] + "\".");
 						LogHandler.print_debug_info(
 								"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
 								input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", tokens), line);
@@ -150,7 +260,8 @@ public class CSVHandler {
 								"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
 								input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", tokens), line);
 					} else if (!ID_REGEX.matcher(tokens[i]).matches()) {
-						LogHandler.err_println("Found invalid id \"" + tokens[i] + "\". Skipping.");
+						LogHandler.err_println(
+								"Found invalid id \"" + tokens[i] + "\" for zone \"" + tokens[0] + "\". Skipping.");
 						LogHandler.print_debug_info(
 								"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
 								input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", tokens), line);
@@ -173,11 +284,11 @@ public class CSVHandler {
 				last_failed = false;
 			} catch (IOException e) {
 				if (last_failed) {
-					LogHandler.err_println("Reading an input line failed. Returning current mappings set.");
+					LogHandler.err_println("Reading an input line failed. Returning current zones set.");
 				} else {
 					LogHandler.err_println("Reading an input line failed. Trying another one.");
 				}
-				LogHandler.print_exception(e, "read a mappings file", "Input Stream Handler: %s, Separator Chars: %s",
+				LogHandler.print_exception(e, "read a zones file", "Input Stream Handler: %s, Separator Chars: %s",
 						input.toString(), SEPARATOR_REGEX);
 
 				if (last_failed) {
@@ -194,60 +305,11 @@ public class CSVHandler {
 		}
 
 		if (first.isEmpty() && second.isEmpty()) {
-			LogHandler.err_println("Input file did not contain any valid data.");
+			LogHandler.err_println("Zones input file did not contain any valid data.");
 			LogHandler.print_debug_info("Input Stream Handler: %s", input);
 			return null;
 		} else {
 			return new Pair<>(first, second);
-		}
-	}
-
-	/**
-	 * Writes the given list of {@link TurkeyInfo} objects to a turkeys input file.
-	 * 
-	 * @param turkeys The {@link TurkeyInfo} objects to write to a file.
-	 * @param output  The output stream handler to write the file to.
-	 * @throws NullPointerException If one of the parameters if {@code null}.
-	 */
-	public static void writeTurkeyCSV(List<TurkeyInfo> turkeys, IOutputStreamHandler output)
-			throws NullPointerException {
-		Objects.requireNonNull(turkeys, "The list of turkeys to write can't be null.");
-		Objects.requireNonNull(output, "The output stream handler to write to can't be null.");
-
-		int numTransponders = 0;
-		for (TurkeyInfo ti : turkeys) {
-			if (ti.getTransponders().size() > numTransponders) {
-				numTransponders = ti.getTransponders().size();
-			}
-		}
-
-		StringBuilder headers = new StringBuilder();
-		headers.append("Tier;");
-		for (int i = 1; i <= numTransponders; i++) {
-			headers.append("Transponder ");
-			headers.append(i);
-			if (i < numTransponders) {
-				headers.append(DEFAULT_SEPARATOR);
-			}
-		}
-
-		output.println(headers.toString());
-
-		for (TurkeyInfo ti : turkeys) {
-			StringBuilder sb = new StringBuilder();
-			sb.append(ti.getId());
-
-			List<String> trans = ti.getTransponders();
-			for (int i = 0; i < trans.size(); i++) {
-				sb.append(DEFAULT_SEPARATOR);
-				sb.append(trans.get(i));
-			}
-
-			for (int i = numTransponders - trans.size(); i > 0; i--) {
-				sb.append(DEFAULT_SEPARATOR);
-			}
-
-			output.println(sb.toString());
 		}
 	}
 
@@ -299,6 +361,209 @@ public class CSVHandler {
 	}
 
 	/**
+	 * Reads the data from the stream handler as a turkeys CSV file and converts it
+	 * to a two maps.<br/>
+	 * A {@link TurkeyInfo} object is created for every line.<br/>
+	 * The format of the first map is {@code turkey id -> turkey info}.<br/>
+	 * The second map format is {@code transponder id -> turkey id} for each column
+	 * except the first one.
+	 * 
+	 * @param input The stream handler containing the data to be read.
+	 * @param args  The {@link Arguments} instance to use for the {@link TurkeyInfo}
+	 *              objects.
+	 * @return A pair containing the two maps described above. Or {@code null} if
+	 *         there was no valid data in the input.
+	 * @throws NullPointerException if {@code input} or {@code args} is
+	 *                              {@code null}.
+	 */
+	public static Pair<Map<String, TurkeyInfo>, Map<String, String>> readTurkeyCSV(IInputStreamHandler input,
+			final Arguments args) throws NullPointerException {
+		Objects.requireNonNull(input, "The to read cannot be null.");
+		Objects.requireNonNull(args, "The arguments to use to create TurkeyInfos cannot be null.");
+		try {
+			checkInput(input);
+		} catch (EOFException e) {
+			LogHandler.err_println("Input file did not contain any data.");
+			LogHandler.print_exception(e, "read a turkey file", "Input Stream Handler: %s", input);
+			return null;
+		}
+
+		Map<String, TurkeyInfo> first = new TreeMap<String, TurkeyInfo>(IntOrStringComparator.INSTANCE);
+		Map<String, String> second = new HashMap<>();
+		boolean last_failed = false;
+		while (!input.done()) {
+			try {
+				String line = input.readline();
+				if (line == null || line.trim().isEmpty()) {
+					LogHandler.err_println("Read an empty line from Input Stream Handler : " + input.toString(), true);
+					LogHandler.print_debug_info("Input Stream Handler: %s, Line: \"%s\"", input.toString(), line);
+					continue;
+				}
+
+				String tokens[] = null;
+				try {
+					tokens = splitLine(line, 5, null);
+				} catch (IllegalArgumentException e) {
+					LogHandler.err_println(
+							"Input line \"" + line + "\" did not contain at least five tokens. Skipping line.");
+					LogHandler.print_exception(e, "split input line",
+							"Input Stream Handler: %s, Separator Chars: %s, Line: \"%s\"", input.toString(),
+							SEPARATOR_REGEX.toString(), line);
+					continue;
+				}
+
+				if (tokens[0].equalsIgnoreCase("tier")) {
+					LogHandler.out_println("Read header line \"" + line + "\".", true);
+					continue;
+				}
+
+				if (first.containsKey(tokens[0])) {
+					LogHandler.err_println("Found duplicate turkey id \"" + tokens[0] + "\". Skipping line.");
+					LogHandler.print_debug_info(
+							"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
+							input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", tokens), line);
+					continue;
+				} else if (!ID_REGEX.matcher(tokens[0]).matches()) {
+					LogHandler.err_println("Found invalid turkey id \"" + tokens[0] + "\". Skipping line.");
+					LogHandler.print_debug_info(
+							"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
+							input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", tokens), line);
+					continue;
+				}
+
+				if (!tokens[1].isEmpty() && !ID_REGEX.matcher(tokens[1]).matches()) {
+					LogHandler.err_println("Found invalid start zone id \"" + tokens[1] + "\" for turkey \"" + tokens[0]
+							+ "\". Skipping line.");
+					LogHandler.print_debug_info(
+							"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
+							input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", tokens), line);
+					continue;
+				}
+
+				List<String> list = new ArrayList<>();
+				for (int i = 4; i < tokens.length; i++) {
+					if (second.containsKey(tokens[i])) {
+						LogHandler.err_println("Found duplicate id \"" + tokens[i]
+								+ "\". Ignoring the occurrence for turkey \"" + tokens[0] + "\".");
+						LogHandler.print_debug_info(
+								"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
+								input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", tokens), line);
+					} else if (tokens[i].isEmpty()) {
+						LogHandler.err_println("Found empty value in line \"" + line + "\". Skipping.", true);
+						LogHandler.print_debug_info(
+								"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
+								input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", tokens), line);
+					} else if (!ID_REGEX.matcher(tokens[i]).matches()) {
+						LogHandler.err_println(
+								"Found invalid id \"" + tokens[i] + "\" for turkey \"" + tokens[0] + "\". Skipping.");
+						LogHandler.print_debug_info(
+								"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
+								input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", tokens), line);
+					} else {
+						list.add(tokens[i]);
+						second.put(tokens[i], tokens[0]);
+					}
+				}
+
+				if (list.isEmpty()) {
+					LogHandler.err_println(
+							"Input line \"" + line + "\" did not contain at least one valid value. Skipping line.");
+					LogHandler.print_debug_info(
+							"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
+							input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", tokens), line);
+					continue;
+				}
+
+				first.put(tokens[0], new TurkeyInfo(tokens[0], list, null, tokens[1].isEmpty() ? null : tokens[1], null,
+						null, args));
+				last_failed = false;
+			} catch (IOException e) {
+				if (last_failed) {
+					LogHandler.err_println("Reading an input line failed. Returning current turkey set.");
+				} else {
+					LogHandler.err_println("Reading an input line failed. Trying another one.");
+				}
+				LogHandler.print_exception(e, "read a turkey file", "Input Stream Handler: %s, Separator Chars: %s",
+						input.toString(), SEPARATOR_REGEX);
+
+				if (last_failed) {
+					break;
+				} else {
+					last_failed = true;
+				}
+			}
+		}
+
+		if (input instanceof FileInputStreamHandler) {// TODO convert to some kind of generic getInputName
+			LogHandler.out_println("Finished reading file " + ((FileInputStreamHandler) input).getInputFile().getPath(),
+					true);
+		}
+
+		if (first.isEmpty() && second.isEmpty()) {
+			LogHandler.err_println("Turkey input file did not contain any valid data.");
+			LogHandler.print_debug_info("Input Stream Handler: %s", input);
+			return null;
+		} else {
+			return new Pair<>(first, second);
+		}
+	}
+
+	/**
+	 * Writes the given list of {@link TurkeyInfo} objects to a turkeys input
+	 * file.<br/>
+	 * Writs the current zone of the {@link TurkeyInfo} as its start zone.
+	 * 
+	 * @param turkeys The {@link TurkeyInfo} objects to write to a file.
+	 * @param output  The output stream handler to write the file to.
+	 * @throws NullPointerException If one of the parameters if {@code null}.
+	 */
+	public static void writeTurkeyCSV(List<TurkeyInfo> turkeys, IOutputStreamHandler output)
+			throws NullPointerException {
+		Objects.requireNonNull(turkeys, "The list of turkeys to write can't be null.");
+		Objects.requireNonNull(output, "The output stream handler to write to can't be null.");
+
+		int numTransponders = 0;
+		for (TurkeyInfo ti : turkeys) {
+			if (ti.getTransponders().size() > numTransponders) {
+				numTransponders = ti.getTransponders().size();
+			}
+		}
+
+		StringBuilder headers = new StringBuilder();
+		headers.append("Tier;Startbereich;Endzeit;Enddatum");
+		for (int i = 1; i <= numTransponders; i++) {
+			headers.append(DEFAULT_SEPARATOR);
+			headers.append("Transponder ");
+			headers.append(i);
+		}
+
+		output.println(headers.toString());
+
+		for (TurkeyInfo ti : turkeys) {
+			StringBuilder sb = new StringBuilder();
+			sb.append(ti.getId());
+			sb.append(DEFAULT_SEPARATOR);
+			if (ti.getCurrentZone() != null) {
+				sb.append(ti.getCurrentZone());
+			}
+			sb.append(DEFAULT_SEPARATOR);
+			sb.append(DEFAULT_SEPARATOR);
+
+			List<String> trans = ti.getTransponders();
+			for (int i = 0; i < trans.size(); i++) {
+				sb.append(DEFAULT_SEPARATOR);
+				sb.append(trans.get(i));
+			}
+
+			for (int i = numTransponders - trans.size(); i > 0; i--) {
+				sb.append(DEFAULT_SEPARATOR);
+			}
+
+			output.println(sb.toString());
+		}
+	}
+
+	/**
 	 * Parses a downtimes csv file.<br/>
 	 * Creates a pair with the start and end time of each downtime and sorts them by
 	 * start time.<br/>
@@ -332,27 +597,24 @@ public class CSVHandler {
 					continue;
 				}
 
-				tokens = SEPARATOR_REGEX.split(line.trim());
+				try {
+					tokens = splitLine(line, 4, Arrays.asList(1, 3));
+				} catch (IllegalArgumentException e) {
+					LogHandler.err_println(
+							"Input line \"" + line + "\" did not contain exactly four tokens. Skipping line.");
+					LogHandler.print_exception(e, "split input line",
+							"Input Stream Handler: %s, Separator Chars: %s, Line: \"%s\"", input.toString(),
+							SEPARATOR_REGEX.toString(), line);
+					continue;
+				}
+
 				if (tokens.length != 4) {
-					if (tokens.length == 6 && line.contains(",") && !tokens[1].contains(".")
-							&& StringUtils.isInteger(tokens[2]) && !tokens[4].contains(".")
-							&& StringUtils.isInteger(tokens[5])) {
-						tokens = new String[] { tokens[0], tokens[1] + ',' + tokens[2], tokens[3],
-								tokens[4] + ',' + tokens[5] };
-					} else if (tokens.length == 5 && line.contains(",") && !tokens[1].contains(".")
-							&& StringUtils.isInteger(tokens[2])) {
-						tokens = new String[] { tokens[0], tokens[1] + ',' + tokens[2], tokens[3], tokens[4] };
-					} else if (tokens.length == 5 && line.contains(",") && !tokens[3].contains(".")
-							&& StringUtils.isInteger(tokens[4])) {
-						tokens = new String[] { tokens[0], tokens[1], tokens[2], tokens[3] + ',' + tokens[4] };
-					} else {
-						LogHandler.err_println(
-								"Input line \"" + line + "\" did not contain exactly four tokens. Skipping line.");
-						LogHandler.print_debug_info(
-								"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
-								input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", tokens), line);
-						continue;
-					}
+					LogHandler.err_println(
+							"Input line \"" + line + "\" did not contain exactly four tokens. Skipping line.");
+					LogHandler.print_debug_info(
+							"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
+							input.toString(), SEPARATOR_REGEX.toString(), StringUtils.join(", ", tokens), line);
+					continue;
 				}
 
 				if (tokens[0].toLowerCase().startsWith("start")) {
@@ -427,12 +689,7 @@ public class CSVHandler {
 		}
 
 		// Due to merging there can never be two pairs with the same key.
-		Collections.sort(downtimes, new Comparator<Pair<Long, Long>>() {
-			@Override
-			public int compare(Pair<Long, Long> o1, Pair<Long, Long> o2) {
-				return (int) Math.min(Integer.MAX_VALUE, Math.max(Integer.MIN_VALUE, o1.getKey() - o2.getKey()));
-			}
-		});
+		Collections.sort(downtimes, DOWNTIME_COMPARATOR);
 
 		if (downtimes.isEmpty()) {
 			LogHandler.err_println("Input file did not contain any valid data.");
@@ -498,30 +755,24 @@ public class CSVHandler {
 					continue;
 				}
 
-				tokens = SEPARATOR_REGEX.split(line.trim());
+				try {
+					tokens = splitLine(line, 4, Collections.singleton((int) tokenOrder[2]));
+				} catch (IllegalArgumentException e) {
+					LogHandler.err_println(
+							"Input line \"" + line + "\" did not contain exactly four tokens. Skipping line.");
+					LogHandler.print_exception(e, "split input line",
+							"Input Stream Handler: %s, Spearator Chars: %s, Line: \"%s\"", input.toString(),
+							SEPARATOR_REGEX.toString(), line);
+					continue;
+				}
+
 				if (tokens.length != 4) {
-					// Assume this is a time with a comma decimal separator
-					if (tokens.length == 5 && line.contains(",") && !tokens[tokenOrder[2]].contains(".")
-							&& StringUtils.isInteger(tokens[tokenOrder[2] + 1])) {
-						String oldTokens[] = tokens;
-						tokens = new String[4];
-						for (int i = 0; i < 4; i++) {
-							if (i < tokenOrder[2]) {
-								tokens[i] = oldTokens[i];
-							} else if (i == tokenOrder[2]) {
-								tokens[i] = oldTokens[i] + ',' + oldTokens[i + 1];
-							} else {
-								tokens[i] = oldTokens[i + 1];
-							}
-						}
-					} else {
-						LogHandler.err_println(
-								"Input line \"" + line + "\" did not contain exactly four tokens. Skipping line.");
-						LogHandler.print_debug_info(
-								"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
-								input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", tokens), line);
-						continue;
-					}
+					LogHandler.err_println(
+							"Input line \"" + line + "\" did not contain exactly four tokens. Skipping line.");
+					LogHandler.print_debug_info(
+							"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
+							input.toString(), SEPARATOR_REGEX.toString(), StringUtils.join(", ", tokens), line);
+					continue;
 				}
 
 				if (tokens[0].equalsIgnoreCase("transponder") || tokens[1].equalsIgnoreCase("transponder")
@@ -601,7 +852,7 @@ public class CSVHandler {
 				break;
 			} catch (IOException e) {
 				if (last_failed) {
-					LogHandler.err_println("Reading an input line failed. Returning current mappings set.");
+					LogHandler.err_println("Reading an input line failed. Stopping.");
 				} else {
 					LogHandler.err_println("Reading an input line failed. Trying another one.");
 				}
@@ -762,13 +1013,18 @@ public class CSVHandler {
 					continue;
 				}
 
-				tokens = SEPARATOR_REGEX.split(line.trim());
-				if (tokens.length < 4) {
+				try {
+					Set<Integer> times = new HashSet<Integer>();
+					for (int i = 2; i < headers.length; i++) {
+						times.add(i);
+					}
+					tokens = splitLine(line, 4, times);
+				} catch (IllegalArgumentException e) {
 					LogHandler.err_println(
 							"Input line \"" + line + "\" did not contain at least four tokens. Skipping line.");
-					LogHandler.print_debug_info(
-							"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
-							input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", tokens), line);
+					LogHandler.print_exception(e, "split input line",
+							"Input Stream Handler: %s, Separator Chars: %s, Line: \"%s\"", input.toString(),
+							SEPARATOR_REGEX, line);
 					continue;
 				}
 
@@ -901,6 +1157,16 @@ public class CSVHandler {
 			LogHandler.err_println("Stays file did not start with a valid header line.");
 			LogHandler.print_debug_info("Input Stream Handler: %s, Separator Chars: %s, Line: \"%s\"", input.toString(),
 					SEPARATOR_REGEX, headerLine);
+			throw new IOException("Invalid input file");
+		}
+
+		String headers[] = SEPARATOR_REGEX.split(headerLine);
+
+		if (headers.length != 7) {
+			LogHandler.err_println("Header line \"" + headerLine + "\" did not contain exactly seven headers.");
+			LogHandler.print_debug_info("Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
+					input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", headers), headerLine);
+			throw new IOException("Invalid input file");
 		}
 
 		Map<String, List<ZoneStay>> stays = new HashMap<String, List<ZoneStay>>();
@@ -915,13 +1181,22 @@ public class CSVHandler {
 					continue;
 				}
 
-				tokens = SEPARATOR_REGEX.split(line.trim());
+				try {
+					tokens = splitLine(line, 7, Arrays.asList(3, 5, 6));
+				} catch (IllegalArgumentException e) {
+					LogHandler.err_println(
+							"Input line \"" + line + "\" did not contain exactly seven tokens. Skipping line.");
+					LogHandler.print_exception(e, "split input line",
+							"Input Stream Handler: %s, Separator Chars: %s, Line: \"%s\"", input.toString(),
+							SEPARATOR_REGEX.toString(), line);
+				}
+
 				if (tokens.length != 7) {
 					LogHandler.err_println(
 							"Input line \"" + line + "\" did not contain exactly seven tokens. Skipping line.");
 					LogHandler.print_debug_info(
 							"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
-							input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", tokens), line);
+							input.toString(), SEPARATOR_REGEX.toString(), StringUtils.join(", ", tokens), line);
 					continue;
 				}
 

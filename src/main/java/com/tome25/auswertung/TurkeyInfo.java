@@ -48,7 +48,7 @@ public class TurkeyInfo {
 	 * The output stream handler to write {@link ZoneStay ZoneStays} to after
 	 * finishing them.
 	 */
-	private final IOutputStreamHandler stayOut;
+	private IOutputStreamHandler stayOut;
 
 	/**
 	 * The time at which records on the next day not immediately following another
@@ -138,8 +138,8 @@ public class TurkeyInfo {
 	 * @throws NullPointerException If {@code id} or {@code stayOut} is
 	 *                              {@code null}.
 	 */
-	public TurkeyInfo(String id, List<String> transponders, IOutputStreamHandler stayOut, String currentZone,
-			Calendar time, Calendar startTime, Arguments args) throws NullPointerException {
+	public TurkeyInfo(final String id, final List<String> transponders, IOutputStreamHandler stayOut,
+			String currentZone, Calendar time, Calendar startTime, final Arguments args) throws NullPointerException {
 		this.id = Objects.requireNonNull(id, "The turkey id cannot be null.");
 		this.args = Objects.requireNonNull(args, "The args object configuring this cannot be null.");
 
@@ -211,10 +211,21 @@ public class TurkeyInfo {
 			endDay(time, args.fillDays && (startTime == null || currentTime.after(startTime)));
 		}
 
-		boolean newRec = !TimeUtils.isSameDay(currentTime, time) && !TimeUtils.isNextDay(currentTime, time);
+		boolean newRec = true;
+		if (currentTime != null) {
+			newRec = !TimeUtils.isSameDay(currentTime, time) && !TimeUtils.isNextDay(currentTime, time);
+		}
+
 		if (startTime != null && currentTime != null
 				&& (!args.fillDays || TimeUtils.isSameDay(startTime, time) || TimeUtils.isNextDay(startTime, time))) {
 			newRec = startTime.after(currentTime);
+		}
+
+		if (currentTime == null && startTime != null) {
+			currentTime = startTime;
+			if (currentZone != null) {
+				lastStay = new ZoneStay(id, currentZone, currentTime);
+			}
 		}
 
 		long timeMs = time.getTimeInMillis();
@@ -225,7 +236,7 @@ public class TurkeyInfo {
 		} else if (args.fillDays && !(startTime != null && TimeUtils.isSameDay(startTime, time))) {
 			addTime(time, newZone, TimeUtils.getMsOfDay(time));
 
-			if (newRec && stayOut != null && !lastStay.hasLeft()) {
+			if (newRec && stayOut != null && lastStay != null && !lastStay.hasLeft()) {
 				Calendar lastCal = new GregorianCalendar();
 				lastCal.setTimeInMillis(lastZoneChange);
 				// FIXME probably produces 1ms offsets
@@ -256,7 +267,7 @@ public class TurkeyInfo {
 			long recordTime = timeMs - startTime.getTimeInMillis();
 			addTime(time, newZone, recordTime);
 
-			if (newRec && stayOut != null && !lastStay.hasLeft()) {
+			if (newRec && stayOut != null && lastStay != null && !lastStay.hasLeft()) {
 				if (!currentZone.equals(lastStay.getZone()) && lastZoneChange < currentTime.getTimeInMillis()) {
 					Calendar lastCal = new GregorianCalendar();
 					lastCal.setTimeInMillis(lastZoneChange);
@@ -308,10 +319,10 @@ public class TurkeyInfo {
 				todayZoneChanges++;
 				totalZoneChanges++;
 
-				if (!lastStay.getZone().equals(currentZone)) {
+				if (lastStay == null || !lastStay.getZone().equals(currentZone)) {
 					Calendar lastChangeCal = new GregorianCalendar();
 					lastChangeCal.setTimeInMillis(lastZoneChange);
-					if (stayOut != null) {
+					if (lastStay != null && stayOut != null) {
 						lastStay.setExitTime(lastChangeCal);
 						stayOut.println(CSVHandler.stayToCsvLine(lastStay));
 					}
@@ -579,7 +590,11 @@ public class TurkeyInfo {
 	 * @return The current time of this object.
 	 */
 	public Calendar getCurrentCal() {
-		return (Calendar) currentTime.clone();
+		if (currentTime == null) {
+			return null;
+		} else {
+			return (Calendar) currentTime.clone();
+		}
 	}
 
 	/**
@@ -677,10 +692,19 @@ public class TurkeyInfo {
 		this.startTime = startTime;
 	}
 
+	/**
+	 * Sets the output stream handler to write {@link ZoneStay ZoneStays} to.
+	 * 
+	 * @param stayOut The new stays output stream handler.
+	 */
+	public void setStayOut(IOutputStreamHandler stayOut) {
+		this.stayOut = stayOut;
+	}
+
 	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
-		builder.append("TurkeyInfo [id=");
+		builder.append("TurkeyInfo[id=");
 		builder.append(id);
 		builder.append(", args=");
 		builder.append(args);
@@ -689,9 +713,9 @@ public class TurkeyInfo {
 		builder.append(", stayOut=");
 		builder.append(stayOut);
 		builder.append(", startTimeDate=");
-		builder.append(TimeUtils.encodeDate(startTime));
+		builder.append(startTime == null ? "null" : TimeUtils.encodeDate(startTime));
 		builder.append(", startTimeOfDay=");
-		builder.append(TimeUtils.encodeTime(TimeUtils.getMsOfDay(startTime)));
+		builder.append(startTime == null ? "null" : TimeUtils.encodeTime(TimeUtils.getMsOfDay(startTime)));
 		builder.append(", dayZoneTimes=");
 		builder.append(dayZoneTimes);
 		builder.append(", totalZoneTimes=");
@@ -701,9 +725,9 @@ public class TurkeyInfo {
 		builder.append(", lastStay=");
 		builder.append(lastStay);
 		builder.append(", currentTimeDate=");
-		builder.append(TimeUtils.encodeDate(currentTime));
+		builder.append(currentTime == null ? "null" : TimeUtils.encodeDate(currentTime));
 		builder.append(", currentTimeOfDay=");
-		builder.append(TimeUtils.encodeTime(TimeUtils.getMsOfDay(currentTime)));
+		builder.append(currentTime == null ? "null" : TimeUtils.encodeTime(TimeUtils.getMsOfDay(currentTime)));
 		builder.append(", lastZoneChange=");
 		builder.append(lastZoneChange);
 		builder.append(", todayZoneChanges=");
@@ -714,6 +738,41 @@ public class TurkeyInfo {
 		builder.append(dayZoneChanges);
 		builder.append("]");
 		return builder.toString();
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(args, currentTime, currentZone, dayZoneChanges, dayZoneTimes, id, lastStay, lastZoneChange,
+				startTime, stayOut, todayZoneChanges, totalZoneChanges, totalZoneTimes, transponders);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+
+		if (getClass() != obj.getClass()) {
+			return false;
+		}
+
+		TurkeyInfo other = (TurkeyInfo) obj;
+		if (!Objects.equals(id, other.id) || !Objects.equals(transponders, other.transponders)) {
+			return false;
+		}
+
+		if (lastZoneChange != other.lastZoneChange || todayZoneChanges != other.todayZoneChanges
+				|| totalZoneChanges != other.totalZoneChanges) {
+			return false;
+		}
+
+		return Objects.equals(args, other.args) && Objects.equals(currentTime, other.currentTime)
+				&& Objects.equals(currentZone, other.currentZone)
+				&& Objects.equals(dayZoneChanges, other.dayZoneChanges)
+				&& Objects.equals(dayZoneTimes, other.dayZoneTimes) && Objects.equals(lastStay, other.lastStay)
+				&& Objects.equals(startTime, other.startTime) && Objects.equals(stayOut, other.stayOut)
+				&& Objects.equals(totalZoneTimes, other.totalZoneTimes);
 	}
 
 }

@@ -116,7 +116,7 @@ Die Tabelle in diesem Abschnitt beschreibt die Funktion aller Argumente.
 |               | `--overrideoutputs`  | **Achtung:** Wenn das Programm nicht in einem Terminal gestartet wird, werden die Dateien auch überschrieben.       |  
 |               |                      | Da in diesem Falle die Nachfrage nicht möglich ist, überschreibt das Programm sie ohne Nachfrage.                   |  
 | -c            | `--decimal-separator`| Erwartet einen Punkt oder ein Komma als Argument.                                                                   |  
-|               | `--decimalseparator` | Teilt dem Programm mit welches Zeichen in [Ergebniss-Dateien](output.md) und [Statusmeldungen] Hundertstel          |  
+|               | `--decimalseparator` | Teilt dem Programm mit welches Zeichen in [Ergebnis-Dateien](output.md) und [Statusmeldungen] Hundertstel           |  
 |               | `--decimal-comma`    | von Sekunden getrennt werden sollen.                                                                                |  
 |               | `--decimalcomma`     | Wenn dieses Argument nicht verwendet wird, nutzt das Programm Punkte um Sekunden und Hundertstel zu trennen.        |  
 |               | `--comma`            |                                                                                                                     |  
