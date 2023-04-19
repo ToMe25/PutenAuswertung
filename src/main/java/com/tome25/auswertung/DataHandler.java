@@ -192,14 +192,14 @@ public class DataHandler {
 			if (downtimeStart != null && downtimeEnd != null) {
 				if (TimeUtils.isSameDay(downtimeStart, downtimeEnd)) {
 					for (TurkeyInfo ti : turkeyInfos.values()) {
-						if (!args.fillDays && ti.getCurrentCal() != null && !ti.getCurrentCal().before(startTime)) {
-							// FIXME what if lastDate isn't the same day as downtimeStart?
-							ti.changeZone(ti.getCurrentZone(), downtimeStart);
-							ti.printCurrentStay(false);
-						} else if (args.fillDays && ti.hasDay(record.date) && ti.getCurrentCal() != null
-								&& !ti.getCurrentCal().before(startTime)) {
-							ti.changeZone(ti.getCurrentZone(), downtimeStart);
-							ti.printCurrentStay(false);
+						if (!args.fillDays) {
+							if (ti.tryUpdate(downtimeStart)) {
+								ti.printCurrentStay(false);
+							}
+						} else if (args.fillDays && ti.hasDay(record.date)) {
+							if (ti.tryUpdate(downtimeStart)) {
+								ti.printCurrentStay(false);
+							}
 						}
 						ti.setStartTime(downtimeEnd);
 					}
@@ -208,15 +208,16 @@ public class DataHandler {
 					lastDts = downtimeStart;
 				} else {
 					for (TurkeyInfo ti : turkeyInfos.values()) {
-						if (!args.fillDays && ti.getCurrentCal() != null && !ti.getCurrentCal().before(startTime)) {
-							// FIXME what if lastDate isn't the same day as downtimeStart?
-							ti.changeZone(ti.getCurrentZone(), downtimeStart);
-							ti.endDay(lastDate);
-							ti.printCurrentStay(false);
+						if (!args.fillDays) {
+							if (ti.tryUpdate(downtimeStart)) {
+								ti.endDay(downtimeStart);
+								ti.printCurrentStay(false);
+							}
 						} else if (args.fillDays && ti.getCurrentCal() != null) {
-							if (downtimes != null && ti.hasDay(lastDate) && !ti.getCurrentCal().before(startTime)) {
-								ti.changeZone(ti.getCurrentZone(), downtimeStart);
-								ti.endDay(downtimeStart, false);
+							if (downtimes != null && ti.hasDay(lastDate)) {
+								if (ti.tryUpdate(downtimeStart)) {
+									ti.endDay(downtimeStart, false);
+								}
 							} else if (downtimes == null) {
 								ti.endDay(ti.getCurrentCal());
 							}
@@ -282,7 +283,7 @@ public class DataHandler {
 					turkeyInfos.put(turkeyId,
 							new TurkeyInfo(turkeyId, Collections.singletonList(record.transponder), staysStream,
 									zones.getValue().get(record.antenna), record.cal, args.fillDays ? null : startTime,
-									args));
+									null, args));
 				} catch (NullPointerException e) {
 					LogHandler.err_println("Creating a new TurkeyInfo object failed. Terminating.");
 					LogHandler.print_exception(e, "create a new TurkeyInfo",
@@ -297,36 +298,89 @@ public class DataHandler {
 					TurkeyInfo ti = turkeyInfos.get(turkeyId);
 					if (args.fillDays && lastDts != null && ti.getCurrentCal() != null
 							&& TimeUtils.isNextDay(ti.getCurrentCal(), lastDts)
-							&& TimeUtils.isSameDay(lastDts, record.cal) && prevStartTime != null
-							&& !ti.getCurrentCal().before(prevStartTime)) {
+							&& TimeUtils.isSameDay(lastDts, record.cal) && prevStartTime != null) {
 						ti.setStartTime(prevStartTime);
-						ti.changeZone(ti.getCurrentZone(), lastDts);
+						ti.tryUpdate(lastDts);
 						ti.setStartTime(startTime);
 					}
-					ti.changeZone(zones.getValue().get(record.antenna), record.cal);
+
+					if (ti.getCurrentCal() != null && record.cal.before(ti.getCurrentCal())) {
+						LogHandler.err_println(
+								"New antenna record at " + record.date + ' ' + record.getTime() + " for turkey \""
+										+ turkeyId + "\" is before the last one for the same turkey. Skipping line.");
+						LogHandler.print_debug_info(
+								"New Antenna Record: %s, New Time of Day: %s, New Date: %s, Current Time of Day: %s, Current Date: %s, Turkey: %s",
+								record, record.getTime(), record.date, TimeUtils.encodeTime(ti.getCurrentTime()),
+								ti.getCurrentDate(), ti);
+						continue;
+					} else if (ti.getEndCal() != null && record.cal.after(ti.getEndCal())) {
+						LogHandler.err_println("New antenna record at " + record.date + ' ' + record.getTime()
+								+ " for turkey \"" + turkeyId
+								+ "\" is after that turkeys end time. Updating to its end time instead.");
+						LogHandler.print_debug_info(
+								"New Antenna Record: %s, Record Time of Day: %s, Record Date: %s, End Time of Day: %s, End Date: %s, Turkey: %s",
+								record, record.getTime(), record.date,
+								TimeUtils.encodeTime(TimeUtils.getMsOfDay(ti.getEndCal())),
+								TimeUtils.encodeDate(ti.getEndCal()), ti);
+						if (ti.tryUpdate(record.cal)) {
+							ti.endDay(record.cal);
+							ti.printCurrentStay(false);
+						}
+						continue;
+					} else {
+						ti.changeZone(zones.getValue().get(record.antenna), record.cal);
+					}
 				} catch (IllegalArgumentException e) {
 					LogHandler.err_println(
-							"New antenna record at " + record.date + ' ' + record.getTime() + " for turkey \""
-									+ turkeyId + "\" is before the last one for the same turkey. Skipping line.");
-					LogHandler.print_exception(e, "update turkey zone",
-							"New Antenna Record: %s, New Time of Day: %s, New Date: %s, Current Time of Day: %s, Current Date: %s, Turkey: %s, Arguments: %s",
-							record, record.getClass(), record.date,
-							TimeUtils.encodeTime(turkeyInfos.get(turkeyId).getCurrentTime()),
-							turkeyInfos.get(turkeyId).getCurrentDate(), turkeyId, args);
+							"An error occurred while updating turkey \"" + turkeyId + "\". Skipping line.");
+					LogHandler.print_exception(e, "update turkey zone", "New Antenna Record: %s, Turkey: %s", record,
+							turkeyInfos.get(turkeyId));
 				}
 			}
 		}
 
 		for (TurkeyInfo ti : turkeyInfos.values()) {
+			if (ti.getCurrentCal() == null) {
+				continue;
+			}
+
 			if (!args.fillDays) {
-				if (ti.getCurrentCal().after(startTime) || ti.getCurrentCal().equals(startTime)) {
-					ti.changeZone(ti.getCurrentZone(), lastTimes.get(lastDate));
+				if (ti.tryUpdate(lastTimes.get(lastDate))) {
 					ti.endDay(lastDate);
 					ti.printCurrentStay(false);
 				}
 			} else {
-				ti.endDay(ti.getCurrentDate());
-				ti.printCurrentStay(false);
+				if (ti.getCurrentCal().before(startTime) && !ti.getCurrentCal().before(prevStartTime)) {
+					ti.setStartTime(prevStartTime);
+				}
+
+				if (ti.getStartCal() == null || ti.getCurrentCal().after(ti.getStartCal())) {
+					if (downtimes != null) {
+						Calendar dtsCal = null;
+						long current = ti.getCurrentCal().getTimeInMillis();
+						for (Pair<Long, Long> downtime : downtimes) {
+							if (downtime.getKey() >= current) {
+								dtsCal = new GregorianCalendar();
+								dtsCal.setTimeInMillis(downtime.getKey());
+								if (!TimeUtils.isSameDay(ti.getCurrentCal(), dtsCal)) {
+									dtsCal = null;
+								}
+								break;
+							}
+						}
+
+						if (dtsCal != null) {
+							if (ti.tryUpdate(dtsCal)) {
+								ti.endDay(dtsCal, false);
+							}
+						} else {
+							ti.endDay(ti.getCurrentCal());
+						}
+					} else {
+						ti.endDay(ti.getCurrentCal());
+					}
+					ti.printCurrentStay(false);
+				}
 			}
 		}
 

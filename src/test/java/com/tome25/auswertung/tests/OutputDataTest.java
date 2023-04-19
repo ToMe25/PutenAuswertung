@@ -54,7 +54,7 @@ public class OutputDataTest {
 	 */
 	@Test
 	public void shortCrossDate() throws IOException {
-		final TestMappings mappings = generateTestMappings(2, 3, tempFolder);
+		final TestMappings mappings = generateTestMappings(2, 3, 5, false, 0, 0, tempFolder);
 		List<TurkeyInfo> turkeys = mappings.turkeys;
 		Map<String, List<String>> zones = mappings.zones;
 		FileInputStreamHandler turkeysIn = mappings.turkeysIn;
@@ -223,7 +223,7 @@ public class OutputDataTest {
 	 */
 	@Test
 	public void oneMonthStay() throws IOException {
-		final TestMappings mappings = generateTestMappings(2, 2, tempFolder);
+		final TestMappings mappings = generateTestMappings(2, 2, 5, false, 0, 0, tempFolder);
 		List<TurkeyInfo> turkeys = mappings.turkeys;
 		Map<String, List<String>> zones = mappings.zones;
 		FileInputStreamHandler turkeysIn = mappings.turkeysIn;
@@ -497,6 +497,11 @@ public class OutputDataTest {
 		assertThat("A turkey is missing from the generates zone stays.", generated.zoneStays.keySet(),
 				hasItems(generated.zoneTimes.keySet().toArray(new String[0])));
 
+		Map<String, TurkeyInfo> turkeys = new HashMap<String, TurkeyInfo>();
+		for (TurkeyInfo ti : parsed.turkeys) {
+			turkeys.put(ti.getId(), ti);
+		}
+
 		for (final String turkey : parsed.zoneTimes.keySet()) {
 			Map<String, Map<String, Long>> turkeyOutputTimes = parsed.zoneTimes.get(turkey);
 			assertThat("The generated data for turkey \"" + turkey + "\" is missing a date.",
@@ -610,42 +615,65 @@ public class OutputDataTest {
 								+ "\" stay times doesn't match the total.",
 						stayTotals.get(zone), turkeyOutputTimes.get("total").get(zone));
 			}
+
+			if (turkeys.get(turkey).getEndCal() != null) {
+				assertFalse("The last zone stay for turkey \"" + turkey + "\" ends after its end time.",
+						parsed.zoneStays.get(turkey).get(parsed.zoneStays.size() - 1).getExitCal()
+								.after(turkeys.get(turkey).getEndCal()));
+			}
 		}
 	}
 
 	/**
 	 * Generates and writes to two files mapping files for turkeys and zones.
 	 * 
-	 * @param turkeys    The number of turkeys to generate.
-	 * @param zones      The number of zones to generate.
-	 * @param tempFolder The {@link TempFileStreamHandler} object to use to create
-	 *                   the required temporary files.
+	 * @param turkeys         The number of turkeys to generate.
+	 * @param zones           The number of zones to generate.
+	 * @param maxTransponders The max number of transponders per turkey.
+	 * @param advancedTurkeys Whether turkeys with a start zone and end time should
+	 *                        be generated.
+	 * @param startTime       The earliest possible end time if
+	 *                        {@code advancedTurkeys} is {@code true}.<br/>
+	 *                        Ignored if {@code advancedTurkeys} is {@code false}.
+	 * @param endTime         The latest possible end time if
+	 *                        {@code advancedTurkeys} is {@code true}. Ignored if
+	 *                        {@code advancedTurkeys} is {@code false}.
+	 * @param tempFolder      The {@link TempFileStreamHandler} object to use to
+	 *                        create the required temporary files.
 	 * @return An object containing the sets of mappings and
 	 *         {@link FileInputStreamHandler FileInputStreamHandlers} to read them.
 	 * @throws IOException              If writing or creating one of the temporary
 	 *                                  files fails.
 	 * @throws NullPointerException     If {@code tempFolder} is {@code null}.
 	 * @throws IllegalArgumentException If {@code turkeys} or {@code zones} is less
-	 *                                  than 1.
+	 *                                  than 1. Or if {@code advancedTurkeys} is
+	 *                                  {@code true} and {@code endTime} isn't after
+	 *                                  {@code startTime}.
 	 */
-	public static TestMappings generateTestMappings(int turkeys, int zones, TempFileStreamHandler tempFolder)
+	public static TestMappings generateTestMappings(int turkeys, int zones, int maxTransponders,
+			boolean advancedTurkeys, long startTime, long endTime, TempFileStreamHandler tempFolder)
 			throws IOException, NullPointerException, IllegalArgumentException {
-		Pair<FileInputStreamHandler, FileOutputStreamHandler> turkeysPair = tempFolder.newTempIOFile("turkeys.csv");
-		FileOutputStreamHandler turkeysOut = turkeysPair.getValue();
-
-		final TestMappings mappings = new TestMappings();
-		mappings.turkeysIn = turkeysPair.getKey();
-		mappings.turkeys = TurkeyGenerator.generateTurkeys(turkeys, 5);
-		CSVHandler.writeTurkeyCSV(mappings.turkeys, turkeysOut);
-		turkeysOut.close();
-
 		Pair<FileInputStreamHandler, FileOutputStreamHandler> zonesPair = tempFolder.newTempIOFile("zones.csv");
 		FileOutputStreamHandler zonesOut = zonesPair.getValue();
+		final TestMappings mappings = new TestMappings();
 		mappings.zonesIn = zonesPair.getKey();
 
 		mappings.zones = ZoneGenerator.generateZones(zones);
 		CSVHandler.writeZonesCSV(mappings.zones, zonesOut);
 		zonesOut.close();
+
+		Pair<FileInputStreamHandler, FileOutputStreamHandler> turkeysPair = tempFolder.newTempIOFile("turkeys.csv");
+		FileOutputStreamHandler turkeysOut = turkeysPair.getValue();
+
+		mappings.turkeysIn = turkeysPair.getKey();
+		if (advancedTurkeys) {
+			mappings.turkeys = TurkeyGenerator.generateTurkeysAdvanced((short) turkeys, maxTransponders,
+					new ArrayList<String>(mappings.zones.keySet()), startTime, endTime);
+		} else {
+			mappings.turkeys = TurkeyGenerator.generateTurkeys(turkeys, maxTransponders);
+		}
+		CSVHandler.writeTurkeyCSV(mappings.turkeys, turkeysOut);
+		turkeysOut.close();
 
 		return mappings;
 	}
@@ -655,6 +683,7 @@ public class OutputDataTest {
 	 * results when parsing it.
 	 * 
 	 * @param mappings     The mappings files to generate test data for.
+	 * @param startDate    The first date to generate data for.
 	 * @param days         The number of days worth of antenna records to generate
 	 *                     and use.
 	 * @param args         The configuration to use to generate test data.
@@ -678,8 +707,8 @@ public class OutputDataTest {
 	 *                                  {@code null}.
 	 * @throws IllegalArgumentException If {@code days} is less than 1.
 	 */
-	public static TestData generateTestValues(final TestMappings mappings, int days, final Arguments args,
-			boolean continuous, boolean complete, TempFileStreamHandler tempFolder,
+	public static TestData generateTestValues(final TestMappings mappings, final String startDate, int days,
+			final Arguments args, boolean continuous, boolean complete, TempFileStreamHandler tempFolder,
 			final IOutputStreamHandler antennaOut, final IOutputStreamHandler downtimesOut)
 			throws IOException, NullPointerException, IllegalArgumentException {
 		Objects.requireNonNull(mappings, "The mappings to generate valies for cannot be null.");
@@ -692,7 +721,7 @@ public class OutputDataTest {
 		}
 
 		TestData results = AntennaDataGenerator.generateAntennaData(mappings.turkeys, mappings.zones, antennaOut,
-				downtimesOut, args, days, continuous, complete);
+				downtimesOut, args, startDate, days, continuous, complete);
 		antennaOut.close();
 
 		return results;

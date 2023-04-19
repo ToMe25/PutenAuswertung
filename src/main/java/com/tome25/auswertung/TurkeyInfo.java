@@ -58,6 +58,12 @@ public class TurkeyInfo {
 	private Calendar startTime;
 
 	/**
+	 * The time at which this turkey stops existing.<br/>
+	 * Use {@code null} if the end time is unknown.
+	 */
+	private final Calendar endTime;
+
+	/**
 	 * A map containing a map containing the time this turkey spent in each recorded
 	 * zone for each day.
 	 */
@@ -131,38 +137,69 @@ public class TurkeyInfo {
 	 *                     Set to {@code null} to mark as not yet known.
 	 * @param startTime    The time of the first recorded day at which the records
 	 *                     should start.<br/>
-	 *                     Can only be {@code null} if {@link Arguments#fillDays} is
-	 *                     {@code true}.
+	 *                     Can only be {@code null} if {@link Arguments#fillDays
+	 *                     args.fillDays} is {@code true}.
+	 * @param endTime      The time at which the records for this turkey should
+	 *                     end.<br/>
+	 *                     If {@code null} the records end at the end of the
+	 *                     recording.<br/>
+	 *                     This is either the start of the next downtime,<br/>
+	 *                     if {@link Arguments#fillDays args.fillDays} is
+	 *                     {@code true} at the end of the last day, or<br/>
+	 *                     at the time of the last record of any turkey if it is
+	 *                     {@code false}.
 	 * @param args         An {@link Arguments} instance containing the
 	 *                     configuration for the current data analysis.
-	 * @throws NullPointerException If {@code id} or {@code stayOut} is
-	 *                              {@code null}.
+	 * @throws NullPointerException     If {@code id} or {@code args} is
+	 *                                  {@code null}.<br/>
+	 *                                  Also if {@code time} isn't {@code null}, but
+	 *                                  {@code currentZone} is {@code null}.<br/>
+	 *                                  As well as if {@code time} isn't
+	 *                                  {@code null}, {@link Arguments#fillDays
+	 *                                  args.fillDays} is {@code false} and
+	 *                                  {@code startTime} is {@code null}.
+	 * @throws IllegalArgumentException If {@code time} is before {@code startTime},
+	 *                                  {@code time} is after {@code endTime}, or
+	 *                                  {@code time} isn't {@code null} and
+	 *                                  {@code currentZone} is empty.
 	 */
 	public TurkeyInfo(final String id, final List<String> transponders, IOutputStreamHandler stayOut,
-			String currentZone, Calendar time, Calendar startTime, final Arguments args) throws NullPointerException {
+			String currentZone, Calendar time, Calendar startTime, final Calendar endTime, final Arguments args)
+			throws NullPointerException, IllegalArgumentException {
 		this.id = Objects.requireNonNull(id, "The turkey id cannot be null.");
 		this.args = Objects.requireNonNull(args, "The args object configuring this cannot be null.");
 
 		// If time is null this is just used as a static storage object.
 		if (time != null) {
-			if (currentZone == null || currentZone.trim().isEmpty()) {
-				throw new NullPointerException("The current zone cannot be null when the current time isn't null.");
+			Objects.requireNonNull(currentZone, "The current zone cannot be null when the current time isn't null.");
+			if (currentZone.trim().isEmpty()) {
+				throw new IllegalArgumentException(
+						"The current zone cannot be empty when the current time isn't null.");
 			}
 
 			if (!args.fillDays) {
-				this.startTime = Objects.requireNonNull(startTime,
-						"The start time cannot be null of args.fillDays is false.");
+				Objects.requireNonNull(startTime, "The start time cannot be null of args.fillDays is false.");
+			}
+
+			if (startTime != null && time.before(startTime)) {
+				throw new IllegalArgumentException("Current time cannot be before start time.");
+			}
+
+			if (endTime != null && time.after(endTime)) {
+				throw new IllegalArgumentException("Current time cannot be after end time.");
 			}
 		}
 
 		if (currentZone != null) {
-			currentZone = currentZone.trim();
+			currentZone = currentZone.trim().isEmpty() ? null : currentZone.trim();
 		}
 
 		this.transponders = transponders;
 		this.stayOut = stayOut;
 		this.currentZone = currentZone;
 		this.currentTime = time;
+		this.startTime = startTime;
+		this.endTime = endTime;
 		this.lastZoneChange = time == null ? 0 : time.getTimeInMillis();
 
 		if (time != null) {
@@ -192,8 +229,10 @@ public class TurkeyInfo {
 	 * @param time    The time at which the antenna record was created.
 	 * @throws NullPointerException     If {@code newZone} or {@code date} is
 	 *                                  {@code null}.
-	 * @throws IllegalArgumentException If {@code time} is before the current time
-	 *                                  or the start time.
+	 * @throws IllegalArgumentException If {@code time} is before
+	 *                                  {@link #getCurrentCal() current time},
+	 *                                  before {@link #getStartCal() start time}, or
+	 *                                  after {@link #getEndCal() end time}.
 	 */
 	public void changeZone(String newZone, Calendar time) throws NullPointerException, IllegalArgumentException {
 		Objects.requireNonNull(newZone, "The zone the turkey moved into cannot be null.");
@@ -205,6 +244,10 @@ public class TurkeyInfo {
 
 		if (startTime != null && time.before(startTime)) {
 			throw new IllegalArgumentException("New time was before start time.");
+		}
+
+		if (endTime != null && time.after(endTime)) {
+			throw new IllegalArgumentException("New time was after end time.");
 		}
 
 		if (currentTime != null && !TimeUtils.isSameDay(currentTime, time)) {
@@ -221,18 +264,28 @@ public class TurkeyInfo {
 			newRec = startTime.after(currentTime);
 		}
 
-		if (currentTime == null && startTime != null) {
-			currentTime = startTime;
-			if (currentZone != null) {
-				lastStay = new ZoneStay(id, currentZone, currentTime);
-			}
-		}
-
 		long timeMs = time.getTimeInMillis();
 
 		if (currentZone != null && !newRec) {
 			long recordTime = timeMs - currentTime.getTimeInMillis();
 			addTime(time, currentZone, recordTime);
+		} else if (currentTime == null && currentZone != null) {
+			Calendar startCal = startTime == null ? null : (Calendar) startTime.clone();
+			if (args.fillDays && (startTime == null || !TimeUtils.isSameDay(startTime, time))) {
+				startCal = TimeUtils.parseDate(TimeUtils.encodeDate(time));
+			}
+			if (time.equals(startCal)) {
+				currentZone = newZone;
+			}
+
+			long recordTime = timeMs - startCal.getTimeInMillis();
+			addTime(time, currentZone, recordTime);
+			if (!currentZone.equals(newZone)) {
+				lastZoneChange = timeMs;
+			} else {
+				lastZoneChange = startCal.getTimeInMillis();
+			}
+			lastStay = new ZoneStay(id, currentZone, startCal);
 		} else if (args.fillDays && !(startTime != null && TimeUtils.isSameDay(startTime, time))) {
 			addTime(time, newZone, TimeUtils.getMsOfDay(time));
 
@@ -544,6 +597,52 @@ public class TurkeyInfo {
 	}
 
 	/**
+	 * Attempts to change the current time of this turkey to the given time.<br/>
+	 * The time will be changed if these conditions are met:
+	 * <ul>
+	 * <li>The given time is after or equal to this turkeys {@link #getCurrentCal()
+	 * current time}.</li>
+	 * <li>This turkeys {@link #getCurrentCal() current time} is after or equal to
+	 * this turkeys {@link #getStartCal() start time}.</li>
+	 * <li>This turkeys {@link #getCurrentCal() current time} is before its
+	 * {@link #getEndCal() end time}.</li>
+	 * </ul>
+	 * 
+	 * If {@code time} is after this turkeys {@link #getEndCal() end time} its
+	 * {@link #getCurrentCal() current time} is updated to that instead.
+	 * 
+	 * @param time The time to update this turkey to.
+	 * @return {@code true} if this turkey was updated, {@code false} otherwise.
+	 * @throws NullPointerException If {@code time} is {@code null}.
+	 */
+	public boolean tryUpdate(Calendar time) throws NullPointerException {
+		Objects.requireNonNull(time, "The time to update to cannot be null.");
+
+		if (currentTime == null || currentZone == null) {
+			return false;
+		}
+
+		if (time.before(currentTime)) {
+			return false;
+		}
+
+		if (startTime != null && currentTime.before(startTime)) {
+			return false;
+		}
+
+		if (endTime != null && !currentTime.before(endTime)) {
+			return false;
+		}
+
+		if (endTime != null && time.after(endTime)) {
+			time = endTime;
+		}
+
+		changeZone(currentZone, time);
+		return true;
+	}
+
+	/**
 	 * Gets the string id representing the turkey represented by this object.
 	 * 
 	 * @return the string id representing the turkey represented by this object.
@@ -681,6 +780,20 @@ public class TurkeyInfo {
 	}
 
 	/**
+	 * Gets a {@link Calendar} representing the time at which the current, or next
+	 * recording starts.
+	 * 
+	 * @return The time where the records begin.
+	 */
+	public Calendar getStartCal() {
+		if (startTime == null) {
+			return null;
+		} else {
+			return (Calendar) startTime.clone();
+		}
+	}
+
+	/**
 	 * Sets the time at which records should start the next time there is a new
 	 * recording start.<br/>
 	 * A recording start is when zone times are recorded, after days where there
@@ -690,6 +803,20 @@ public class TurkeyInfo {
 	 */
 	public void setStartTime(Calendar startTime) {
 		this.startTime = startTime;
+	}
+
+	/**
+	 * Gets a {@link Calendar} representing the time after which no more data should
+	 * be recorded.
+	 * 
+	 * @return The time where the records should end.
+	 */
+	public Calendar getEndCal() {
+		if (endTime == null) {
+			return null;
+		} else {
+			return (Calendar) endTime.clone();
+		}
 	}
 
 	/**
@@ -716,10 +843,10 @@ public class TurkeyInfo {
 		builder.append(startTime == null ? "null" : TimeUtils.encodeDate(startTime));
 		builder.append(", startTimeOfDay=");
 		builder.append(startTime == null ? "null" : TimeUtils.encodeTime(TimeUtils.getMsOfDay(startTime)));
-		builder.append(", dayZoneTimes=");
-		builder.append(dayZoneTimes);
-		builder.append(", totalZoneTimes=");
-		builder.append(totalZoneTimes);
+		builder.append(", endTimeDate=");
+		builder.append(endTime == null ? "null" : TimeUtils.encodeDate(endTime));
+		builder.append(", endTimeOfDay=");
+		builder.append(endTime == null ? "null" : TimeUtils.encodeTime(TimeUtils.getMsOfDay(endTime)));
 		builder.append(", currentZone=");
 		builder.append(currentZone);
 		builder.append(", lastStay=");
@@ -728,22 +855,30 @@ public class TurkeyInfo {
 		builder.append(currentTime == null ? "null" : TimeUtils.encodeDate(currentTime));
 		builder.append(", currentTimeOfDay=");
 		builder.append(currentTime == null ? "null" : TimeUtils.encodeTime(TimeUtils.getMsOfDay(currentTime)));
-		builder.append(", lastZoneChange=");
-		builder.append(lastZoneChange);
+		Calendar lastChange = new GregorianCalendar();
+		lastChange.setTimeInMillis(lastZoneChange);
+		builder.append(", lastZoneChangeDate=");
+		builder.append(TimeUtils.encodeDate(lastChange));
+		builder.append(", lastZoneChangeTimeOfDay=");
+		builder.append(TimeUtils.encodeTime(TimeUtils.getMsOfDay(lastChange)));
 		builder.append(", todayZoneChanges=");
 		builder.append(todayZoneChanges);
 		builder.append(", totalZoneChanges=");
 		builder.append(totalZoneChanges);
 		builder.append(", dayZoneChanges=");
 		builder.append(dayZoneChanges);
+		builder.append(", dayZoneTimes=");
+		builder.append(dayZoneTimes);
+		builder.append(", totalZoneTimes=");
+		builder.append(totalZoneTimes);
 		builder.append("]");
 		return builder.toString();
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(args, currentTime, currentZone, dayZoneChanges, dayZoneTimes, id, lastStay, lastZoneChange,
-				startTime, stayOut, todayZoneChanges, totalZoneChanges, totalZoneTimes, transponders);
+		return Objects.hash(args, currentTime, currentZone, dayZoneChanges, dayZoneTimes, endTime, id, lastStay,
+				lastZoneChange, startTime, stayOut, todayZoneChanges, totalZoneChanges, totalZoneTimes, transponders);
 	}
 
 	@Override
@@ -770,9 +905,9 @@ public class TurkeyInfo {
 		return Objects.equals(args, other.args) && Objects.equals(currentTime, other.currentTime)
 				&& Objects.equals(currentZone, other.currentZone)
 				&& Objects.equals(dayZoneChanges, other.dayZoneChanges)
-				&& Objects.equals(dayZoneTimes, other.dayZoneTimes) && Objects.equals(lastStay, other.lastStay)
-				&& Objects.equals(startTime, other.startTime) && Objects.equals(stayOut, other.stayOut)
-				&& Objects.equals(totalZoneTimes, other.totalZoneTimes);
+				&& Objects.equals(dayZoneTimes, other.dayZoneTimes) && Objects.equals(endTime, other.endTime)
+				&& Objects.equals(lastStay, other.lastStay) && Objects.equals(startTime, other.startTime)
+				&& Objects.equals(stayOut, other.stayOut) && Objects.equals(totalZoneTimes, other.totalZoneTimes);
 	}
 
 }

@@ -15,11 +15,13 @@ FILE_HEADER = """package com.tome25.auswertung.tests.generated;
 
 import java.io.IOException;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
 import com.tome25.auswertung.args.Arguments;
+import com.tome25.auswertung.log.LogHandler;
 import com.tome25.auswertung.stream.FileInputStreamHandler;
 import com.tome25.auswertung.stream.FileOutputStreamHandler;
 import com.tome25.auswertung.testdata.AntennaDataGenerator;
@@ -28,6 +30,7 @@ import com.tome25.auswertung.tests.OutputDataTest;
 import com.tome25.auswertung.tests.OutputDataTest.TestMappings;
 import com.tome25.auswertung.tests.rules.TempFileStreamHandler;
 import com.tome25.auswertung.utils.Pair;
+import com.tome25.auswertung.utils.TimeUtils;
 
 /**
  * An automatically generated class containing unit tests testing the fill data
@@ -50,16 +53,34 @@ public class GeneratedOutputDataTest {
     public TempFileStreamHandler tempFolder = new TempFileStreamHandler();
 
     /**
+     * The date at which the test data starts.
+     *
+     * @see #startTime
+     */
+    public final String START_DATE = "03.02.2022";
+
+    /**
+     * The time at which the test data starts.<br/>
+     * The first millisecond of {@link #startDate}.
+     */
+    public final long START_TIME = TimeUtils.parseDate(START_DATE).getTimeInMillis();
+
+    /**
+     * Whether the generated unit tests should be run with debug logging enabled.<br/>
+     * Increases run time significantly.
+     */
+    public final boolean DEBUG = false;
+
+    /**
+     * Whether debug mode was previously enabled.
+     */
+    private boolean wasDebug;
+
+    /**
      * An {@link Arguments} to be used for a single test.<br/>
      * Can be modified since its regenerated in {@link #initialize} anyway.
      */
     public Arguments args;
-
-    /**
-     * A collection of mappings to be used for a single test.<br/>
-     * Can be modified since its regenerated in {@link #initialize} anyway.
-     */
-    public TestMappings mappings;
 
     /**
      * A file {@link FileInputStreamHandler input}/{@link FileOutputStreamHandler output} stream handler pair
@@ -78,16 +99,30 @@ public class GeneratedOutputDataTest {
     /**
      * Initializes some common elements required for every test.<br/>
      * Also resets the seed of the {@link AntennaDataGenerator}.
-     * 
-     * @throws IOException If writing the test mappings fails.
+     *
+     * @throws IOException If creating a temporary file fails.
+     * @see #reset()
      */
     @Before
     public void initialize() throws IOException {
         args = Arguments.empty();
         AntennaDataGenerator.resetSeed();
-        mappings = OutputDataTest.generateTestMappings(100, 5, tempFolder);
         antennaPair = tempFolder.newTempIOFile("antenna.csv");
         downtimesPair = tempFolder.newTempIOFile("downtimes.csv");
+        wasDebug = LogHandler.isDebug();
+        LogHandler.setDebug(DEBUG);
+    }
+
+    /**
+     * Resets some things after every test.<br/>
+     * Currently resets the {@link AntennaDataGenerator} seed and debug logging.
+     *
+     * @see #initialize()
+     */
+    @After
+    public void reset() {
+        LogHandler.setDebug(wasDebug);
+        AntennaDataGenerator.resetSeed();
     }"""
 
 
@@ -101,70 +136,80 @@ def main():
                 for min_time in ['Default', 'No', '30Min']:
                     for complete in [True, False]:
                         for cont in [True, False]:
-                            output.write(os.linesep)
-                            output.write("\t/**" + os.linesep)
-                            if fill_days:
-                                output.write("\t * A unit test using fillDays, meaning each day will be considered its own recording.<br/>" + os.linesep)
-                            else:
-                                output.write("\t * A unit test for the default hadling, aka fillDays disabled.<br/>" + os.linesep)
-                            
-                            if downtimes:
-                                output.write("\t * This unit test uses a downtimes csv.<br/>" + os.linesep)
-                            else:
-                                output.write("\t * This unit test does not use a downtimes csv.<br/>" + os.linesep)
-                            
-                            if min_time == 'Default':
-                                output.write("\t * This unit test uses the default minimum zone stay time.<br/>" + os.linesep)
-                            elif min_time == 'No':
-                                output.write("\t * This unit test disables the minimum zone stay time.<br/>" + os.linesep)
-                            elif min_time == '30Min':
-                                output.write("\t * This unit test uses a minimum zone stay time of 30 minutes.<br/>" + os.linesep)
-                            
-                            if complete:
-                                output.write("\t * This unit test generates antenna records for each turkey for each day it generates data for.<br/>" + os.linesep)
-                            else:
-                                output.write("\t * This unit test skips some days for some turkeys in its antenna records.<br/>" + os.linesep)
-                            
-                            if cont:
-                                output.write("\t * This unit test generates antenna records for a continuous block of days." + os.linesep)
-                            else:
-                                output.write("\t * This unit test has some days without data in its antenna records." + os.linesep)
-                            
-                            output.write("\t *" + os.linesep)
-                            output.write("\t * @throws IOException If reading, writing, or creating a temporary file fails." + os.linesep)
-                            output.write("\t */" + os.linesep)
-                            
-                            output.write("\t@Test" + os.linesep)
-                            method_name = ""
-                            if fill_days:
-                                method_name += "fillDays"
-                            else:
-                                method_name += "default"
-                            
-                            if downtimes:
-                                method_name += "Downtimes"
-                            
-                            method_name += min_time + "MinTime"
-                            if not complete:
-                                method_name += "Incomplete"
-                            if not cont:
-                                method_name += "NonCont"
-                            
-                            output.write(("\tpublic void %s() throws IOException {" % method_name) + os.linesep)
-                            if fill_days:
-                                output.write("\t\targs.fillDays = true;" + os.linesep)
-                            
-                            if min_time == 'No':
-                                output.write("\t\targs.minTime = 0;" + os.linesep)
-                            elif min_time == '30Min':
-                                output.write("\t\targs.minTime = 1800;" + os.linesep)
-                            
-                            output.write(("\t\tfinal TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, %s, %s, tempFolder, antennaPair.getValue(), %s);" % ("true" if cont else "false", "true" if complete else "false", "downtimesPair.getValue()" if downtimes else "null")) + os.linesep)
-                            output.write(("\t\tfinal TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), %s);" % ("downtimesPair.getKey()" if downtimes else "null")) + os.linesep)
-                            
-                            output.write("\t\tOutputDataTest.validateResults(generated, parsed, args);" + os.linesep)
-                            output.write("\t}" + os.linesep)
-                            
+                            for advTurkeys in [False, True]:
+                                output.write(os.linesep)
+                                output.write("\t/**" + os.linesep)
+                                if fill_days:
+                                    output.write("\t * A unit test using fillDays, meaning each day will be considered its own recording.<br/>" + os.linesep)
+                                else:
+                                    output.write("\t * A unit test for the default hadling, aka fillDays disabled.<br/>" + os.linesep)
+                                
+                                if downtimes:
+                                    output.write("\t * This unit test uses a downtimes csv.<br/>" + os.linesep)
+                                else:
+                                    output.write("\t * This unit test does not use a downtimes csv.<br/>" + os.linesep)
+                                
+                                if min_time == 'Default':
+                                    output.write("\t * This unit test uses the default minimum zone stay time.<br/>" + os.linesep)
+                                elif min_time == 'No':
+                                    output.write("\t * This unit test disables the minimum zone stay time.<br/>" + os.linesep)
+                                elif min_time == '30Min':
+                                    output.write("\t * This unit test uses a minimum zone stay time of 30 minutes.<br/>" + os.linesep)
+                                
+                                if complete:
+                                    output.write("\t * This unit test generates antenna records for each turkey for each day it generates data for.<br/>" + os.linesep)
+                                else:
+                                    output.write("\t * This unit test skips some days for some turkeys in its antenna records.<br/>" + os.linesep)
+                                
+                                if cont:
+                                    output.write("\t * This unit test generates antenna records for a continuous block of days.<br/>" + os.linesep)
+                                else:
+                                    output.write("\t * This unit test has some days without data in its antenna records.<br/>" + os.linesep)
+                                
+                                if advTurkeys:
+                                    output.write("\t * This unit test uses turkeys with start zone and end time." + os.linesep)
+                                else:
+                                    output.write("\t * This unit test does not use turkeys with start zone or end time." + os.linesep)
+                                
+                                output.write("\t *" + os.linesep)
+                                output.write("\t * @throws IOException If reading, writing, or creating a temporary file fails." + os.linesep)
+                                output.write("\t */" + os.linesep)
+                                
+                                output.write("\t@Test" + os.linesep)
+                                method_name = ""
+                                if fill_days:
+                                    method_name += "fillDays"
+                                else:
+                                    method_name += "default"
+                                
+                                if downtimes:
+                                    method_name += "Downtimes"
+                                
+                                method_name += min_time + "MinTime"
+                                if not complete:
+                                    method_name += "Incomplete"
+                                if not cont:
+                                    method_name += "NonCont"
+                                
+                                if advTurkeys:
+                                    method_name += "AdvancedTurkeys"
+                                
+                                output.write(("\tpublic void %s() throws IOException {" % method_name) + os.linesep)
+                                if fill_days:
+                                    output.write("\t\targs.fillDays = true;" + os.linesep)
+                                
+                                if min_time == 'No':
+                                    output.write("\t\targs.minTime = 0;" + os.linesep)
+                                elif min_time == '30Min':
+                                    output.write("\t\targs.minTime = 1800;" + os.linesep)
+                                
+                                output.write(("\t\tfinal TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, %s, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);" % ("true" if advTurkeys else "false")) + os.linesep)
+                                output.write(("\t\tfinal TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, %s, %s, tempFolder, antennaPair.getValue(), %s);" % ("true" if cont else "false", "true" if complete else "false", "downtimesPair.getValue()" if downtimes else "null")) + os.linesep)
+                                output.write(("\t\tfinal TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), %s);" % ("downtimesPair.getKey()" if downtimes else "null")) + os.linesep)
+                                
+                                output.write("\t\tOutputDataTest.validateResults(generated, parsed, args);" + os.linesep)
+                                output.write("\t}" + os.linesep)
+                                
         output.write('}' + os.linesep)
     
     print("Generated output data unit tests in file \"%s\"." % OUTPUT_FILE)

@@ -57,7 +57,7 @@ public class ZoneStay {
 	 *               {@code null}.
 	 * @throws NullPointerException     If {@code turkey}, {@code zone}, or
 	 *                                  {@code entry} is {@code null}.
-	 * @throws IllegalArgumentException If the exit time is before the entry time.
+	 * @throws IllegalArgumentException If the exit time isn't after the entry time.
 	 */
 	public ZoneStay(final String turkey, final String zone, final Calendar entry, Calendar exit)
 			throws NullPointerException, IllegalArgumentException {
@@ -65,8 +65,8 @@ public class ZoneStay {
 		Objects.requireNonNull(zone, "The zone in which the turkey spends its time can't be null.");
 		Objects.requireNonNull(entry, "The time at which the turkey entered the zone can't be null.");
 
-		if (exit != null && exit.before(entry)) {
-			throw new IllegalArgumentException("Exit time was before entry time.");
+		if (exit != null && !exit.after(entry)) {
+			throw new IllegalArgumentException("Exit time wasn't after entry time.");
 		}
 
 		this.turkey = turkey;

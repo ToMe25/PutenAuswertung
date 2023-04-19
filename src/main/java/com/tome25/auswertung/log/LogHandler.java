@@ -333,6 +333,7 @@ public class LogHandler {
 	 * Gets the current output stream the {@code LogHandler} writes log messages to.
 	 * 
 	 * @return The current standard output stream.
+	 * @see #setOutput(PrintStream)
 	 */
 	public static PrintStream getOutput() {
 		return output;
@@ -345,6 +346,7 @@ public class LogHandler {
 	 * added using {@link #addLogFile}.
 	 * 
 	 * @param out the new standard output stream.
+	 * @see #getOutput()
 	 */
 	public static synchronized void setOutput(PrintStream out) {
 		output = out;
@@ -367,6 +369,7 @@ public class LogHandler {
 	 * to.
 	 * 
 	 * @return The current standard error stream.
+	 * @see #setError(PrintStream)
 	 */
 	public static PrintStream getError() {
 		return error;
@@ -379,6 +382,7 @@ public class LogHandler {
 	 * added using {@link #addLogFile}.
 	 * 
 	 * @param err the new standard error stream.
+	 * @see #getError()
 	 */
 	public static synchronized void setError(PrintStream err) {
 		error = err;

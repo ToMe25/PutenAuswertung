@@ -138,7 +138,7 @@ public class CSVHandler {
 					&& separators >= min_tokens) {
 				end = match.end();
 				if (match.find()) {
-					if (match.start() - end <= 2) {
+					if (match.start() - end <= 2 && match.start() > end) {
 						boolean failed = false;
 						for (int i = end; i < match.start(); i++) {
 							if (!Character.isDigit(line.charAt(i))) {
@@ -199,7 +199,7 @@ public class CSVHandler {
 			checkInput(input);
 		} catch (EOFException e) {
 			LogHandler.err_println("Input file did not contain any data.");
-			LogHandler.print_exception(e, "read a zones file", "Input Stream Handler: %s", input);
+			LogHandler.print_exception(e, "read a zones file", "Input Stream Handler: %s", input.toString());
 			return null;
 		}
 
@@ -210,7 +210,7 @@ public class CSVHandler {
 			try {
 				String line = input.readline();
 				if (line == null || line.trim().isEmpty()) {
-					LogHandler.err_println("Read an empty line from Input Stream Handler : " + input.toString(), true);
+					LogHandler.err_println("Skipped an empty line from input file.", true);
 					LogHandler.print_debug_info("Input Stream Handler: %s, Line: \"%s\"", input.toString(), line);
 					continue;
 				}
@@ -222,8 +222,8 @@ public class CSVHandler {
 					LogHandler.err_println(
 							"Input line \"" + line + "\" did not contain at least two tokens. Skipping line.");
 					LogHandler.print_exception(e, "split input line",
-							"Input Stream Handler: %s, Separator Chars: %s, Line: \"%s\"", input.toString(),
-							SEPARATOR_REGEX.toString(), line);
+							"Separator Chars: %s, Line: \"%s\", Input Stream Handler: %s", SEPARATOR_REGEX.toString(),
+							line, input.toString());
 					continue;
 				}
 
@@ -235,14 +235,14 @@ public class CSVHandler {
 				if (first.containsKey(tokens[0])) {
 					LogHandler.err_println("Found duplicate zone id \"" + tokens[0] + "\". Skipping line.");
 					LogHandler.print_debug_info(
-							"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
-							input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", tokens), line);
+							"Separator Chars: %s, Tokens: [%s], Line: \"%s\", Input Stream Handler: %s",
+							SEPARATOR_REGEX.toString(), StringUtils.join(", ", tokens), line, input.toString());
 					continue;
 				} else if (!ID_REGEX.matcher(tokens[0]).matches()) {
 					LogHandler.err_println("Found invalid zone id \"" + tokens[0] + "\". Skipping line.");
 					LogHandler.print_debug_info(
-							"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
-							input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", tokens), line);
+							"Separator Chars: %s, Tokens: [%s], Line: \"%s\", Input Stream Handler: %s",
+							SEPARATOR_REGEX.toString(), StringUtils.join(", ", tokens), line, input.toString());
 					continue;
 				}
 
@@ -252,19 +252,19 @@ public class CSVHandler {
 						LogHandler.err_println("Found duplicate id \"" + tokens[i]
 								+ "\". Ignoring the occurrence for zone \"" + tokens[0] + "\".");
 						LogHandler.print_debug_info(
-								"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
-								input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", tokens), line);
+								"Separator Chars: %s, Tokens: [%s], Line: \"%s\", Input Stream Handler: %s",
+								SEPARATOR_REGEX.toString(), StringUtils.join(", ", tokens), line, input.toString());
 					} else if (tokens[i].isEmpty()) {
 						LogHandler.err_println("Found empty value in line \"" + line + "\". Skipping.", true);
 						LogHandler.print_debug_info(
-								"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
-								input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", tokens), line);
+								"Separator Chars: %s, Tokens: [%s], Line: \"%s\", Input Stream Handler: %s",
+								SEPARATOR_REGEX.toString(), StringUtils.join(", ", tokens), line, input.toString());
 					} else if (!ID_REGEX.matcher(tokens[i]).matches()) {
 						LogHandler.err_println(
 								"Found invalid id \"" + tokens[i] + "\" for zone \"" + tokens[0] + "\". Skipping.");
 						LogHandler.print_debug_info(
-								"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
-								input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", tokens), line);
+								"Separator Chars: %s, Tokens: [%s], Line: \"%s\", Input Stream Handler: %s",
+								SEPARATOR_REGEX.toString(), StringUtils.join(", ", tokens), line, input.toString());
 					} else {
 						list.add(tokens[i]);
 						second.put(tokens[i], tokens[0]);
@@ -275,8 +275,8 @@ public class CSVHandler {
 					LogHandler.err_println(
 							"Input line \"" + line + "\" did not contain at least one valid value. Skipping line.");
 					LogHandler.print_debug_info(
-							"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
-							input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", tokens), line);
+							"Separator Chars: %s, Tokens: [%s], Line: \"%s\", Input Stream Handler: %s",
+							SEPARATOR_REGEX.toString(), StringUtils.join(", ", tokens), line, input.toString());
 					continue;
 				}
 
@@ -289,7 +289,7 @@ public class CSVHandler {
 					LogHandler.err_println("Reading an input line failed. Trying another one.");
 				}
 				LogHandler.print_exception(e, "read a zones file", "Input Stream Handler: %s, Separator Chars: %s",
-						input.toString(), SEPARATOR_REGEX);
+						input.toString(), SEPARATOR_REGEX.toString());
 
 				if (last_failed) {
 					break;
@@ -306,7 +306,7 @@ public class CSVHandler {
 
 		if (first.isEmpty() && second.isEmpty()) {
 			LogHandler.err_println("Zones input file did not contain any valid data.");
-			LogHandler.print_debug_info("Input Stream Handler: %s", input);
+			LogHandler.print_debug_info("Input Stream Handler: %s", input.toString());
 			return null;
 		} else {
 			return new Pair<>(first, second);
@@ -343,10 +343,10 @@ public class CSVHandler {
 		output.println(headers.toString());
 
 		for (String zone : zones.keySet()) {
-			List<String> antennas = zones.get(zone);
 			StringBuilder sb = new StringBuilder();
 			sb.append(zone);
 
+			List<String> antennas = zones.get(zone);
 			for (String antenna : antennas) {
 				sb.append(DEFAULT_SEPARATOR);
 				sb.append(antenna);
@@ -384,7 +384,7 @@ public class CSVHandler {
 			checkInput(input);
 		} catch (EOFException e) {
 			LogHandler.err_println("Input file did not contain any data.");
-			LogHandler.print_exception(e, "read a turkey file", "Input Stream Handler: %s", input);
+			LogHandler.print_exception(e, "read a turkey file", "Input Stream Handler: %s", input.toString());
 			return null;
 		}
 
@@ -395,20 +395,20 @@ public class CSVHandler {
 			try {
 				String line = input.readline();
 				if (line == null || line.trim().isEmpty()) {
-					LogHandler.err_println("Read an empty line from Input Stream Handler : " + input.toString(), true);
+					LogHandler.err_println("Skipped an empty line from input file.", true);
 					LogHandler.print_debug_info("Input Stream Handler: %s, Line: \"%s\"", input.toString(), line);
 					continue;
 				}
 
 				String tokens[] = null;
 				try {
-					tokens = splitLine(line, 5, null);
+					tokens = splitLine(line, 5, Collections.singleton(2));
 				} catch (IllegalArgumentException e) {
 					LogHandler.err_println(
 							"Input line \"" + line + "\" did not contain at least five tokens. Skipping line.");
 					LogHandler.print_exception(e, "split input line",
-							"Input Stream Handler: %s, Separator Chars: %s, Line: \"%s\"", input.toString(),
-							SEPARATOR_REGEX.toString(), line);
+							"Separator Chars: %s, Line: \"%s\", Input Stream Handler: %s", SEPARATOR_REGEX.toString(),
+							line, input.toString());
 					continue;
 				}
 
@@ -420,14 +420,14 @@ public class CSVHandler {
 				if (first.containsKey(tokens[0])) {
 					LogHandler.err_println("Found duplicate turkey id \"" + tokens[0] + "\". Skipping line.");
 					LogHandler.print_debug_info(
-							"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
-							input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", tokens), line);
+							"Separator Chars: %s, Tokens: [%s], Line: \"%s\", Input Stream Handler: %s",
+							SEPARATOR_REGEX.toString(), StringUtils.join(", ", tokens), line, input.toString());
 					continue;
 				} else if (!ID_REGEX.matcher(tokens[0]).matches()) {
 					LogHandler.err_println("Found invalid turkey id \"" + tokens[0] + "\". Skipping line.");
 					LogHandler.print_debug_info(
-							"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
-							input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", tokens), line);
+							"Separator Chars: %s, Tokens: [%s], Line: \"%s\", Input Stream Handler: %s",
+							SEPARATOR_REGEX.toString(), StringUtils.join(", ", tokens), line, input.toString());
 					continue;
 				}
 
@@ -435,9 +435,46 @@ public class CSVHandler {
 					LogHandler.err_println("Found invalid start zone id \"" + tokens[1] + "\" for turkey \"" + tokens[0]
 							+ "\". Skipping line.");
 					LogHandler.print_debug_info(
-							"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
-							input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", tokens), line);
+							"Separator Chars: %s, Tokens: [%s], Line: \"%s\", Input Stream Handler: %s",
+							SEPARATOR_REGEX.toString(), StringUtils.join(", ", tokens), line, input.toString());
 					continue;
+				}
+
+				Calendar endTime = null;
+				if (!tokens[2].isEmpty() && tokens[3].isEmpty()) {
+					LogHandler.err_println("Found end time \"" + tokens[2] + "\" without end date for turkey \""
+							+ tokens[0] + "\". Ignoring.");
+					LogHandler.print_debug_info(
+							"Separator Chars: %s, Tokens: [%s], Line: \"%s\", Input Stream Handler: %s",
+							SEPARATOR_REGEX.toString(), StringUtils.join(", ", tokens), line, input.toString());
+				} else if (tokens[2].isEmpty() && !tokens[3].isEmpty()) {
+					try {
+						endTime = TimeUtils.parseDate(tokens[3]);
+						LogHandler.err_println("Found end date \"" + tokens[3] + "\" without end time for turkey \""
+								+ tokens[0] + "\". Removing turkey at beginning of the day.");
+						LogHandler.print_debug_info(
+								"End Date: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\", Input Stream Handler: %s",
+								tokens[3], SEPARATOR_REGEX.toString(), StringUtils.join(", ", tokens), line,
+								input.toString());
+					} catch (IllegalArgumentException e) {
+						LogHandler.err_println("Failed to parse end date \"" + tokens[3] + "\" for turkey \""
+								+ tokens[0] + "\". Ignoring.");
+						LogHandler.print_exception(e, "parse end date",
+								"End Date: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\", Input Stream Handler: %s",
+								tokens[3], SEPARATOR_REGEX.toString(), StringUtils.join(", ", tokens), line,
+								input.toString());
+					}
+				} else if (!tokens[2].isEmpty() && !tokens[3].isEmpty()) {
+					try {
+						endTime = TimeUtils.parseTime(tokens[3], tokens[2]);
+					} catch (IllegalArgumentException e) {
+						LogHandler.err_println("Failed to parse end time \"" + tokens[2] + "\" or end date \""
+								+ tokens[3] + "\" for turkey \"" + tokens[0] + "\". Ignoring end time and date.");
+						LogHandler.print_exception(e, "parse end time",
+								"End Date: %s, End Time: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\", Input Stream Handler: %s",
+								tokens[3], tokens[2], SEPARATOR_REGEX.toString(), StringUtils.join(", ", tokens), line,
+								input.toString());
+					}
 				}
 
 				List<String> list = new ArrayList<>();
@@ -446,19 +483,19 @@ public class CSVHandler {
 						LogHandler.err_println("Found duplicate id \"" + tokens[i]
 								+ "\". Ignoring the occurrence for turkey \"" + tokens[0] + "\".");
 						LogHandler.print_debug_info(
-								"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
-								input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", tokens), line);
+								"Separator Chars: %s, Tokens: [%s], Line: \"%s\", Input Stream Handler: %s",
+								SEPARATOR_REGEX.toString(), StringUtils.join(", ", tokens), line, input.toString());
 					} else if (tokens[i].isEmpty()) {
 						LogHandler.err_println("Found empty value in line \"" + line + "\". Skipping.", true);
 						LogHandler.print_debug_info(
-								"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
-								input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", tokens), line);
+								"Separator Chars: %s, Tokens: [%s], Line: \"%s\", Input Stream Handler: %s",
+								SEPARATOR_REGEX.toString(), StringUtils.join(", ", tokens), line, input.toString());
 					} else if (!ID_REGEX.matcher(tokens[i]).matches()) {
 						LogHandler.err_println(
 								"Found invalid id \"" + tokens[i] + "\" for turkey \"" + tokens[0] + "\". Skipping.");
 						LogHandler.print_debug_info(
-								"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
-								input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", tokens), line);
+								"Separator Chars: %s, Tokens: [%s], Line: \"%s\", Input Stream Handler: %s",
+								SEPARATOR_REGEX.toString(), StringUtils.join(", ", tokens), line, input.toString());
 					} else {
 						list.add(tokens[i]);
 						second.put(tokens[i], tokens[0]);
@@ -469,13 +506,12 @@ public class CSVHandler {
 					LogHandler.err_println(
 							"Input line \"" + line + "\" did not contain at least one valid value. Skipping line.");
 					LogHandler.print_debug_info(
-							"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
-							input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", tokens), line);
+							"Separator Chars: %s, Tokens: [%s], Line: \"%s\", Input Stream Handler: %s",
+							SEPARATOR_REGEX.toString(), StringUtils.join(", ", tokens), line, input.toString());
 					continue;
 				}
 
-				first.put(tokens[0], new TurkeyInfo(tokens[0], list, null, tokens[1].isEmpty() ? null : tokens[1], null,
-						null, args));
+				first.put(tokens[0], new TurkeyInfo(tokens[0], list, null, tokens[1], null, null, endTime, args));
 				last_failed = false;
 			} catch (IOException e) {
 				if (last_failed) {
@@ -484,7 +520,7 @@ public class CSVHandler {
 					LogHandler.err_println("Reading an input line failed. Trying another one.");
 				}
 				LogHandler.print_exception(e, "read a turkey file", "Input Stream Handler: %s, Separator Chars: %s",
-						input.toString(), SEPARATOR_REGEX);
+						input.toString(), SEPARATOR_REGEX.toString());
 
 				if (last_failed) {
 					break;
@@ -501,7 +537,7 @@ public class CSVHandler {
 
 		if (first.isEmpty() && second.isEmpty()) {
 			LogHandler.err_println("Turkey input file did not contain any valid data.");
-			LogHandler.print_debug_info("Input Stream Handler: %s", input);
+			LogHandler.print_debug_info("Input Stream Handler: %s", input.toString());
 			return null;
 		} else {
 			return new Pair<>(first, second);
@@ -530,7 +566,7 @@ public class CSVHandler {
 		}
 
 		StringBuilder headers = new StringBuilder();
-		headers.append("Tier;Startbereich;Endzeit;Enddatum");
+		headers.append(String.format("Tier%1$cStartbereich%1$cEndzeit%1$cEnddatum", DEFAULT_SEPARATOR));
 		for (int i = 1; i <= numTransponders; i++) {
 			headers.append(DEFAULT_SEPARATOR);
 			headers.append("Transponder ");
@@ -546,8 +582,15 @@ public class CSVHandler {
 			if (ti.getCurrentZone() != null) {
 				sb.append(ti.getCurrentZone());
 			}
+
 			sb.append(DEFAULT_SEPARATOR);
+			if (ti.getEndCal() != null) {
+				sb.append(TimeUtils.encodeTime(TimeUtils.getMsOfDay(ti.getEndCal())));
+			}
 			sb.append(DEFAULT_SEPARATOR);
+			if (ti.getEndCal() != null) {
+				sb.append(TimeUtils.encodeDate(ti.getEndCal()));
+			}
 
 			List<String> trans = ti.getTransponders();
 			for (int i = 0; i < trans.size(); i++) {
@@ -579,7 +622,7 @@ public class CSVHandler {
 			checkInput(input);
 		} catch (EOFException e) {
 			LogHandler.err_println("Input file did not contain any data.");
-			LogHandler.print_exception(e, "read a downtimes file", "Input Stream Handler: %s", input);
+			LogHandler.print_exception(e, "read a downtimes file", "Input Stream Handler: %s", input.toString());
 			return null;
 		}
 
@@ -592,7 +635,7 @@ public class CSVHandler {
 			try {
 				line = input.readline();
 				if (line == null || line.trim().isEmpty()) {
-					LogHandler.err_println("Read an empty line from Input Stream Handler : " + input.toString(), true);
+					LogHandler.err_println("Skipped an empty line from input file.", true);
 					LogHandler.print_debug_info("Input Stream Handler: %s, Line: \"%s\"", input.toString(), line);
 					continue;
 				}
@@ -603,8 +646,8 @@ public class CSVHandler {
 					LogHandler.err_println(
 							"Input line \"" + line + "\" did not contain exactly four tokens. Skipping line.");
 					LogHandler.print_exception(e, "split input line",
-							"Input Stream Handler: %s, Separator Chars: %s, Line: \"%s\"", input.toString(),
-							SEPARATOR_REGEX.toString(), line);
+							"Separator Chars: %s, Line: \"%s\", Input Stream Handler: %s", SEPARATOR_REGEX.toString(),
+							line, input.toString());
 					continue;
 				}
 
@@ -612,8 +655,8 @@ public class CSVHandler {
 					LogHandler.err_println(
 							"Input line \"" + line + "\" did not contain exactly four tokens. Skipping line.");
 					LogHandler.print_debug_info(
-							"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
-							input.toString(), SEPARATOR_REGEX.toString(), StringUtils.join(", ", tokens), line);
+							"Separator Chars: %s, Tokens: [%s], Line: \"%s\", Input Stream Handler: %s",
+							SEPARATOR_REGEX.toString(), StringUtils.join(", ", tokens), line, input.toString());
 					continue;
 				}
 
@@ -627,10 +670,11 @@ public class CSVHandler {
 				if (!end.after(start)) {
 					LogHandler.err_println("Downtime end wasn't after its start. Skipping line.");
 					LogHandler.print_debug_info(
-							"Start Date: %s, Start Time: %s, End Date: %s, End Time: %s, Input Stream Handler: %s, Line: \"%s\", Separator Chars: %s, Tokens: [%s]",
+							"Start Date: %s, Start Time: %s, End Date: %s, End Time: %s, Line: \"%s\", "
+									+ "Separator Chars: %s, Tokens: [%s], Input Stream Handler: %s",
 							TimeUtils.encodeDate(start), TimeUtils.encodeTime(TimeUtils.getMsOfDay(start)),
-							TimeUtils.encodeDate(end), TimeUtils.encodeTime(TimeUtils.getMsOfDay(end)),
-							input.toString(), line, SEPARATOR_REGEX, StringUtils.join(", ", tokens));
+							TimeUtils.encodeDate(end), TimeUtils.encodeTime(TimeUtils.getMsOfDay(end)), line,
+							SEPARATOR_REGEX.toString(), StringUtils.join(", ", tokens), input.toString());
 					continue;
 				}
 
@@ -661,7 +705,7 @@ public class CSVHandler {
 					LogHandler.err_println("Reading an input line failed. Trying another one.");
 				}
 				LogHandler.print_exception(e, "read a downtimes file", "Input Stream Handler: %s, Separator Chars: %s",
-						input.toString(), SEPARATOR_REGEX);
+						input.toString(), SEPARATOR_REGEX.toString());
 
 				if (last_failed) {
 					break;
@@ -676,10 +720,10 @@ public class CSVHandler {
 					LogHandler.err_println("Failed to parse end time or date of line \"" + line + "\". Skipping line.");
 				}
 				LogHandler.print_exception(e, "parse downtime line",
-						"Start Date: %s, Start Time: %s, Input Stream Handler: %s, Line: \"%s\", Separator Chars: %s, Tokens: [%s]",
+						"Start Date: %s, Start Time: %s, Line: \"%s\", Separator Chars: %s, Tokens: [%s], Input Stream Handler: %s",
 						start == null ? "null" : TimeUtils.encodeDate(start),
-						start == null ? "null" : TimeUtils.encodeTime(TimeUtils.getMsOfDay(start)), input.toString(),
-						line, SEPARATOR_REGEX, StringUtils.join(", ", tokens));
+						start == null ? "null" : TimeUtils.encodeTime(TimeUtils.getMsOfDay(start)), line,
+						SEPARATOR_REGEX.toString(), StringUtils.join(", ", tokens), input.toString());
 			}
 		}
 
@@ -693,7 +737,7 @@ public class CSVHandler {
 
 		if (downtimes.isEmpty()) {
 			LogHandler.err_println("Input file did not contain any valid data.");
-			LogHandler.print_debug_info("Input Stream Handler: %s", input);
+			LogHandler.print_debug_info("Input Stream Handler: %s", input.toString());
 			return null;
 		} else {
 			return downtimes;
@@ -761,8 +805,8 @@ public class CSVHandler {
 					LogHandler.err_println(
 							"Input line \"" + line + "\" did not contain exactly four tokens. Skipping line.");
 					LogHandler.print_exception(e, "split input line",
-							"Input Stream Handler: %s, Spearator Chars: %s, Line: \"%s\"", input.toString(),
-							SEPARATOR_REGEX.toString(), line);
+							"Spearator Chars: %s, Line: \"%s\", Input Stream Handler: %s", SEPARATOR_REGEX.toString(),
+							line, input.toString());
 					continue;
 				}
 
@@ -770,8 +814,8 @@ public class CSVHandler {
 					LogHandler.err_println(
 							"Input line \"" + line + "\" did not contain exactly four tokens. Skipping line.");
 					LogHandler.print_debug_info(
-							"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
-							input.toString(), SEPARATOR_REGEX.toString(), StringUtils.join(", ", tokens), line);
+							"Separator Chars: %s, Tokens: [%s], Line: \"%s\", Input Stream Handler: %s",
+							SEPARATOR_REGEX.toString(), StringUtils.join(", ", tokens), line, input.toString());
 					continue;
 				}
 
@@ -793,8 +837,8 @@ public class CSVHandler {
 						} else {
 							LogHandler.err_println("Found invalid header \"" + tokens[i] + "\".");
 							LogHandler.print_debug_info(
-									"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
-									input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", tokens), line);
+									"Separator Chars: %s, Tokens: [%s], Line: \"%s\", Input Stream Handler: %s",
+									SEPARATOR_REGEX.toString(), StringUtils.join(", ", tokens), line, input.toString());
 							break;
 						}
 					}
@@ -808,8 +852,8 @@ public class CSVHandler {
 						LogHandler.err_println(
 								"Header line \"" + line + "\" was invalid. Assuming default column order.");
 						LogHandler.print_debug_info(
-								"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
-								input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", tokens), line);
+								"Separator Chars: %s, Tokens: [%s], Line: \"%s\", Input Stream Handler: %s",
+								SEPARATOR_REGEX.toString(), StringUtils.join(", ", tokens), line, input.toString());
 						tokenOrder[0] = 0;
 						tokenOrder[1] = 1;
 						tokenOrder[2] = 2;
@@ -825,8 +869,8 @@ public class CSVHandler {
 					if (tokens[i].isEmpty()) {
 						LogHandler.err_println("Input line \"" + line + "\" contained an empty token. Skipping line.");
 						LogHandler.print_debug_info(
-								"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
-								input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", tokens), line);
+								"Separator Chars: %s, Tokens: [%s], Line: \"%s\", Input Stream Handler: %s",
+								SEPARATOR_REGEX.toString(), StringUtils.join(", ", tokens), line, input.toString());
 						continue main_loop;
 					}
 				}
@@ -835,15 +879,15 @@ public class CSVHandler {
 					LogHandler.err_println("Input line \"" + line + "\" contains invalid transponder id \""
 							+ tokens[tokenOrder[0]] + "\". Skipping line.");
 					LogHandler.print_debug_info(
-							"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
-							input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", tokens), line);
+							"Separator Chars: %s, Tokens: [%s], Line: \"%s\", Input Stream Handler: %s",
+							SEPARATOR_REGEX.toString(), StringUtils.join(", ", tokens), line, input.toString());
 					continue;
 				} else if (!ID_REGEX.matcher(tokens[tokenOrder[3]]).matches()) {
 					LogHandler.err_println("Input line \"" + line + "\" contains invalid antenna id \""
 							+ tokens[tokenOrder[3]] + "\". Skipping line.");
 					LogHandler.print_debug_info(
-							"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
-							input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", tokens), line);
+							"Separator Chars: %s, Tokens: [%s], Line: \"%s\", Input Stream Handler: %s",
+							SEPARATOR_REGEX.toString(), StringUtils.join(", ", tokens), line, input.toString());
 					continue;
 				}
 
@@ -857,7 +901,7 @@ public class CSVHandler {
 					LogHandler.err_println("Reading an input line failed. Trying another one.");
 				}
 				LogHandler.print_exception(e, "read data input", "Input Stream Handler: %s, Separator Chars: %s",
-						input.toString(), SEPARATOR_REGEX);
+						input.toString(), SEPARATOR_REGEX.toString());
 
 				if (last_failed) {
 					break;
@@ -867,8 +911,8 @@ public class CSVHandler {
 			} catch (IllegalArgumentException e) {
 				LogHandler.err_println("Parsing time of day or date of line \"" + line + "\" failed. Skipping line.");
 				LogHandler.print_exception(e, "parse record time",
-						"Input Stream Handler: %s, Line: \"%s\", Separator Chars: %s, Tokens: [%s]", input.toString(),
-						line, SEPARATOR_REGEX, StringUtils.join(", ", tokens));
+						"Line: \"%s\", Separator Chars: %s, Tokens: [%s], Input Stream Handler: %s", line,
+						SEPARATOR_REGEX.toString(), StringUtils.join(", ", tokens), input.toString());
 			}
 		}
 
@@ -978,15 +1022,15 @@ public class CSVHandler {
 			checkInput(input);
 		} catch (EOFException e) {
 			LogHandler.err_println("Input file did not contain any data.");
-			LogHandler.print_exception(e, "read a totals file", "Input Stream Handler: %s", input);
+			LogHandler.print_exception(e, "read a totals file", "Input Stream Handler: %s", input.toString());
 			return null;
 		}
 
 		String headerLine = input.readline().trim();
 		if (!headerLine.toLowerCase().startsWith("tier")) {
 			LogHandler.err_println("Totals file did not start with a valid header line.");
-			LogHandler.print_debug_info("Input Stream Handler: %s, Separator Chars: %s, Line: \"%s\"", input.toString(),
-					SEPARATOR_REGEX, headerLine);
+			LogHandler.print_debug_info("Separator Chars: %s, Line: \"%s\", Input Stream Handler: %s",
+					SEPARATOR_REGEX.toString(), headerLine, input.toString());
 			throw new IOException("Invalid input file");
 		}
 
@@ -994,8 +1038,8 @@ public class CSVHandler {
 
 		if (headers.length < 4) {
 			LogHandler.err_println("Header line \"" + headerLine + "\" did not contain at least four headers.");
-			LogHandler.print_debug_info("Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
-					input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", headers), headerLine);
+			LogHandler.print_debug_info("Separator Chars: %s, Tokens: [%s], Line: \"%s\", Input Stream Handler: %s",
+					SEPARATOR_REGEX.toString(), StringUtils.join(", ", headers), headerLine, input.toString());
 			throw new IOException("Invalid input file");
 		}
 
@@ -1009,13 +1053,15 @@ public class CSVHandler {
 			try {
 				line = input.readline();
 				if (line == null || line.trim().isEmpty()) {
-					LogHandler.err_println("Read an empty line from Input Stream Handler : " + input.toString(), true);
+					LogHandler.err_println("Skipped an empty line from input file.", true);
+					LogHandler.print_debug_info("Input Stream Handler: %s, Line: \"%s\"", input.toString(), line);
 					continue;
 				}
 
 				try {
 					Set<Integer> times = new HashSet<Integer>();
-					for (int i = 2; i < headers.length; i++) {
+					int numTokens = SEPARATOR_REGEX.split(line).length;
+					for (int i = 2; i < numTokens; i++) {
 						times.add(i);
 					}
 					tokens = splitLine(line, 4, times);
@@ -1023,8 +1069,8 @@ public class CSVHandler {
 					LogHandler.err_println(
 							"Input line \"" + line + "\" did not contain at least four tokens. Skipping line.");
 					LogHandler.print_exception(e, "split input line",
-							"Input Stream Handler: %s, Separator Chars: %s, Line: \"%s\"", input.toString(),
-							SEPARATOR_REGEX, line);
+							"Separator Chars: %s, Line: \"%s\", Input Stream Handler: %s", SEPARATOR_REGEX.toString(),
+							line, input.toString());
 					continue;
 				}
 
@@ -1041,8 +1087,9 @@ public class CSVHandler {
 				if (dateTimes.containsKey(day)) {
 					LogHandler.err_println("Found already parsed turkey date combo. Skipping line.");
 					LogHandler.print_debug_info(
-							"Turkey: %s, Date: %s, Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
-							turkey, day, input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", tokens), line);
+							"Turkey: %s, Date: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\", Input Stream Handler: %s",
+							turkey, day, SEPARATOR_REGEX.toString(), StringUtils.join(", ", tokens), line,
+							input.toString());
 					continue;
 				}
 
@@ -1069,7 +1116,7 @@ public class CSVHandler {
 					LogHandler.err_println("Reading an input line failed. Trying another one.");
 				}
 				LogHandler.print_exception(e, "read an output file", "Input Stream Handler: %s, Separator Chars: %s",
-						input.toString(), SEPARATOR_REGEX);
+						input.toString(), SEPARATOR_REGEX.toString());
 
 				if (last_failed) {
 					break;
@@ -1078,13 +1125,13 @@ public class CSVHandler {
 				}
 			} catch (NumberFormatException e) {
 				LogHandler.err_println("Parsing the zone changes number failed. Skipping line.");
-				LogHandler.print_debug_info("Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
-						input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", tokens), line);
+				LogHandler.print_debug_info("Separator Chars: %s, Tokens: [%s], Line: \"%s\", Input Stream Handler: %s",
+						SEPARATOR_REGEX.toString(), StringUtils.join(", ", tokens), line, input.toString());
 			} catch (IllegalArgumentException e) {
 				LogHandler.err_println("Parsing time of day or date of line \"" + line + "\" failed. Skipping line.");
 				LogHandler.print_exception(e, "parse record time of day or date",
-						"Input Stream Handler: %s, Tokens: [%s], Line: \"%s\"", input.toString(),
-						StringUtils.join(", ", tokens), line);
+						"Separator Chars: %s, Tokens: [%s], Line: \"%s\", Input Stream Handler: %s",
+						SEPARATOR_REGEX.toString(), StringUtils.join(", ", tokens), line, input.toString());
 			}
 		}
 
@@ -1095,7 +1142,7 @@ public class CSVHandler {
 
 		if (turkeyTimes.isEmpty() && turkeyChanges.isEmpty()) {
 			LogHandler.err_println("Input file did not contain any valid data.");
-			LogHandler.print_debug_info("Input Stream Handler: %s", input);
+			LogHandler.print_debug_info("Input Stream Handler: %s", input.toString());
 			return null;
 		} else {
 			return new Pair<>(turkeyTimes, turkeyChanges);
@@ -1148,15 +1195,15 @@ public class CSVHandler {
 			checkInput(input);
 		} catch (EOFException e) {
 			LogHandler.err_println("Input file did not contain any data.");
-			LogHandler.print_exception(e, "read a stays file", "Input Stream Handler: %s", input);
+			LogHandler.print_exception(e, "read a stays file", "Input Stream Handler: %s", input.toString());
 			return null;
 		}
 
 		String headerLine = input.readline().trim();
 		if (!headerLine.toLowerCase().startsWith("tier")) {
 			LogHandler.err_println("Stays file did not start with a valid header line.");
-			LogHandler.print_debug_info("Input Stream Handler: %s, Separator Chars: %s, Line: \"%s\"", input.toString(),
-					SEPARATOR_REGEX, headerLine);
+			LogHandler.print_debug_info("Separator Chars: %s, Line: \"%s\", Input Stream Handler: %s",
+					SEPARATOR_REGEX.toString(), headerLine, input.toString());
 			throw new IOException("Invalid input file");
 		}
 
@@ -1164,8 +1211,8 @@ public class CSVHandler {
 
 		if (headers.length != 7) {
 			LogHandler.err_println("Header line \"" + headerLine + "\" did not contain exactly seven headers.");
-			LogHandler.print_debug_info("Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
-					input.toString(), SEPARATOR_REGEX, StringUtils.join(", ", headers), headerLine);
+			LogHandler.print_debug_info("Separator Chars: %s, Tokens: [%s], Line: \"%s\", Input Stream Handler: %s",
+					SEPARATOR_REGEX.toString(), StringUtils.join(", ", headers), headerLine, input.toString());
 			throw new IOException("Invalid input file");
 		}
 
@@ -1177,7 +1224,8 @@ public class CSVHandler {
 			try {
 				line = input.readline();
 				if (line == null || line.trim().isEmpty()) {
-					LogHandler.err_println("Read an empty line from Input Stream Handler : " + input.toString(), true);
+					LogHandler.err_println("Skipped an empty line from input file.", true);
+					LogHandler.print_debug_info("Input Stream Handler: %s, Line: \"%s\"", input.toString(), line);
 					continue;
 				}
 
@@ -1187,16 +1235,16 @@ public class CSVHandler {
 					LogHandler.err_println(
 							"Input line \"" + line + "\" did not contain exactly seven tokens. Skipping line.");
 					LogHandler.print_exception(e, "split input line",
-							"Input Stream Handler: %s, Separator Chars: %s, Line: \"%s\"", input.toString(),
-							SEPARATOR_REGEX.toString(), line);
+							"Separator Chars: %s, Line: \"%s\", Input Stream Handler: %s", SEPARATOR_REGEX.toString(),
+							line, input.toString());
 				}
 
 				if (tokens.length != 7) {
 					LogHandler.err_println(
 							"Input line \"" + line + "\" did not contain exactly seven tokens. Skipping line.");
 					LogHandler.print_debug_info(
-							"Input Stream Handler: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
-							input.toString(), SEPARATOR_REGEX.toString(), StringUtils.join(", ", tokens), line);
+							"Separator Chars: %s, Tokens: [%s], Line: \"%s\", Input Stream Handler: %s",
+							SEPARATOR_REGEX.toString(), StringUtils.join(", ", tokens), line, input.toString());
 					continue;
 				}
 
@@ -1213,9 +1261,9 @@ public class CSVHandler {
 				if (fileStayTime != calcStayTime) {
 					LogHandler.err_println("Stay time did not match match entry and exit time. Skipping line.");
 					LogHandler.print_debug_info(
-							"Input Stream Handler: %s, File Stay Time: %s, Calculated Stay Time: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\"",
-							input.toString(), TimeUtils.encodeTime(fileStayTime), TimeUtils.encodeTime(calcStayTime),
-							SEPARATOR_REGEX, StringUtils.join(", ", tokens), line);
+							"File Stay Time: %s, Calculated Stay Time: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\", Input Stream Handler: %s",
+							TimeUtils.encodeTime(fileStayTime), TimeUtils.encodeTime(calcStayTime),
+							SEPARATOR_REGEX.toString(), StringUtils.join(", ", tokens), line, input.toString());
 					continue;
 				}
 
@@ -1227,7 +1275,7 @@ public class CSVHandler {
 					LogHandler.err_println("Reading an input line failed. Trying another one.");
 				}
 				LogHandler.print_exception(e, "read an output file", "Input Stream Handler: %s, Separator Chars: %s",
-						input.toString(), SEPARATOR_REGEX);
+						input.toString(), SEPARATOR_REGEX.toString());
 
 				if (last_failed) {
 					break;
@@ -1237,8 +1285,8 @@ public class CSVHandler {
 			} catch (IllegalArgumentException e) {
 				LogHandler.err_println("Parsing time of day or date in line \"" + line + "\" failed. Skipping line.");
 				LogHandler.print_exception(e, "parse zone stay time of day or date",
-						"Input Stream Handler: %s, Tokens: [%s], Line: \"%s\"", input.toString(),
-						StringUtils.join(", ", tokens), line);
+						"Separator Chars: %s, Tokens: [%s], Line: \"%s\", Input Stream Handler: %s",
+						SEPARATOR_REGEX.toString(), StringUtils.join(", ", tokens), line, input.toString());
 			}
 		}
 
@@ -1249,7 +1297,7 @@ public class CSVHandler {
 
 		if (stays.isEmpty()) {
 			LogHandler.err_println("Input file did not contain any valid data.");
-			LogHandler.print_debug_info("Input Stream Handler: %s", input);
+			LogHandler.print_debug_info("Input Stream Handler: %s", input.toString());
 			return null;
 		} else {
 			return stays;

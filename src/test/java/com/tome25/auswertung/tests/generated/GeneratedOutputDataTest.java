@@ -2,11 +2,13 @@ package com.tome25.auswertung.tests.generated;
 
 import java.io.IOException;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
 import com.tome25.auswertung.args.Arguments;
+import com.tome25.auswertung.log.LogHandler;
 import com.tome25.auswertung.stream.FileInputStreamHandler;
 import com.tome25.auswertung.stream.FileOutputStreamHandler;
 import com.tome25.auswertung.testdata.AntennaDataGenerator;
@@ -15,6 +17,7 @@ import com.tome25.auswertung.tests.OutputDataTest;
 import com.tome25.auswertung.tests.OutputDataTest.TestMappings;
 import com.tome25.auswertung.tests.rules.TempFileStreamHandler;
 import com.tome25.auswertung.utils.Pair;
+import com.tome25.auswertung.utils.TimeUtils;
 
 /**
  * An automatically generated class containing unit tests testing the fill data
@@ -37,16 +40,34 @@ public class GeneratedOutputDataTest {
     public TempFileStreamHandler tempFolder = new TempFileStreamHandler();
 
     /**
+     * The date at which the test data starts.
+     *
+     * @see #startTime
+     */
+    public final String START_DATE = "03.02.2022";
+
+    /**
+     * The time at which the test data starts.<br/>
+     * The first millisecond of {@link #startDate}.
+     */
+    public final long START_TIME = TimeUtils.parseDate(START_DATE).getTimeInMillis();
+
+    /**
+     * Whether the generated unit tests should be run with debug logging enabled.<br/>
+     * Increases run time significantly.
+     */
+    public final boolean DEBUG = false;
+
+    /**
+     * Whether debug mode was previously enabled.
+     */
+    private boolean wasDebug;
+
+    /**
      * An {@link Arguments} to be used for a single test.<br/>
      * Can be modified since its regenerated in {@link #initialize} anyway.
      */
     public Arguments args;
-
-    /**
-     * A collection of mappings to be used for a single test.<br/>
-     * Can be modified since its regenerated in {@link #initialize} anyway.
-     */
-    public TestMappings mappings;
 
     /**
      * A file {@link FileInputStreamHandler input}/{@link FileOutputStreamHandler output} stream handler pair
@@ -65,16 +86,30 @@ public class GeneratedOutputDataTest {
     /**
      * Initializes some common elements required for every test.<br/>
      * Also resets the seed of the {@link AntennaDataGenerator}.
-     * 
-     * @throws IOException If writing the test mappings fails.
+     *
+     * @throws IOException If creating a temporary file fails.
+     * @see #reset()
      */
     @Before
     public void initialize() throws IOException {
         args = Arguments.empty();
         AntennaDataGenerator.resetSeed();
-        mappings = OutputDataTest.generateTestMappings(100, 5, tempFolder);
         antennaPair = tempFolder.newTempIOFile("antenna.csv");
         downtimesPair = tempFolder.newTempIOFile("downtimes.csv");
+        wasDebug = LogHandler.isDebug();
+        LogHandler.setDebug(DEBUG);
+    }
+
+    /**
+     * Resets some things after every test.<br/>
+     * Currently resets the {@link AntennaDataGenerator} seed and debug logging.
+     *
+     * @see #initialize()
+     */
+    @After
+    public void reset() {
+        LogHandler.setDebug(wasDebug);
+        AntennaDataGenerator.resetSeed();
     }
 
 	/**
@@ -82,13 +117,15 @@ public class GeneratedOutputDataTest {
 	 * This unit test does not use a downtimes csv.<br/>
 	 * This unit test uses the default minimum zone stay time.<br/>
 	 * This unit test generates antenna records for each turkey for each day it generates data for.<br/>
-	 * This unit test generates antenna records for a continuous block of days.
+	 * This unit test generates antenna records for a continuous block of days.<br/>
+	 * This unit test does not use turkeys with start zone or end time.
 	 *
 	 * @throws IOException If reading, writing, or creating a temporary file fails.
 	 */
 	@Test
 	public void defaultDefaultMinTime() throws IOException {
-		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, true, true, tempFolder, antennaPair.getValue(), null);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, true, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
 	}
@@ -98,13 +135,51 @@ public class GeneratedOutputDataTest {
 	 * This unit test does not use a downtimes csv.<br/>
 	 * This unit test uses the default minimum zone stay time.<br/>
 	 * This unit test generates antenna records for each turkey for each day it generates data for.<br/>
-	 * This unit test has some days without data in its antenna records.
+	 * This unit test generates antenna records for a continuous block of days.<br/>
+	 * This unit test uses turkeys with start zone and end time.
+	 *
+	 * @throws IOException If reading, writing, or creating a temporary file fails.
+	 */
+	@Test
+	public void defaultDefaultMinTimeAdvancedTurkeys() throws IOException {
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, true, tempFolder, antennaPair.getValue(), null);
+		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
+		OutputDataTest.validateResults(generated, parsed, args);
+	}
+
+	/**
+	 * A unit test for the default hadling, aka fillDays disabled.<br/>
+	 * This unit test does not use a downtimes csv.<br/>
+	 * This unit test uses the default minimum zone stay time.<br/>
+	 * This unit test generates antenna records for each turkey for each day it generates data for.<br/>
+	 * This unit test has some days without data in its antenna records.<br/>
+	 * This unit test does not use turkeys with start zone or end time.
 	 *
 	 * @throws IOException If reading, writing, or creating a temporary file fails.
 	 */
 	@Test
 	public void defaultDefaultMinTimeNonCont() throws IOException {
-		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, false, true, tempFolder, antennaPair.getValue(), null);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, true, tempFolder, antennaPair.getValue(), null);
+		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
+		OutputDataTest.validateResults(generated, parsed, args);
+	}
+
+	/**
+	 * A unit test for the default hadling, aka fillDays disabled.<br/>
+	 * This unit test does not use a downtimes csv.<br/>
+	 * This unit test uses the default minimum zone stay time.<br/>
+	 * This unit test generates antenna records for each turkey for each day it generates data for.<br/>
+	 * This unit test has some days without data in its antenna records.<br/>
+	 * This unit test uses turkeys with start zone and end time.
+	 *
+	 * @throws IOException If reading, writing, or creating a temporary file fails.
+	 */
+	@Test
+	public void defaultDefaultMinTimeNonContAdvancedTurkeys() throws IOException {
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, true, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
 	}
@@ -114,13 +189,15 @@ public class GeneratedOutputDataTest {
 	 * This unit test does not use a downtimes csv.<br/>
 	 * This unit test uses the default minimum zone stay time.<br/>
 	 * This unit test skips some days for some turkeys in its antenna records.<br/>
-	 * This unit test generates antenna records for a continuous block of days.
+	 * This unit test generates antenna records for a continuous block of days.<br/>
+	 * This unit test does not use turkeys with start zone or end time.
 	 *
 	 * @throws IOException If reading, writing, or creating a temporary file fails.
 	 */
 	@Test
 	public void defaultDefaultMinTimeIncomplete() throws IOException {
-		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, true, false, tempFolder, antennaPair.getValue(), null);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, false, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
 	}
@@ -130,13 +207,51 @@ public class GeneratedOutputDataTest {
 	 * This unit test does not use a downtimes csv.<br/>
 	 * This unit test uses the default minimum zone stay time.<br/>
 	 * This unit test skips some days for some turkeys in its antenna records.<br/>
-	 * This unit test has some days without data in its antenna records.
+	 * This unit test generates antenna records for a continuous block of days.<br/>
+	 * This unit test uses turkeys with start zone and end time.
+	 *
+	 * @throws IOException If reading, writing, or creating a temporary file fails.
+	 */
+	@Test
+	public void defaultDefaultMinTimeIncompleteAdvancedTurkeys() throws IOException {
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, false, tempFolder, antennaPair.getValue(), null);
+		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
+		OutputDataTest.validateResults(generated, parsed, args);
+	}
+
+	/**
+	 * A unit test for the default hadling, aka fillDays disabled.<br/>
+	 * This unit test does not use a downtimes csv.<br/>
+	 * This unit test uses the default minimum zone stay time.<br/>
+	 * This unit test skips some days for some turkeys in its antenna records.<br/>
+	 * This unit test has some days without data in its antenna records.<br/>
+	 * This unit test does not use turkeys with start zone or end time.
 	 *
 	 * @throws IOException If reading, writing, or creating a temporary file fails.
 	 */
 	@Test
 	public void defaultDefaultMinTimeIncompleteNonCont() throws IOException {
-		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, false, false, tempFolder, antennaPair.getValue(), null);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, false, tempFolder, antennaPair.getValue(), null);
+		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
+		OutputDataTest.validateResults(generated, parsed, args);
+	}
+
+	/**
+	 * A unit test for the default hadling, aka fillDays disabled.<br/>
+	 * This unit test does not use a downtimes csv.<br/>
+	 * This unit test uses the default minimum zone stay time.<br/>
+	 * This unit test skips some days for some turkeys in its antenna records.<br/>
+	 * This unit test has some days without data in its antenna records.<br/>
+	 * This unit test uses turkeys with start zone and end time.
+	 *
+	 * @throws IOException If reading, writing, or creating a temporary file fails.
+	 */
+	@Test
+	public void defaultDefaultMinTimeIncompleteNonContAdvancedTurkeys() throws IOException {
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, false, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
 	}
@@ -146,14 +261,16 @@ public class GeneratedOutputDataTest {
 	 * This unit test does not use a downtimes csv.<br/>
 	 * This unit test disables the minimum zone stay time.<br/>
 	 * This unit test generates antenna records for each turkey for each day it generates data for.<br/>
-	 * This unit test generates antenna records for a continuous block of days.
+	 * This unit test generates antenna records for a continuous block of days.<br/>
+	 * This unit test does not use turkeys with start zone or end time.
 	 *
 	 * @throws IOException If reading, writing, or creating a temporary file fails.
 	 */
 	@Test
 	public void defaultNoMinTime() throws IOException {
 		args.minTime = 0;
-		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, true, true, tempFolder, antennaPair.getValue(), null);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, true, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
 	}
@@ -163,14 +280,54 @@ public class GeneratedOutputDataTest {
 	 * This unit test does not use a downtimes csv.<br/>
 	 * This unit test disables the minimum zone stay time.<br/>
 	 * This unit test generates antenna records for each turkey for each day it generates data for.<br/>
-	 * This unit test has some days without data in its antenna records.
+	 * This unit test generates antenna records for a continuous block of days.<br/>
+	 * This unit test uses turkeys with start zone and end time.
+	 *
+	 * @throws IOException If reading, writing, or creating a temporary file fails.
+	 */
+	@Test
+	public void defaultNoMinTimeAdvancedTurkeys() throws IOException {
+		args.minTime = 0;
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, true, tempFolder, antennaPair.getValue(), null);
+		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
+		OutputDataTest.validateResults(generated, parsed, args);
+	}
+
+	/**
+	 * A unit test for the default hadling, aka fillDays disabled.<br/>
+	 * This unit test does not use a downtimes csv.<br/>
+	 * This unit test disables the minimum zone stay time.<br/>
+	 * This unit test generates antenna records for each turkey for each day it generates data for.<br/>
+	 * This unit test has some days without data in its antenna records.<br/>
+	 * This unit test does not use turkeys with start zone or end time.
 	 *
 	 * @throws IOException If reading, writing, or creating a temporary file fails.
 	 */
 	@Test
 	public void defaultNoMinTimeNonCont() throws IOException {
 		args.minTime = 0;
-		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, false, true, tempFolder, antennaPair.getValue(), null);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, true, tempFolder, antennaPair.getValue(), null);
+		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
+		OutputDataTest.validateResults(generated, parsed, args);
+	}
+
+	/**
+	 * A unit test for the default hadling, aka fillDays disabled.<br/>
+	 * This unit test does not use a downtimes csv.<br/>
+	 * This unit test disables the minimum zone stay time.<br/>
+	 * This unit test generates antenna records for each turkey for each day it generates data for.<br/>
+	 * This unit test has some days without data in its antenna records.<br/>
+	 * This unit test uses turkeys with start zone and end time.
+	 *
+	 * @throws IOException If reading, writing, or creating a temporary file fails.
+	 */
+	@Test
+	public void defaultNoMinTimeNonContAdvancedTurkeys() throws IOException {
+		args.minTime = 0;
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, true, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
 	}
@@ -180,14 +337,16 @@ public class GeneratedOutputDataTest {
 	 * This unit test does not use a downtimes csv.<br/>
 	 * This unit test disables the minimum zone stay time.<br/>
 	 * This unit test skips some days for some turkeys in its antenna records.<br/>
-	 * This unit test generates antenna records for a continuous block of days.
+	 * This unit test generates antenna records for a continuous block of days.<br/>
+	 * This unit test does not use turkeys with start zone or end time.
 	 *
 	 * @throws IOException If reading, writing, or creating a temporary file fails.
 	 */
 	@Test
 	public void defaultNoMinTimeIncomplete() throws IOException {
 		args.minTime = 0;
-		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, true, false, tempFolder, antennaPair.getValue(), null);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, false, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
 	}
@@ -197,14 +356,54 @@ public class GeneratedOutputDataTest {
 	 * This unit test does not use a downtimes csv.<br/>
 	 * This unit test disables the minimum zone stay time.<br/>
 	 * This unit test skips some days for some turkeys in its antenna records.<br/>
-	 * This unit test has some days without data in its antenna records.
+	 * This unit test generates antenna records for a continuous block of days.<br/>
+	 * This unit test uses turkeys with start zone and end time.
+	 *
+	 * @throws IOException If reading, writing, or creating a temporary file fails.
+	 */
+	@Test
+	public void defaultNoMinTimeIncompleteAdvancedTurkeys() throws IOException {
+		args.minTime = 0;
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, false, tempFolder, antennaPair.getValue(), null);
+		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
+		OutputDataTest.validateResults(generated, parsed, args);
+	}
+
+	/**
+	 * A unit test for the default hadling, aka fillDays disabled.<br/>
+	 * This unit test does not use a downtimes csv.<br/>
+	 * This unit test disables the minimum zone stay time.<br/>
+	 * This unit test skips some days for some turkeys in its antenna records.<br/>
+	 * This unit test has some days without data in its antenna records.<br/>
+	 * This unit test does not use turkeys with start zone or end time.
 	 *
 	 * @throws IOException If reading, writing, or creating a temporary file fails.
 	 */
 	@Test
 	public void defaultNoMinTimeIncompleteNonCont() throws IOException {
 		args.minTime = 0;
-		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, false, false, tempFolder, antennaPair.getValue(), null);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, false, tempFolder, antennaPair.getValue(), null);
+		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
+		OutputDataTest.validateResults(generated, parsed, args);
+	}
+
+	/**
+	 * A unit test for the default hadling, aka fillDays disabled.<br/>
+	 * This unit test does not use a downtimes csv.<br/>
+	 * This unit test disables the minimum zone stay time.<br/>
+	 * This unit test skips some days for some turkeys in its antenna records.<br/>
+	 * This unit test has some days without data in its antenna records.<br/>
+	 * This unit test uses turkeys with start zone and end time.
+	 *
+	 * @throws IOException If reading, writing, or creating a temporary file fails.
+	 */
+	@Test
+	public void defaultNoMinTimeIncompleteNonContAdvancedTurkeys() throws IOException {
+		args.minTime = 0;
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, false, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
 	}
@@ -214,14 +413,16 @@ public class GeneratedOutputDataTest {
 	 * This unit test does not use a downtimes csv.<br/>
 	 * This unit test uses a minimum zone stay time of 30 minutes.<br/>
 	 * This unit test generates antenna records for each turkey for each day it generates data for.<br/>
-	 * This unit test generates antenna records for a continuous block of days.
+	 * This unit test generates antenna records for a continuous block of days.<br/>
+	 * This unit test does not use turkeys with start zone or end time.
 	 *
 	 * @throws IOException If reading, writing, or creating a temporary file fails.
 	 */
 	@Test
 	public void default30MinMinTime() throws IOException {
 		args.minTime = 1800;
-		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, true, true, tempFolder, antennaPair.getValue(), null);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, true, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
 	}
@@ -231,14 +432,54 @@ public class GeneratedOutputDataTest {
 	 * This unit test does not use a downtimes csv.<br/>
 	 * This unit test uses a minimum zone stay time of 30 minutes.<br/>
 	 * This unit test generates antenna records for each turkey for each day it generates data for.<br/>
-	 * This unit test has some days without data in its antenna records.
+	 * This unit test generates antenna records for a continuous block of days.<br/>
+	 * This unit test uses turkeys with start zone and end time.
+	 *
+	 * @throws IOException If reading, writing, or creating a temporary file fails.
+	 */
+	@Test
+	public void default30MinMinTimeAdvancedTurkeys() throws IOException {
+		args.minTime = 1800;
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, true, tempFolder, antennaPair.getValue(), null);
+		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
+		OutputDataTest.validateResults(generated, parsed, args);
+	}
+
+	/**
+	 * A unit test for the default hadling, aka fillDays disabled.<br/>
+	 * This unit test does not use a downtimes csv.<br/>
+	 * This unit test uses a minimum zone stay time of 30 minutes.<br/>
+	 * This unit test generates antenna records for each turkey for each day it generates data for.<br/>
+	 * This unit test has some days without data in its antenna records.<br/>
+	 * This unit test does not use turkeys with start zone or end time.
 	 *
 	 * @throws IOException If reading, writing, or creating a temporary file fails.
 	 */
 	@Test
 	public void default30MinMinTimeNonCont() throws IOException {
 		args.minTime = 1800;
-		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, false, true, tempFolder, antennaPair.getValue(), null);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, true, tempFolder, antennaPair.getValue(), null);
+		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
+		OutputDataTest.validateResults(generated, parsed, args);
+	}
+
+	/**
+	 * A unit test for the default hadling, aka fillDays disabled.<br/>
+	 * This unit test does not use a downtimes csv.<br/>
+	 * This unit test uses a minimum zone stay time of 30 minutes.<br/>
+	 * This unit test generates antenna records for each turkey for each day it generates data for.<br/>
+	 * This unit test has some days without data in its antenna records.<br/>
+	 * This unit test uses turkeys with start zone and end time.
+	 *
+	 * @throws IOException If reading, writing, or creating a temporary file fails.
+	 */
+	@Test
+	public void default30MinMinTimeNonContAdvancedTurkeys() throws IOException {
+		args.minTime = 1800;
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, true, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
 	}
@@ -248,14 +489,16 @@ public class GeneratedOutputDataTest {
 	 * This unit test does not use a downtimes csv.<br/>
 	 * This unit test uses a minimum zone stay time of 30 minutes.<br/>
 	 * This unit test skips some days for some turkeys in its antenna records.<br/>
-	 * This unit test generates antenna records for a continuous block of days.
+	 * This unit test generates antenna records for a continuous block of days.<br/>
+	 * This unit test does not use turkeys with start zone or end time.
 	 *
 	 * @throws IOException If reading, writing, or creating a temporary file fails.
 	 */
 	@Test
 	public void default30MinMinTimeIncomplete() throws IOException {
 		args.minTime = 1800;
-		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, true, false, tempFolder, antennaPair.getValue(), null);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, false, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
 	}
@@ -265,14 +508,54 @@ public class GeneratedOutputDataTest {
 	 * This unit test does not use a downtimes csv.<br/>
 	 * This unit test uses a minimum zone stay time of 30 minutes.<br/>
 	 * This unit test skips some days for some turkeys in its antenna records.<br/>
-	 * This unit test has some days without data in its antenna records.
+	 * This unit test generates antenna records for a continuous block of days.<br/>
+	 * This unit test uses turkeys with start zone and end time.
+	 *
+	 * @throws IOException If reading, writing, or creating a temporary file fails.
+	 */
+	@Test
+	public void default30MinMinTimeIncompleteAdvancedTurkeys() throws IOException {
+		args.minTime = 1800;
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, false, tempFolder, antennaPair.getValue(), null);
+		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
+		OutputDataTest.validateResults(generated, parsed, args);
+	}
+
+	/**
+	 * A unit test for the default hadling, aka fillDays disabled.<br/>
+	 * This unit test does not use a downtimes csv.<br/>
+	 * This unit test uses a minimum zone stay time of 30 minutes.<br/>
+	 * This unit test skips some days for some turkeys in its antenna records.<br/>
+	 * This unit test has some days without data in its antenna records.<br/>
+	 * This unit test does not use turkeys with start zone or end time.
 	 *
 	 * @throws IOException If reading, writing, or creating a temporary file fails.
 	 */
 	@Test
 	public void default30MinMinTimeIncompleteNonCont() throws IOException {
 		args.minTime = 1800;
-		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, false, false, tempFolder, antennaPair.getValue(), null);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, false, tempFolder, antennaPair.getValue(), null);
+		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
+		OutputDataTest.validateResults(generated, parsed, args);
+	}
+
+	/**
+	 * A unit test for the default hadling, aka fillDays disabled.<br/>
+	 * This unit test does not use a downtimes csv.<br/>
+	 * This unit test uses a minimum zone stay time of 30 minutes.<br/>
+	 * This unit test skips some days for some turkeys in its antenna records.<br/>
+	 * This unit test has some days without data in its antenna records.<br/>
+	 * This unit test uses turkeys with start zone and end time.
+	 *
+	 * @throws IOException If reading, writing, or creating a temporary file fails.
+	 */
+	@Test
+	public void default30MinMinTimeIncompleteNonContAdvancedTurkeys() throws IOException {
+		args.minTime = 1800;
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, false, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
 	}
@@ -282,13 +565,15 @@ public class GeneratedOutputDataTest {
 	 * This unit test uses a downtimes csv.<br/>
 	 * This unit test uses the default minimum zone stay time.<br/>
 	 * This unit test generates antenna records for each turkey for each day it generates data for.<br/>
-	 * This unit test generates antenna records for a continuous block of days.
+	 * This unit test generates antenna records for a continuous block of days.<br/>
+	 * This unit test does not use turkeys with start zone or end time.
 	 *
 	 * @throws IOException If reading, writing, or creating a temporary file fails.
 	 */
 	@Test
 	public void defaultDowntimesDefaultMinTime() throws IOException {
-		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, true, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
 	}
@@ -298,13 +583,51 @@ public class GeneratedOutputDataTest {
 	 * This unit test uses a downtimes csv.<br/>
 	 * This unit test uses the default minimum zone stay time.<br/>
 	 * This unit test generates antenna records for each turkey for each day it generates data for.<br/>
-	 * This unit test has some days without data in its antenna records.
+	 * This unit test generates antenna records for a continuous block of days.<br/>
+	 * This unit test uses turkeys with start zone and end time.
+	 *
+	 * @throws IOException If reading, writing, or creating a temporary file fails.
+	 */
+	@Test
+	public void defaultDowntimesDefaultMinTimeAdvancedTurkeys() throws IOException {
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
+		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
+		OutputDataTest.validateResults(generated, parsed, args);
+	}
+
+	/**
+	 * A unit test for the default hadling, aka fillDays disabled.<br/>
+	 * This unit test uses a downtimes csv.<br/>
+	 * This unit test uses the default minimum zone stay time.<br/>
+	 * This unit test generates antenna records for each turkey for each day it generates data for.<br/>
+	 * This unit test has some days without data in its antenna records.<br/>
+	 * This unit test does not use turkeys with start zone or end time.
 	 *
 	 * @throws IOException If reading, writing, or creating a temporary file fails.
 	 */
 	@Test
 	public void defaultDowntimesDefaultMinTimeNonCont() throws IOException {
-		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, false, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
+		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
+		OutputDataTest.validateResults(generated, parsed, args);
+	}
+
+	/**
+	 * A unit test for the default hadling, aka fillDays disabled.<br/>
+	 * This unit test uses a downtimes csv.<br/>
+	 * This unit test uses the default minimum zone stay time.<br/>
+	 * This unit test generates antenna records for each turkey for each day it generates data for.<br/>
+	 * This unit test has some days without data in its antenna records.<br/>
+	 * This unit test uses turkeys with start zone and end time.
+	 *
+	 * @throws IOException If reading, writing, or creating a temporary file fails.
+	 */
+	@Test
+	public void defaultDowntimesDefaultMinTimeNonContAdvancedTurkeys() throws IOException {
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
 	}
@@ -314,13 +637,15 @@ public class GeneratedOutputDataTest {
 	 * This unit test uses a downtimes csv.<br/>
 	 * This unit test uses the default minimum zone stay time.<br/>
 	 * This unit test skips some days for some turkeys in its antenna records.<br/>
-	 * This unit test generates antenna records for a continuous block of days.
+	 * This unit test generates antenna records for a continuous block of days.<br/>
+	 * This unit test does not use turkeys with start zone or end time.
 	 *
 	 * @throws IOException If reading, writing, or creating a temporary file fails.
 	 */
 	@Test
 	public void defaultDowntimesDefaultMinTimeIncomplete() throws IOException {
-		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, true, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
 	}
@@ -330,13 +655,51 @@ public class GeneratedOutputDataTest {
 	 * This unit test uses a downtimes csv.<br/>
 	 * This unit test uses the default minimum zone stay time.<br/>
 	 * This unit test skips some days for some turkeys in its antenna records.<br/>
-	 * This unit test has some days without data in its antenna records.
+	 * This unit test generates antenna records for a continuous block of days.<br/>
+	 * This unit test uses turkeys with start zone and end time.
+	 *
+	 * @throws IOException If reading, writing, or creating a temporary file fails.
+	 */
+	@Test
+	public void defaultDowntimesDefaultMinTimeIncompleteAdvancedTurkeys() throws IOException {
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
+		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
+		OutputDataTest.validateResults(generated, parsed, args);
+	}
+
+	/**
+	 * A unit test for the default hadling, aka fillDays disabled.<br/>
+	 * This unit test uses a downtimes csv.<br/>
+	 * This unit test uses the default minimum zone stay time.<br/>
+	 * This unit test skips some days for some turkeys in its antenna records.<br/>
+	 * This unit test has some days without data in its antenna records.<br/>
+	 * This unit test does not use turkeys with start zone or end time.
 	 *
 	 * @throws IOException If reading, writing, or creating a temporary file fails.
 	 */
 	@Test
 	public void defaultDowntimesDefaultMinTimeIncompleteNonCont() throws IOException {
-		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, false, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
+		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
+		OutputDataTest.validateResults(generated, parsed, args);
+	}
+
+	/**
+	 * A unit test for the default hadling, aka fillDays disabled.<br/>
+	 * This unit test uses a downtimes csv.<br/>
+	 * This unit test uses the default minimum zone stay time.<br/>
+	 * This unit test skips some days for some turkeys in its antenna records.<br/>
+	 * This unit test has some days without data in its antenna records.<br/>
+	 * This unit test uses turkeys with start zone and end time.
+	 *
+	 * @throws IOException If reading, writing, or creating a temporary file fails.
+	 */
+	@Test
+	public void defaultDowntimesDefaultMinTimeIncompleteNonContAdvancedTurkeys() throws IOException {
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
 	}
@@ -346,14 +709,16 @@ public class GeneratedOutputDataTest {
 	 * This unit test uses a downtimes csv.<br/>
 	 * This unit test disables the minimum zone stay time.<br/>
 	 * This unit test generates antenna records for each turkey for each day it generates data for.<br/>
-	 * This unit test generates antenna records for a continuous block of days.
+	 * This unit test generates antenna records for a continuous block of days.<br/>
+	 * This unit test does not use turkeys with start zone or end time.
 	 *
 	 * @throws IOException If reading, writing, or creating a temporary file fails.
 	 */
 	@Test
 	public void defaultDowntimesNoMinTime() throws IOException {
 		args.minTime = 0;
-		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, true, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
 	}
@@ -363,14 +728,54 @@ public class GeneratedOutputDataTest {
 	 * This unit test uses a downtimes csv.<br/>
 	 * This unit test disables the minimum zone stay time.<br/>
 	 * This unit test generates antenna records for each turkey for each day it generates data for.<br/>
-	 * This unit test has some days without data in its antenna records.
+	 * This unit test generates antenna records for a continuous block of days.<br/>
+	 * This unit test uses turkeys with start zone and end time.
+	 *
+	 * @throws IOException If reading, writing, or creating a temporary file fails.
+	 */
+	@Test
+	public void defaultDowntimesNoMinTimeAdvancedTurkeys() throws IOException {
+		args.minTime = 0;
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
+		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
+		OutputDataTest.validateResults(generated, parsed, args);
+	}
+
+	/**
+	 * A unit test for the default hadling, aka fillDays disabled.<br/>
+	 * This unit test uses a downtimes csv.<br/>
+	 * This unit test disables the minimum zone stay time.<br/>
+	 * This unit test generates antenna records for each turkey for each day it generates data for.<br/>
+	 * This unit test has some days without data in its antenna records.<br/>
+	 * This unit test does not use turkeys with start zone or end time.
 	 *
 	 * @throws IOException If reading, writing, or creating a temporary file fails.
 	 */
 	@Test
 	public void defaultDowntimesNoMinTimeNonCont() throws IOException {
 		args.minTime = 0;
-		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, false, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
+		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
+		OutputDataTest.validateResults(generated, parsed, args);
+	}
+
+	/**
+	 * A unit test for the default hadling, aka fillDays disabled.<br/>
+	 * This unit test uses a downtimes csv.<br/>
+	 * This unit test disables the minimum zone stay time.<br/>
+	 * This unit test generates antenna records for each turkey for each day it generates data for.<br/>
+	 * This unit test has some days without data in its antenna records.<br/>
+	 * This unit test uses turkeys with start zone and end time.
+	 *
+	 * @throws IOException If reading, writing, or creating a temporary file fails.
+	 */
+	@Test
+	public void defaultDowntimesNoMinTimeNonContAdvancedTurkeys() throws IOException {
+		args.minTime = 0;
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
 	}
@@ -380,14 +785,16 @@ public class GeneratedOutputDataTest {
 	 * This unit test uses a downtimes csv.<br/>
 	 * This unit test disables the minimum zone stay time.<br/>
 	 * This unit test skips some days for some turkeys in its antenna records.<br/>
-	 * This unit test generates antenna records for a continuous block of days.
+	 * This unit test generates antenna records for a continuous block of days.<br/>
+	 * This unit test does not use turkeys with start zone or end time.
 	 *
 	 * @throws IOException If reading, writing, or creating a temporary file fails.
 	 */
 	@Test
 	public void defaultDowntimesNoMinTimeIncomplete() throws IOException {
 		args.minTime = 0;
-		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, true, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
 	}
@@ -397,14 +804,54 @@ public class GeneratedOutputDataTest {
 	 * This unit test uses a downtimes csv.<br/>
 	 * This unit test disables the minimum zone stay time.<br/>
 	 * This unit test skips some days for some turkeys in its antenna records.<br/>
-	 * This unit test has some days without data in its antenna records.
+	 * This unit test generates antenna records for a continuous block of days.<br/>
+	 * This unit test uses turkeys with start zone and end time.
+	 *
+	 * @throws IOException If reading, writing, or creating a temporary file fails.
+	 */
+	@Test
+	public void defaultDowntimesNoMinTimeIncompleteAdvancedTurkeys() throws IOException {
+		args.minTime = 0;
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
+		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
+		OutputDataTest.validateResults(generated, parsed, args);
+	}
+
+	/**
+	 * A unit test for the default hadling, aka fillDays disabled.<br/>
+	 * This unit test uses a downtimes csv.<br/>
+	 * This unit test disables the minimum zone stay time.<br/>
+	 * This unit test skips some days for some turkeys in its antenna records.<br/>
+	 * This unit test has some days without data in its antenna records.<br/>
+	 * This unit test does not use turkeys with start zone or end time.
 	 *
 	 * @throws IOException If reading, writing, or creating a temporary file fails.
 	 */
 	@Test
 	public void defaultDowntimesNoMinTimeIncompleteNonCont() throws IOException {
 		args.minTime = 0;
-		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, false, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
+		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
+		OutputDataTest.validateResults(generated, parsed, args);
+	}
+
+	/**
+	 * A unit test for the default hadling, aka fillDays disabled.<br/>
+	 * This unit test uses a downtimes csv.<br/>
+	 * This unit test disables the minimum zone stay time.<br/>
+	 * This unit test skips some days for some turkeys in its antenna records.<br/>
+	 * This unit test has some days without data in its antenna records.<br/>
+	 * This unit test uses turkeys with start zone and end time.
+	 *
+	 * @throws IOException If reading, writing, or creating a temporary file fails.
+	 */
+	@Test
+	public void defaultDowntimesNoMinTimeIncompleteNonContAdvancedTurkeys() throws IOException {
+		args.minTime = 0;
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
 	}
@@ -414,14 +861,16 @@ public class GeneratedOutputDataTest {
 	 * This unit test uses a downtimes csv.<br/>
 	 * This unit test uses a minimum zone stay time of 30 minutes.<br/>
 	 * This unit test generates antenna records for each turkey for each day it generates data for.<br/>
-	 * This unit test generates antenna records for a continuous block of days.
+	 * This unit test generates antenna records for a continuous block of days.<br/>
+	 * This unit test does not use turkeys with start zone or end time.
 	 *
 	 * @throws IOException If reading, writing, or creating a temporary file fails.
 	 */
 	@Test
 	public void defaultDowntimes30MinMinTime() throws IOException {
 		args.minTime = 1800;
-		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, true, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
 	}
@@ -431,14 +880,54 @@ public class GeneratedOutputDataTest {
 	 * This unit test uses a downtimes csv.<br/>
 	 * This unit test uses a minimum zone stay time of 30 minutes.<br/>
 	 * This unit test generates antenna records for each turkey for each day it generates data for.<br/>
-	 * This unit test has some days without data in its antenna records.
+	 * This unit test generates antenna records for a continuous block of days.<br/>
+	 * This unit test uses turkeys with start zone and end time.
+	 *
+	 * @throws IOException If reading, writing, or creating a temporary file fails.
+	 */
+	@Test
+	public void defaultDowntimes30MinMinTimeAdvancedTurkeys() throws IOException {
+		args.minTime = 1800;
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
+		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
+		OutputDataTest.validateResults(generated, parsed, args);
+	}
+
+	/**
+	 * A unit test for the default hadling, aka fillDays disabled.<br/>
+	 * This unit test uses a downtimes csv.<br/>
+	 * This unit test uses a minimum zone stay time of 30 minutes.<br/>
+	 * This unit test generates antenna records for each turkey for each day it generates data for.<br/>
+	 * This unit test has some days without data in its antenna records.<br/>
+	 * This unit test does not use turkeys with start zone or end time.
 	 *
 	 * @throws IOException If reading, writing, or creating a temporary file fails.
 	 */
 	@Test
 	public void defaultDowntimes30MinMinTimeNonCont() throws IOException {
 		args.minTime = 1800;
-		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, false, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
+		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
+		OutputDataTest.validateResults(generated, parsed, args);
+	}
+
+	/**
+	 * A unit test for the default hadling, aka fillDays disabled.<br/>
+	 * This unit test uses a downtimes csv.<br/>
+	 * This unit test uses a minimum zone stay time of 30 minutes.<br/>
+	 * This unit test generates antenna records for each turkey for each day it generates data for.<br/>
+	 * This unit test has some days without data in its antenna records.<br/>
+	 * This unit test uses turkeys with start zone and end time.
+	 *
+	 * @throws IOException If reading, writing, or creating a temporary file fails.
+	 */
+	@Test
+	public void defaultDowntimes30MinMinTimeNonContAdvancedTurkeys() throws IOException {
+		args.minTime = 1800;
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
 	}
@@ -448,14 +937,16 @@ public class GeneratedOutputDataTest {
 	 * This unit test uses a downtimes csv.<br/>
 	 * This unit test uses a minimum zone stay time of 30 minutes.<br/>
 	 * This unit test skips some days for some turkeys in its antenna records.<br/>
-	 * This unit test generates antenna records for a continuous block of days.
+	 * This unit test generates antenna records for a continuous block of days.<br/>
+	 * This unit test does not use turkeys with start zone or end time.
 	 *
 	 * @throws IOException If reading, writing, or creating a temporary file fails.
 	 */
 	@Test
 	public void defaultDowntimes30MinMinTimeIncomplete() throws IOException {
 		args.minTime = 1800;
-		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, true, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
 	}
@@ -465,14 +956,54 @@ public class GeneratedOutputDataTest {
 	 * This unit test uses a downtimes csv.<br/>
 	 * This unit test uses a minimum zone stay time of 30 minutes.<br/>
 	 * This unit test skips some days for some turkeys in its antenna records.<br/>
-	 * This unit test has some days without data in its antenna records.
+	 * This unit test generates antenna records for a continuous block of days.<br/>
+	 * This unit test uses turkeys with start zone and end time.
+	 *
+	 * @throws IOException If reading, writing, or creating a temporary file fails.
+	 */
+	@Test
+	public void defaultDowntimes30MinMinTimeIncompleteAdvancedTurkeys() throws IOException {
+		args.minTime = 1800;
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
+		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
+		OutputDataTest.validateResults(generated, parsed, args);
+	}
+
+	/**
+	 * A unit test for the default hadling, aka fillDays disabled.<br/>
+	 * This unit test uses a downtimes csv.<br/>
+	 * This unit test uses a minimum zone stay time of 30 minutes.<br/>
+	 * This unit test skips some days for some turkeys in its antenna records.<br/>
+	 * This unit test has some days without data in its antenna records.<br/>
+	 * This unit test does not use turkeys with start zone or end time.
 	 *
 	 * @throws IOException If reading, writing, or creating a temporary file fails.
 	 */
 	@Test
 	public void defaultDowntimes30MinMinTimeIncompleteNonCont() throws IOException {
 		args.minTime = 1800;
-		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, false, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
+		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
+		OutputDataTest.validateResults(generated, parsed, args);
+	}
+
+	/**
+	 * A unit test for the default hadling, aka fillDays disabled.<br/>
+	 * This unit test uses a downtimes csv.<br/>
+	 * This unit test uses a minimum zone stay time of 30 minutes.<br/>
+	 * This unit test skips some days for some turkeys in its antenna records.<br/>
+	 * This unit test has some days without data in its antenna records.<br/>
+	 * This unit test uses turkeys with start zone and end time.
+	 *
+	 * @throws IOException If reading, writing, or creating a temporary file fails.
+	 */
+	@Test
+	public void defaultDowntimes30MinMinTimeIncompleteNonContAdvancedTurkeys() throws IOException {
+		args.minTime = 1800;
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
 	}
@@ -482,14 +1013,16 @@ public class GeneratedOutputDataTest {
 	 * This unit test does not use a downtimes csv.<br/>
 	 * This unit test uses the default minimum zone stay time.<br/>
 	 * This unit test generates antenna records for each turkey for each day it generates data for.<br/>
-	 * This unit test generates antenna records for a continuous block of days.
+	 * This unit test generates antenna records for a continuous block of days.<br/>
+	 * This unit test does not use turkeys with start zone or end time.
 	 *
 	 * @throws IOException If reading, writing, or creating a temporary file fails.
 	 */
 	@Test
 	public void fillDaysDefaultMinTime() throws IOException {
 		args.fillDays = true;
-		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, true, true, tempFolder, antennaPair.getValue(), null);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, true, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
 	}
@@ -499,14 +1032,54 @@ public class GeneratedOutputDataTest {
 	 * This unit test does not use a downtimes csv.<br/>
 	 * This unit test uses the default minimum zone stay time.<br/>
 	 * This unit test generates antenna records for each turkey for each day it generates data for.<br/>
-	 * This unit test has some days without data in its antenna records.
+	 * This unit test generates antenna records for a continuous block of days.<br/>
+	 * This unit test uses turkeys with start zone and end time.
+	 *
+	 * @throws IOException If reading, writing, or creating a temporary file fails.
+	 */
+	@Test
+	public void fillDaysDefaultMinTimeAdvancedTurkeys() throws IOException {
+		args.fillDays = true;
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, true, tempFolder, antennaPair.getValue(), null);
+		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
+		OutputDataTest.validateResults(generated, parsed, args);
+	}
+
+	/**
+	 * A unit test using fillDays, meaning each day will be considered its own recording.<br/>
+	 * This unit test does not use a downtimes csv.<br/>
+	 * This unit test uses the default minimum zone stay time.<br/>
+	 * This unit test generates antenna records for each turkey for each day it generates data for.<br/>
+	 * This unit test has some days without data in its antenna records.<br/>
+	 * This unit test does not use turkeys with start zone or end time.
 	 *
 	 * @throws IOException If reading, writing, or creating a temporary file fails.
 	 */
 	@Test
 	public void fillDaysDefaultMinTimeNonCont() throws IOException {
 		args.fillDays = true;
-		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, false, true, tempFolder, antennaPair.getValue(), null);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, true, tempFolder, antennaPair.getValue(), null);
+		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
+		OutputDataTest.validateResults(generated, parsed, args);
+	}
+
+	/**
+	 * A unit test using fillDays, meaning each day will be considered its own recording.<br/>
+	 * This unit test does not use a downtimes csv.<br/>
+	 * This unit test uses the default minimum zone stay time.<br/>
+	 * This unit test generates antenna records for each turkey for each day it generates data for.<br/>
+	 * This unit test has some days without data in its antenna records.<br/>
+	 * This unit test uses turkeys with start zone and end time.
+	 *
+	 * @throws IOException If reading, writing, or creating a temporary file fails.
+	 */
+	@Test
+	public void fillDaysDefaultMinTimeNonContAdvancedTurkeys() throws IOException {
+		args.fillDays = true;
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, true, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
 	}
@@ -516,14 +1089,16 @@ public class GeneratedOutputDataTest {
 	 * This unit test does not use a downtimes csv.<br/>
 	 * This unit test uses the default minimum zone stay time.<br/>
 	 * This unit test skips some days for some turkeys in its antenna records.<br/>
-	 * This unit test generates antenna records for a continuous block of days.
+	 * This unit test generates antenna records for a continuous block of days.<br/>
+	 * This unit test does not use turkeys with start zone or end time.
 	 *
 	 * @throws IOException If reading, writing, or creating a temporary file fails.
 	 */
 	@Test
 	public void fillDaysDefaultMinTimeIncomplete() throws IOException {
 		args.fillDays = true;
-		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, true, false, tempFolder, antennaPair.getValue(), null);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, false, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
 	}
@@ -533,14 +1108,54 @@ public class GeneratedOutputDataTest {
 	 * This unit test does not use a downtimes csv.<br/>
 	 * This unit test uses the default minimum zone stay time.<br/>
 	 * This unit test skips some days for some turkeys in its antenna records.<br/>
-	 * This unit test has some days without data in its antenna records.
+	 * This unit test generates antenna records for a continuous block of days.<br/>
+	 * This unit test uses turkeys with start zone and end time.
+	 *
+	 * @throws IOException If reading, writing, or creating a temporary file fails.
+	 */
+	@Test
+	public void fillDaysDefaultMinTimeIncompleteAdvancedTurkeys() throws IOException {
+		args.fillDays = true;
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, false, tempFolder, antennaPair.getValue(), null);
+		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
+		OutputDataTest.validateResults(generated, parsed, args);
+	}
+
+	/**
+	 * A unit test using fillDays, meaning each day will be considered its own recording.<br/>
+	 * This unit test does not use a downtimes csv.<br/>
+	 * This unit test uses the default minimum zone stay time.<br/>
+	 * This unit test skips some days for some turkeys in its antenna records.<br/>
+	 * This unit test has some days without data in its antenna records.<br/>
+	 * This unit test does not use turkeys with start zone or end time.
 	 *
 	 * @throws IOException If reading, writing, or creating a temporary file fails.
 	 */
 	@Test
 	public void fillDaysDefaultMinTimeIncompleteNonCont() throws IOException {
 		args.fillDays = true;
-		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, false, false, tempFolder, antennaPair.getValue(), null);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, false, tempFolder, antennaPair.getValue(), null);
+		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
+		OutputDataTest.validateResults(generated, parsed, args);
+	}
+
+	/**
+	 * A unit test using fillDays, meaning each day will be considered its own recording.<br/>
+	 * This unit test does not use a downtimes csv.<br/>
+	 * This unit test uses the default minimum zone stay time.<br/>
+	 * This unit test skips some days for some turkeys in its antenna records.<br/>
+	 * This unit test has some days without data in its antenna records.<br/>
+	 * This unit test uses turkeys with start zone and end time.
+	 *
+	 * @throws IOException If reading, writing, or creating a temporary file fails.
+	 */
+	@Test
+	public void fillDaysDefaultMinTimeIncompleteNonContAdvancedTurkeys() throws IOException {
+		args.fillDays = true;
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, false, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
 	}
@@ -550,7 +1165,8 @@ public class GeneratedOutputDataTest {
 	 * This unit test does not use a downtimes csv.<br/>
 	 * This unit test disables the minimum zone stay time.<br/>
 	 * This unit test generates antenna records for each turkey for each day it generates data for.<br/>
-	 * This unit test generates antenna records for a continuous block of days.
+	 * This unit test generates antenna records for a continuous block of days.<br/>
+	 * This unit test does not use turkeys with start zone or end time.
 	 *
 	 * @throws IOException If reading, writing, or creating a temporary file fails.
 	 */
@@ -558,7 +1174,8 @@ public class GeneratedOutputDataTest {
 	public void fillDaysNoMinTime() throws IOException {
 		args.fillDays = true;
 		args.minTime = 0;
-		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, true, true, tempFolder, antennaPair.getValue(), null);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, true, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
 	}
@@ -568,7 +1185,28 @@ public class GeneratedOutputDataTest {
 	 * This unit test does not use a downtimes csv.<br/>
 	 * This unit test disables the minimum zone stay time.<br/>
 	 * This unit test generates antenna records for each turkey for each day it generates data for.<br/>
-	 * This unit test has some days without data in its antenna records.
+	 * This unit test generates antenna records for a continuous block of days.<br/>
+	 * This unit test uses turkeys with start zone and end time.
+	 *
+	 * @throws IOException If reading, writing, or creating a temporary file fails.
+	 */
+	@Test
+	public void fillDaysNoMinTimeAdvancedTurkeys() throws IOException {
+		args.fillDays = true;
+		args.minTime = 0;
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, true, tempFolder, antennaPair.getValue(), null);
+		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
+		OutputDataTest.validateResults(generated, parsed, args);
+	}
+
+	/**
+	 * A unit test using fillDays, meaning each day will be considered its own recording.<br/>
+	 * This unit test does not use a downtimes csv.<br/>
+	 * This unit test disables the minimum zone stay time.<br/>
+	 * This unit test generates antenna records for each turkey for each day it generates data for.<br/>
+	 * This unit test has some days without data in its antenna records.<br/>
+	 * This unit test does not use turkeys with start zone or end time.
 	 *
 	 * @throws IOException If reading, writing, or creating a temporary file fails.
 	 */
@@ -576,7 +1214,28 @@ public class GeneratedOutputDataTest {
 	public void fillDaysNoMinTimeNonCont() throws IOException {
 		args.fillDays = true;
 		args.minTime = 0;
-		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, false, true, tempFolder, antennaPair.getValue(), null);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, true, tempFolder, antennaPair.getValue(), null);
+		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
+		OutputDataTest.validateResults(generated, parsed, args);
+	}
+
+	/**
+	 * A unit test using fillDays, meaning each day will be considered its own recording.<br/>
+	 * This unit test does not use a downtimes csv.<br/>
+	 * This unit test disables the minimum zone stay time.<br/>
+	 * This unit test generates antenna records for each turkey for each day it generates data for.<br/>
+	 * This unit test has some days without data in its antenna records.<br/>
+	 * This unit test uses turkeys with start zone and end time.
+	 *
+	 * @throws IOException If reading, writing, or creating a temporary file fails.
+	 */
+	@Test
+	public void fillDaysNoMinTimeNonContAdvancedTurkeys() throws IOException {
+		args.fillDays = true;
+		args.minTime = 0;
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, true, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
 	}
@@ -586,7 +1245,8 @@ public class GeneratedOutputDataTest {
 	 * This unit test does not use a downtimes csv.<br/>
 	 * This unit test disables the minimum zone stay time.<br/>
 	 * This unit test skips some days for some turkeys in its antenna records.<br/>
-	 * This unit test generates antenna records for a continuous block of days.
+	 * This unit test generates antenna records for a continuous block of days.<br/>
+	 * This unit test does not use turkeys with start zone or end time.
 	 *
 	 * @throws IOException If reading, writing, or creating a temporary file fails.
 	 */
@@ -594,7 +1254,8 @@ public class GeneratedOutputDataTest {
 	public void fillDaysNoMinTimeIncomplete() throws IOException {
 		args.fillDays = true;
 		args.minTime = 0;
-		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, true, false, tempFolder, antennaPair.getValue(), null);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, false, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
 	}
@@ -604,7 +1265,28 @@ public class GeneratedOutputDataTest {
 	 * This unit test does not use a downtimes csv.<br/>
 	 * This unit test disables the minimum zone stay time.<br/>
 	 * This unit test skips some days for some turkeys in its antenna records.<br/>
-	 * This unit test has some days without data in its antenna records.
+	 * This unit test generates antenna records for a continuous block of days.<br/>
+	 * This unit test uses turkeys with start zone and end time.
+	 *
+	 * @throws IOException If reading, writing, or creating a temporary file fails.
+	 */
+	@Test
+	public void fillDaysNoMinTimeIncompleteAdvancedTurkeys() throws IOException {
+		args.fillDays = true;
+		args.minTime = 0;
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, false, tempFolder, antennaPair.getValue(), null);
+		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
+		OutputDataTest.validateResults(generated, parsed, args);
+	}
+
+	/**
+	 * A unit test using fillDays, meaning each day will be considered its own recording.<br/>
+	 * This unit test does not use a downtimes csv.<br/>
+	 * This unit test disables the minimum zone stay time.<br/>
+	 * This unit test skips some days for some turkeys in its antenna records.<br/>
+	 * This unit test has some days without data in its antenna records.<br/>
+	 * This unit test does not use turkeys with start zone or end time.
 	 *
 	 * @throws IOException If reading, writing, or creating a temporary file fails.
 	 */
@@ -612,7 +1294,28 @@ public class GeneratedOutputDataTest {
 	public void fillDaysNoMinTimeIncompleteNonCont() throws IOException {
 		args.fillDays = true;
 		args.minTime = 0;
-		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, false, false, tempFolder, antennaPair.getValue(), null);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, false, tempFolder, antennaPair.getValue(), null);
+		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
+		OutputDataTest.validateResults(generated, parsed, args);
+	}
+
+	/**
+	 * A unit test using fillDays, meaning each day will be considered its own recording.<br/>
+	 * This unit test does not use a downtimes csv.<br/>
+	 * This unit test disables the minimum zone stay time.<br/>
+	 * This unit test skips some days for some turkeys in its antenna records.<br/>
+	 * This unit test has some days without data in its antenna records.<br/>
+	 * This unit test uses turkeys with start zone and end time.
+	 *
+	 * @throws IOException If reading, writing, or creating a temporary file fails.
+	 */
+	@Test
+	public void fillDaysNoMinTimeIncompleteNonContAdvancedTurkeys() throws IOException {
+		args.fillDays = true;
+		args.minTime = 0;
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, false, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
 	}
@@ -622,7 +1325,8 @@ public class GeneratedOutputDataTest {
 	 * This unit test does not use a downtimes csv.<br/>
 	 * This unit test uses a minimum zone stay time of 30 minutes.<br/>
 	 * This unit test generates antenna records for each turkey for each day it generates data for.<br/>
-	 * This unit test generates antenna records for a continuous block of days.
+	 * This unit test generates antenna records for a continuous block of days.<br/>
+	 * This unit test does not use turkeys with start zone or end time.
 	 *
 	 * @throws IOException If reading, writing, or creating a temporary file fails.
 	 */
@@ -630,7 +1334,8 @@ public class GeneratedOutputDataTest {
 	public void fillDays30MinMinTime() throws IOException {
 		args.fillDays = true;
 		args.minTime = 1800;
-		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, true, true, tempFolder, antennaPair.getValue(), null);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, true, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
 	}
@@ -640,7 +1345,28 @@ public class GeneratedOutputDataTest {
 	 * This unit test does not use a downtimes csv.<br/>
 	 * This unit test uses a minimum zone stay time of 30 minutes.<br/>
 	 * This unit test generates antenna records for each turkey for each day it generates data for.<br/>
-	 * This unit test has some days without data in its antenna records.
+	 * This unit test generates antenna records for a continuous block of days.<br/>
+	 * This unit test uses turkeys with start zone and end time.
+	 *
+	 * @throws IOException If reading, writing, or creating a temporary file fails.
+	 */
+	@Test
+	public void fillDays30MinMinTimeAdvancedTurkeys() throws IOException {
+		args.fillDays = true;
+		args.minTime = 1800;
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, true, tempFolder, antennaPair.getValue(), null);
+		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
+		OutputDataTest.validateResults(generated, parsed, args);
+	}
+
+	/**
+	 * A unit test using fillDays, meaning each day will be considered its own recording.<br/>
+	 * This unit test does not use a downtimes csv.<br/>
+	 * This unit test uses a minimum zone stay time of 30 minutes.<br/>
+	 * This unit test generates antenna records for each turkey for each day it generates data for.<br/>
+	 * This unit test has some days without data in its antenna records.<br/>
+	 * This unit test does not use turkeys with start zone or end time.
 	 *
 	 * @throws IOException If reading, writing, or creating a temporary file fails.
 	 */
@@ -648,7 +1374,28 @@ public class GeneratedOutputDataTest {
 	public void fillDays30MinMinTimeNonCont() throws IOException {
 		args.fillDays = true;
 		args.minTime = 1800;
-		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, false, true, tempFolder, antennaPair.getValue(), null);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, true, tempFolder, antennaPair.getValue(), null);
+		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
+		OutputDataTest.validateResults(generated, parsed, args);
+	}
+
+	/**
+	 * A unit test using fillDays, meaning each day will be considered its own recording.<br/>
+	 * This unit test does not use a downtimes csv.<br/>
+	 * This unit test uses a minimum zone stay time of 30 minutes.<br/>
+	 * This unit test generates antenna records for each turkey for each day it generates data for.<br/>
+	 * This unit test has some days without data in its antenna records.<br/>
+	 * This unit test uses turkeys with start zone and end time.
+	 *
+	 * @throws IOException If reading, writing, or creating a temporary file fails.
+	 */
+	@Test
+	public void fillDays30MinMinTimeNonContAdvancedTurkeys() throws IOException {
+		args.fillDays = true;
+		args.minTime = 1800;
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, true, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
 	}
@@ -658,7 +1405,8 @@ public class GeneratedOutputDataTest {
 	 * This unit test does not use a downtimes csv.<br/>
 	 * This unit test uses a minimum zone stay time of 30 minutes.<br/>
 	 * This unit test skips some days for some turkeys in its antenna records.<br/>
-	 * This unit test generates antenna records for a continuous block of days.
+	 * This unit test generates antenna records for a continuous block of days.<br/>
+	 * This unit test does not use turkeys with start zone or end time.
 	 *
 	 * @throws IOException If reading, writing, or creating a temporary file fails.
 	 */
@@ -666,7 +1414,8 @@ public class GeneratedOutputDataTest {
 	public void fillDays30MinMinTimeIncomplete() throws IOException {
 		args.fillDays = true;
 		args.minTime = 1800;
-		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, true, false, tempFolder, antennaPair.getValue(), null);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, false, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
 	}
@@ -676,7 +1425,28 @@ public class GeneratedOutputDataTest {
 	 * This unit test does not use a downtimes csv.<br/>
 	 * This unit test uses a minimum zone stay time of 30 minutes.<br/>
 	 * This unit test skips some days for some turkeys in its antenna records.<br/>
-	 * This unit test has some days without data in its antenna records.
+	 * This unit test generates antenna records for a continuous block of days.<br/>
+	 * This unit test uses turkeys with start zone and end time.
+	 *
+	 * @throws IOException If reading, writing, or creating a temporary file fails.
+	 */
+	@Test
+	public void fillDays30MinMinTimeIncompleteAdvancedTurkeys() throws IOException {
+		args.fillDays = true;
+		args.minTime = 1800;
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, false, tempFolder, antennaPair.getValue(), null);
+		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
+		OutputDataTest.validateResults(generated, parsed, args);
+	}
+
+	/**
+	 * A unit test using fillDays, meaning each day will be considered its own recording.<br/>
+	 * This unit test does not use a downtimes csv.<br/>
+	 * This unit test uses a minimum zone stay time of 30 minutes.<br/>
+	 * This unit test skips some days for some turkeys in its antenna records.<br/>
+	 * This unit test has some days without data in its antenna records.<br/>
+	 * This unit test does not use turkeys with start zone or end time.
 	 *
 	 * @throws IOException If reading, writing, or creating a temporary file fails.
 	 */
@@ -684,7 +1454,28 @@ public class GeneratedOutputDataTest {
 	public void fillDays30MinMinTimeIncompleteNonCont() throws IOException {
 		args.fillDays = true;
 		args.minTime = 1800;
-		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, false, false, tempFolder, antennaPair.getValue(), null);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, false, tempFolder, antennaPair.getValue(), null);
+		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
+		OutputDataTest.validateResults(generated, parsed, args);
+	}
+
+	/**
+	 * A unit test using fillDays, meaning each day will be considered its own recording.<br/>
+	 * This unit test does not use a downtimes csv.<br/>
+	 * This unit test uses a minimum zone stay time of 30 minutes.<br/>
+	 * This unit test skips some days for some turkeys in its antenna records.<br/>
+	 * This unit test has some days without data in its antenna records.<br/>
+	 * This unit test uses turkeys with start zone and end time.
+	 *
+	 * @throws IOException If reading, writing, or creating a temporary file fails.
+	 */
+	@Test
+	public void fillDays30MinMinTimeIncompleteNonContAdvancedTurkeys() throws IOException {
+		args.fillDays = true;
+		args.minTime = 1800;
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, false, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
 	}
@@ -694,14 +1485,16 @@ public class GeneratedOutputDataTest {
 	 * This unit test uses a downtimes csv.<br/>
 	 * This unit test uses the default minimum zone stay time.<br/>
 	 * This unit test generates antenna records for each turkey for each day it generates data for.<br/>
-	 * This unit test generates antenna records for a continuous block of days.
+	 * This unit test generates antenna records for a continuous block of days.<br/>
+	 * This unit test does not use turkeys with start zone or end time.
 	 *
 	 * @throws IOException If reading, writing, or creating a temporary file fails.
 	 */
 	@Test
 	public void fillDaysDowntimesDefaultMinTime() throws IOException {
 		args.fillDays = true;
-		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, true, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
 	}
@@ -711,14 +1504,54 @@ public class GeneratedOutputDataTest {
 	 * This unit test uses a downtimes csv.<br/>
 	 * This unit test uses the default minimum zone stay time.<br/>
 	 * This unit test generates antenna records for each turkey for each day it generates data for.<br/>
-	 * This unit test has some days without data in its antenna records.
+	 * This unit test generates antenna records for a continuous block of days.<br/>
+	 * This unit test uses turkeys with start zone and end time.
+	 *
+	 * @throws IOException If reading, writing, or creating a temporary file fails.
+	 */
+	@Test
+	public void fillDaysDowntimesDefaultMinTimeAdvancedTurkeys() throws IOException {
+		args.fillDays = true;
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
+		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
+		OutputDataTest.validateResults(generated, parsed, args);
+	}
+
+	/**
+	 * A unit test using fillDays, meaning each day will be considered its own recording.<br/>
+	 * This unit test uses a downtimes csv.<br/>
+	 * This unit test uses the default minimum zone stay time.<br/>
+	 * This unit test generates antenna records for each turkey for each day it generates data for.<br/>
+	 * This unit test has some days without data in its antenna records.<br/>
+	 * This unit test does not use turkeys with start zone or end time.
 	 *
 	 * @throws IOException If reading, writing, or creating a temporary file fails.
 	 */
 	@Test
 	public void fillDaysDowntimesDefaultMinTimeNonCont() throws IOException {
 		args.fillDays = true;
-		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, false, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
+		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
+		OutputDataTest.validateResults(generated, parsed, args);
+	}
+
+	/**
+	 * A unit test using fillDays, meaning each day will be considered its own recording.<br/>
+	 * This unit test uses a downtimes csv.<br/>
+	 * This unit test uses the default minimum zone stay time.<br/>
+	 * This unit test generates antenna records for each turkey for each day it generates data for.<br/>
+	 * This unit test has some days without data in its antenna records.<br/>
+	 * This unit test uses turkeys with start zone and end time.
+	 *
+	 * @throws IOException If reading, writing, or creating a temporary file fails.
+	 */
+	@Test
+	public void fillDaysDowntimesDefaultMinTimeNonContAdvancedTurkeys() throws IOException {
+		args.fillDays = true;
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
 	}
@@ -728,14 +1561,16 @@ public class GeneratedOutputDataTest {
 	 * This unit test uses a downtimes csv.<br/>
 	 * This unit test uses the default minimum zone stay time.<br/>
 	 * This unit test skips some days for some turkeys in its antenna records.<br/>
-	 * This unit test generates antenna records for a continuous block of days.
+	 * This unit test generates antenna records for a continuous block of days.<br/>
+	 * This unit test does not use turkeys with start zone or end time.
 	 *
 	 * @throws IOException If reading, writing, or creating a temporary file fails.
 	 */
 	@Test
 	public void fillDaysDowntimesDefaultMinTimeIncomplete() throws IOException {
 		args.fillDays = true;
-		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, true, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
 	}
@@ -745,14 +1580,54 @@ public class GeneratedOutputDataTest {
 	 * This unit test uses a downtimes csv.<br/>
 	 * This unit test uses the default minimum zone stay time.<br/>
 	 * This unit test skips some days for some turkeys in its antenna records.<br/>
-	 * This unit test has some days without data in its antenna records.
+	 * This unit test generates antenna records for a continuous block of days.<br/>
+	 * This unit test uses turkeys with start zone and end time.
+	 *
+	 * @throws IOException If reading, writing, or creating a temporary file fails.
+	 */
+	@Test
+	public void fillDaysDowntimesDefaultMinTimeIncompleteAdvancedTurkeys() throws IOException {
+		args.fillDays = true;
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
+		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
+		OutputDataTest.validateResults(generated, parsed, args);
+	}
+
+	/**
+	 * A unit test using fillDays, meaning each day will be considered its own recording.<br/>
+	 * This unit test uses a downtimes csv.<br/>
+	 * This unit test uses the default minimum zone stay time.<br/>
+	 * This unit test skips some days for some turkeys in its antenna records.<br/>
+	 * This unit test has some days without data in its antenna records.<br/>
+	 * This unit test does not use turkeys with start zone or end time.
 	 *
 	 * @throws IOException If reading, writing, or creating a temporary file fails.
 	 */
 	@Test
 	public void fillDaysDowntimesDefaultMinTimeIncompleteNonCont() throws IOException {
 		args.fillDays = true;
-		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, false, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
+		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
+		OutputDataTest.validateResults(generated, parsed, args);
+	}
+
+	/**
+	 * A unit test using fillDays, meaning each day will be considered its own recording.<br/>
+	 * This unit test uses a downtimes csv.<br/>
+	 * This unit test uses the default minimum zone stay time.<br/>
+	 * This unit test skips some days for some turkeys in its antenna records.<br/>
+	 * This unit test has some days without data in its antenna records.<br/>
+	 * This unit test uses turkeys with start zone and end time.
+	 *
+	 * @throws IOException If reading, writing, or creating a temporary file fails.
+	 */
+	@Test
+	public void fillDaysDowntimesDefaultMinTimeIncompleteNonContAdvancedTurkeys() throws IOException {
+		args.fillDays = true;
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
 	}
@@ -762,7 +1637,8 @@ public class GeneratedOutputDataTest {
 	 * This unit test uses a downtimes csv.<br/>
 	 * This unit test disables the minimum zone stay time.<br/>
 	 * This unit test generates antenna records for each turkey for each day it generates data for.<br/>
-	 * This unit test generates antenna records for a continuous block of days.
+	 * This unit test generates antenna records for a continuous block of days.<br/>
+	 * This unit test does not use turkeys with start zone or end time.
 	 *
 	 * @throws IOException If reading, writing, or creating a temporary file fails.
 	 */
@@ -770,7 +1646,8 @@ public class GeneratedOutputDataTest {
 	public void fillDaysDowntimesNoMinTime() throws IOException {
 		args.fillDays = true;
 		args.minTime = 0;
-		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, true, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
 	}
@@ -780,7 +1657,28 @@ public class GeneratedOutputDataTest {
 	 * This unit test uses a downtimes csv.<br/>
 	 * This unit test disables the minimum zone stay time.<br/>
 	 * This unit test generates antenna records for each turkey for each day it generates data for.<br/>
-	 * This unit test has some days without data in its antenna records.
+	 * This unit test generates antenna records for a continuous block of days.<br/>
+	 * This unit test uses turkeys with start zone and end time.
+	 *
+	 * @throws IOException If reading, writing, or creating a temporary file fails.
+	 */
+	@Test
+	public void fillDaysDowntimesNoMinTimeAdvancedTurkeys() throws IOException {
+		args.fillDays = true;
+		args.minTime = 0;
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
+		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
+		OutputDataTest.validateResults(generated, parsed, args);
+	}
+
+	/**
+	 * A unit test using fillDays, meaning each day will be considered its own recording.<br/>
+	 * This unit test uses a downtimes csv.<br/>
+	 * This unit test disables the minimum zone stay time.<br/>
+	 * This unit test generates antenna records for each turkey for each day it generates data for.<br/>
+	 * This unit test has some days without data in its antenna records.<br/>
+	 * This unit test does not use turkeys with start zone or end time.
 	 *
 	 * @throws IOException If reading, writing, or creating a temporary file fails.
 	 */
@@ -788,7 +1686,28 @@ public class GeneratedOutputDataTest {
 	public void fillDaysDowntimesNoMinTimeNonCont() throws IOException {
 		args.fillDays = true;
 		args.minTime = 0;
-		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, false, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
+		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
+		OutputDataTest.validateResults(generated, parsed, args);
+	}
+
+	/**
+	 * A unit test using fillDays, meaning each day will be considered its own recording.<br/>
+	 * This unit test uses a downtimes csv.<br/>
+	 * This unit test disables the minimum zone stay time.<br/>
+	 * This unit test generates antenna records for each turkey for each day it generates data for.<br/>
+	 * This unit test has some days without data in its antenna records.<br/>
+	 * This unit test uses turkeys with start zone and end time.
+	 *
+	 * @throws IOException If reading, writing, or creating a temporary file fails.
+	 */
+	@Test
+	public void fillDaysDowntimesNoMinTimeNonContAdvancedTurkeys() throws IOException {
+		args.fillDays = true;
+		args.minTime = 0;
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
 	}
@@ -798,7 +1717,8 @@ public class GeneratedOutputDataTest {
 	 * This unit test uses a downtimes csv.<br/>
 	 * This unit test disables the minimum zone stay time.<br/>
 	 * This unit test skips some days for some turkeys in its antenna records.<br/>
-	 * This unit test generates antenna records for a continuous block of days.
+	 * This unit test generates antenna records for a continuous block of days.<br/>
+	 * This unit test does not use turkeys with start zone or end time.
 	 *
 	 * @throws IOException If reading, writing, or creating a temporary file fails.
 	 */
@@ -806,7 +1726,8 @@ public class GeneratedOutputDataTest {
 	public void fillDaysDowntimesNoMinTimeIncomplete() throws IOException {
 		args.fillDays = true;
 		args.minTime = 0;
-		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, true, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
 	}
@@ -816,7 +1737,28 @@ public class GeneratedOutputDataTest {
 	 * This unit test uses a downtimes csv.<br/>
 	 * This unit test disables the minimum zone stay time.<br/>
 	 * This unit test skips some days for some turkeys in its antenna records.<br/>
-	 * This unit test has some days without data in its antenna records.
+	 * This unit test generates antenna records for a continuous block of days.<br/>
+	 * This unit test uses turkeys with start zone and end time.
+	 *
+	 * @throws IOException If reading, writing, or creating a temporary file fails.
+	 */
+	@Test
+	public void fillDaysDowntimesNoMinTimeIncompleteAdvancedTurkeys() throws IOException {
+		args.fillDays = true;
+		args.minTime = 0;
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
+		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
+		OutputDataTest.validateResults(generated, parsed, args);
+	}
+
+	/**
+	 * A unit test using fillDays, meaning each day will be considered its own recording.<br/>
+	 * This unit test uses a downtimes csv.<br/>
+	 * This unit test disables the minimum zone stay time.<br/>
+	 * This unit test skips some days for some turkeys in its antenna records.<br/>
+	 * This unit test has some days without data in its antenna records.<br/>
+	 * This unit test does not use turkeys with start zone or end time.
 	 *
 	 * @throws IOException If reading, writing, or creating a temporary file fails.
 	 */
@@ -824,7 +1766,28 @@ public class GeneratedOutputDataTest {
 	public void fillDaysDowntimesNoMinTimeIncompleteNonCont() throws IOException {
 		args.fillDays = true;
 		args.minTime = 0;
-		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, false, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
+		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
+		OutputDataTest.validateResults(generated, parsed, args);
+	}
+
+	/**
+	 * A unit test using fillDays, meaning each day will be considered its own recording.<br/>
+	 * This unit test uses a downtimes csv.<br/>
+	 * This unit test disables the minimum zone stay time.<br/>
+	 * This unit test skips some days for some turkeys in its antenna records.<br/>
+	 * This unit test has some days without data in its antenna records.<br/>
+	 * This unit test uses turkeys with start zone and end time.
+	 *
+	 * @throws IOException If reading, writing, or creating a temporary file fails.
+	 */
+	@Test
+	public void fillDaysDowntimesNoMinTimeIncompleteNonContAdvancedTurkeys() throws IOException {
+		args.fillDays = true;
+		args.minTime = 0;
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
 	}
@@ -834,7 +1797,8 @@ public class GeneratedOutputDataTest {
 	 * This unit test uses a downtimes csv.<br/>
 	 * This unit test uses a minimum zone stay time of 30 minutes.<br/>
 	 * This unit test generates antenna records for each turkey for each day it generates data for.<br/>
-	 * This unit test generates antenna records for a continuous block of days.
+	 * This unit test generates antenna records for a continuous block of days.<br/>
+	 * This unit test does not use turkeys with start zone or end time.
 	 *
 	 * @throws IOException If reading, writing, or creating a temporary file fails.
 	 */
@@ -842,7 +1806,8 @@ public class GeneratedOutputDataTest {
 	public void fillDaysDowntimes30MinMinTime() throws IOException {
 		args.fillDays = true;
 		args.minTime = 1800;
-		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, true, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
 	}
@@ -852,7 +1817,28 @@ public class GeneratedOutputDataTest {
 	 * This unit test uses a downtimes csv.<br/>
 	 * This unit test uses a minimum zone stay time of 30 minutes.<br/>
 	 * This unit test generates antenna records for each turkey for each day it generates data for.<br/>
-	 * This unit test has some days without data in its antenna records.
+	 * This unit test generates antenna records for a continuous block of days.<br/>
+	 * This unit test uses turkeys with start zone and end time.
+	 *
+	 * @throws IOException If reading, writing, or creating a temporary file fails.
+	 */
+	@Test
+	public void fillDaysDowntimes30MinMinTimeAdvancedTurkeys() throws IOException {
+		args.fillDays = true;
+		args.minTime = 1800;
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
+		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
+		OutputDataTest.validateResults(generated, parsed, args);
+	}
+
+	/**
+	 * A unit test using fillDays, meaning each day will be considered its own recording.<br/>
+	 * This unit test uses a downtimes csv.<br/>
+	 * This unit test uses a minimum zone stay time of 30 minutes.<br/>
+	 * This unit test generates antenna records for each turkey for each day it generates data for.<br/>
+	 * This unit test has some days without data in its antenna records.<br/>
+	 * This unit test does not use turkeys with start zone or end time.
 	 *
 	 * @throws IOException If reading, writing, or creating a temporary file fails.
 	 */
@@ -860,7 +1846,28 @@ public class GeneratedOutputDataTest {
 	public void fillDaysDowntimes30MinMinTimeNonCont() throws IOException {
 		args.fillDays = true;
 		args.minTime = 1800;
-		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, false, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
+		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
+		OutputDataTest.validateResults(generated, parsed, args);
+	}
+
+	/**
+	 * A unit test using fillDays, meaning each day will be considered its own recording.<br/>
+	 * This unit test uses a downtimes csv.<br/>
+	 * This unit test uses a minimum zone stay time of 30 minutes.<br/>
+	 * This unit test generates antenna records for each turkey for each day it generates data for.<br/>
+	 * This unit test has some days without data in its antenna records.<br/>
+	 * This unit test uses turkeys with start zone and end time.
+	 *
+	 * @throws IOException If reading, writing, or creating a temporary file fails.
+	 */
+	@Test
+	public void fillDaysDowntimes30MinMinTimeNonContAdvancedTurkeys() throws IOException {
+		args.fillDays = true;
+		args.minTime = 1800;
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
 	}
@@ -870,7 +1877,8 @@ public class GeneratedOutputDataTest {
 	 * This unit test uses a downtimes csv.<br/>
 	 * This unit test uses a minimum zone stay time of 30 minutes.<br/>
 	 * This unit test skips some days for some turkeys in its antenna records.<br/>
-	 * This unit test generates antenna records for a continuous block of days.
+	 * This unit test generates antenna records for a continuous block of days.<br/>
+	 * This unit test does not use turkeys with start zone or end time.
 	 *
 	 * @throws IOException If reading, writing, or creating a temporary file fails.
 	 */
@@ -878,7 +1886,8 @@ public class GeneratedOutputDataTest {
 	public void fillDaysDowntimes30MinMinTimeIncomplete() throws IOException {
 		args.fillDays = true;
 		args.minTime = 1800;
-		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, true, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
 	}
@@ -888,7 +1897,28 @@ public class GeneratedOutputDataTest {
 	 * This unit test uses a downtimes csv.<br/>
 	 * This unit test uses a minimum zone stay time of 30 minutes.<br/>
 	 * This unit test skips some days for some turkeys in its antenna records.<br/>
-	 * This unit test has some days without data in its antenna records.
+	 * This unit test generates antenna records for a continuous block of days.<br/>
+	 * This unit test uses turkeys with start zone and end time.
+	 *
+	 * @throws IOException If reading, writing, or creating a temporary file fails.
+	 */
+	@Test
+	public void fillDaysDowntimes30MinMinTimeIncompleteAdvancedTurkeys() throws IOException {
+		args.fillDays = true;
+		args.minTime = 1800;
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
+		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
+		OutputDataTest.validateResults(generated, parsed, args);
+	}
+
+	/**
+	 * A unit test using fillDays, meaning each day will be considered its own recording.<br/>
+	 * This unit test uses a downtimes csv.<br/>
+	 * This unit test uses a minimum zone stay time of 30 minutes.<br/>
+	 * This unit test skips some days for some turkeys in its antenna records.<br/>
+	 * This unit test has some days without data in its antenna records.<br/>
+	 * This unit test does not use turkeys with start zone or end time.
 	 *
 	 * @throws IOException If reading, writing, or creating a temporary file fails.
 	 */
@@ -896,7 +1926,28 @@ public class GeneratedOutputDataTest {
 	public void fillDaysDowntimes30MinMinTimeIncompleteNonCont() throws IOException {
 		args.fillDays = true;
 		args.minTime = 1800;
-		final TestData generated = OutputDataTest.generateTestValues(mappings, 10, args, false, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
+		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
+		OutputDataTest.validateResults(generated, parsed, args);
+	}
+
+	/**
+	 * A unit test using fillDays, meaning each day will be considered its own recording.<br/>
+	 * This unit test uses a downtimes csv.<br/>
+	 * This unit test uses a minimum zone stay time of 30 minutes.<br/>
+	 * This unit test skips some days for some turkeys in its antenna records.<br/>
+	 * This unit test has some days without data in its antenna records.<br/>
+	 * This unit test uses turkeys with start zone and end time.
+	 *
+	 * @throws IOException If reading, writing, or creating a temporary file fails.
+	 */
+	@Test
+	public void fillDaysDowntimes30MinMinTimeIncompleteNonContAdvancedTurkeys() throws IOException {
+		args.fillDays = true;
+		args.minTime = 1800;
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
 	}

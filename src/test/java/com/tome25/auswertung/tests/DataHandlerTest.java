@@ -64,7 +64,8 @@ public class DataHandlerTest {
 
 		Arguments args = Arguments.empty();
 		args.fillDays = true;
-		AntennaDataGenerator.generateAntennaData(turkeys, zones, dataCSV.getValue(), null, args, 5, true, true);
+		AntennaDataGenerator.generateAntennaData(turkeys, zones, dataCSV.getValue(), null, args, "12.02.2023", 5, true,
+				true);
 
 		DataHandler.handleStreams(dataCSV.getKey(), turkeyCSV.getKey(), zoneCSV.getKey(), null, totalsCSV.getKey(),
 				staysCSV.getKey(), args);
@@ -100,7 +101,8 @@ public class DataHandlerTest {
 
 		Arguments args = Arguments.empty();
 		args.fillDays = true;
-		AntennaDataGenerator.generateAntennaData(turkeys, zones, dataCSV.getValue(), null, args, 5, true, true);
+		AntennaDataGenerator.generateAntennaData(turkeys, zones, dataCSV.getValue(), null, args, "05.11.2022", 5, true,
+				true);
 
 		DataHandler.handleStreams(dataCSV.getKey(), turkeyCSV.getKey(), zoneCSV.getKey(), null, totalsCSV.getKey(),
 				staysCSV.getKey(), args);
@@ -121,7 +123,7 @@ public class DataHandlerTest {
 	 */
 	@Test
 	public void readEmptyDowntimes() throws IOException {
-		TestMappings mappings = OutputDataTest.generateTestMappings(5, 2, tempFolder);
+		TestMappings mappings = OutputDataTest.generateTestMappings(5, 2, 5, false, 0, 0, tempFolder);
 
 		Pair<FileInputStreamHandler, FileOutputStreamHandler> dataCSV = tempFolder
 				.newTempIOFile("empty_downtimes_antennadata.csv");
@@ -129,7 +131,7 @@ public class DataHandlerTest {
 		Arguments args = Arguments.empty();
 		args.fillDays = true;
 		final TestData generated = AntennaDataGenerator.generateAntennaData(mappings.turkeys, mappings.zones,
-				dataCSV.getValue(), null, args, 5, true, true);
+				dataCSV.getValue(), null, args, "17.08.2022", 5, true, true);
 
 		Pair<FileInputStreamHandler, PrintStream> downtimesCSV = tempFolder
 				.newTempInputFile("empty_downtimes_downtimes.csv");
@@ -162,14 +164,14 @@ public class DataHandlerTest {
 	 */
 	@Test
 	public void readEmptyLastRecord() throws IOException {
-		TestMappings mappings = OutputDataTest.generateTestMappings(5, 2, tempFolder);
+		TestMappings mappings = OutputDataTest.generateTestMappings(5, 2, 5, false, 0, 0, tempFolder);
 
 		Pair<FileInputStreamHandler, FileOutputStreamHandler> dataCSV = tempFolder
 				.newTempIOFile("empty_last_record_antennadata.csv");
 		Arguments args = Arguments.empty();
 		args.fillDays = true;
 		final TestData generated = AntennaDataGenerator.generateAntennaData(mappings.turkeys, mappings.zones,
-				dataCSV.getValue(), null, args, 5, true, true);
+				dataCSV.getValue(), null, args, "30.06.2023", 5, true, true);
 		dataCSV.getValue().println(null);
 
 		Pair<FileInputStreamHandler, FileOutputStreamHandler> totalsCSV = tempFolder
@@ -198,7 +200,7 @@ public class DataHandlerTest {
 	 */
 	@Test
 	public void readInvalidLastRecord() throws IOException {
-		TestMappings mappings = OutputDataTest.generateTestMappings(5, 2, tempFolder);
+		TestMappings mappings = OutputDataTest.generateTestMappings(5, 2, 5, false, 0, 0, tempFolder);
 
 		Pair<FileInputStreamHandler, FileOutputStreamHandler> dataCSV = tempFolder
 				.newTempIOFile("invalid_last_record_antennadata.csv");
@@ -206,7 +208,7 @@ public class DataHandlerTest {
 		Arguments args = Arguments.empty();
 		args.fillDays = true;
 		final TestData generated = AntennaDataGenerator.generateAntennaData(mappings.turkeys, mappings.zones,
-				dataCSV.getValue(), null, args, 5, true, true);
+				dataCSV.getValue(), null, args, "22.02.2022", 5, true, true);
 		dataCSV.getValue().println("Test;Data;Here");
 
 		Pair<FileInputStreamHandler, FileOutputStreamHandler> totalsCSV = tempFolder
