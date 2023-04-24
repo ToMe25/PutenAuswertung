@@ -278,12 +278,24 @@ public class DataHandler {
 								end.set(Calendar.MINUTE, 59);
 								end.set(Calendar.SECOND, 59);
 								end.set(Calendar.MILLISECOND, 999);
+								if (ti.getCurrentCal().before(startTime)) {
+									end = lastDts;
+									ti.setStartTime(prevStartTime);
+								}
 								if (ti.tryUpdate(end)) {
 									ti.endDay(ti.getCurrentCal(), false);
 								}
+								ti.setStartTime(startTime);
+								ti.printCurrentStay(false);
+							} else if (downtimes != null && ti.getCurrentCal().before(startTime)) {
+								ti.setStartTime(prevStartTime);
+								if (ti.tryUpdate(lastDts)) {
+									ti.endDay(ti.getCurrentCal(), false);
+								}
+								ti.setStartTime(startTime);
+								ti.printCurrentStay(false);
 							} else {
-								ti.endDay(ti.getCurrentCal(),
-										downtimes == null || !ti.getCurrentCal().before(startTime));
+								ti.endDay(ti.getCurrentCal());
 							}
 						}
 					}
@@ -350,6 +362,8 @@ public class DataHandler {
 								TimeUtils.encodeDate(ti.getEndCal()), ti);
 						if (ti.tryUpdate(record.cal)) {
 							ti.endDay(ti.getCurrentCal(), false);
+							ti.printCurrentStay(false);
+						} else if (args.fillDays && !TimeUtils.isSameDay(ti.getCurrentCal(), ti.getEndCal())) {
 							ti.printCurrentStay(false);
 						}
 						continue;

@@ -606,6 +606,10 @@ public class TurkeyInfo {
 	 * this turkeys {@link #getStartCal() start time}.</li>
 	 * <li>This turkeys {@link #getCurrentCal() current time} is before its
 	 * {@link #getEndCal() end time}.</li>
+	 * <li>If {@link Arguments#fillDays args.fillDays} is {@code true} and
+	 * {@code time} is after this turkeys {@link #getEndCal() end time},
+	 * {@code time} has to be on the same day as the {@link #getCurrentCal() current
+	 * time}.</li>
 	 * </ul>
 	 * 
 	 * If {@code time} is after this turkeys {@link #getEndCal() end time} its
@@ -635,6 +639,9 @@ public class TurkeyInfo {
 		}
 
 		if (endTime != null && time.after(endTime)) {
+			if (args.fillDays && !TimeUtils.isSameDay(currentTime, time)) {
+				return false;
+			}
 			time = endTime;
 		}
 
@@ -770,10 +777,9 @@ public class TurkeyInfo {
 	 * 
 	 * @param date The day for which to check.
 	 * @return {@code true} if this object holds data for the given day.
-	 * @throws NullPointerException     If {@code date} is {@code null}.
-	 * @throws IllegalArgumentException If {@code date} can't be parsed as a date.
+	 * @throws NullPointerException If {@code date} is {@code null}.
 	 */
-	public boolean hasDay(String date) throws NullPointerException, IllegalArgumentException {
+	public boolean hasDay(String date) throws NullPointerException {
 		Objects.requireNonNull(date, "The date to check for can't be null.");
 
 		return dayZoneTimes.containsKey(date);

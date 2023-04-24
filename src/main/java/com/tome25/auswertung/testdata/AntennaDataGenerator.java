@@ -426,13 +426,40 @@ public class AntennaDataGenerator {
 							dayCal.add(Calendar.DATE, -1);
 						}
 					}
-				} else if (downtimeStart != 0 && currentZone.containsKey(turkey)) {
-					Calendar endCal = new GregorianCalendar();
-					endCal.setTimeInMillis(downtimeStart);
-					zoneDayTimes.put(currentZone.get(turkey), Math.max(0,
-							zoneDayTimes.get(currentZone.get(turkey)) - 24 * 3600000 + TimeUtils.getMsOfDay(endCal)));
-					totalTimes.put(currentZone.get(turkey), Math.max(0,
-							totalTimes.get(currentZone.get(turkey)) - 24 * 3600000 + TimeUtils.getMsOfDay(endCal)));
+				} else {
+					if (downtimeStart != 0 && currentZone.containsKey(turkey)) {
+						Calendar endCal = new GregorianCalendar();
+						endCal.setTimeInMillis(downtimeStart);
+						if (endTime.containsKey(turkey) && TimeUtils.isSameDay(endTime.get(turkey), cal)
+								&& endTime.get(turkey).before(endCal)) {
+							endCal = endTime.get(turkey);
+						}
+						zoneDayTimes.put(currentZone.get(turkey), Math.max(0, zoneDayTimes.get(currentZone.get(turkey))
+								- 24 * 3600000 + TimeUtils.getMsOfDay(endCal)));
+						totalTimes.put(currentZone.get(turkey), Math.max(0,
+								totalTimes.get(currentZone.get(turkey)) - 24 * 3600000 + TimeUtils.getMsOfDay(endCal)));
+					} else if (currentZone.containsKey(turkey) && endTime.containsKey(turkey)
+							&& TimeUtils.isSameDay(endTime.get(turkey), cal)) {
+						Calendar endCal = endTime.get(turkey);
+						zoneDayTimes.put(currentZone.get(turkey), Math.max(0, zoneDayTimes.get(currentZone.get(turkey))
+								- 24 * 3600000 + TimeUtils.getMsOfDay(endCal)));
+						totalTimes.put(currentZone.get(turkey), Math.max(0,
+								totalTimes.get(currentZone.get(turkey)) - 24 * 3600000 + TimeUtils.getMsOfDay(endCal)));
+					} else if (downtimeStart != 0 && downtime != null && downtime.getKey() > downtimeStart
+							&& lastZone.containsKey(turkey)) {
+						int time = (int) (downtime.getKey() - downtimeStart);
+						zoneDayTimes.put(lastZone.get(turkey),
+								Math.max(0, zoneDayTimes.get(lastZone.get(turkey)) - time));
+						totalTimes.put(lastZone.get(turkey), Math.max(0, totalTimes.get(lastZone.get(turkey)) - time));
+					}
+
+					if (!lastRecord.containsKey(turkey) || (lastRecord.get(turkey) != -1
+							&& !TimeUtils.encodeDate(lastRecord.get(turkey)).equals(date))) {
+						for (String zone : zoneDayTimes.keySet()) {
+							totalTimes.put(zone, totalTimes.get(zone) - zoneDayTimes.get(zone));
+						}
+						zoneDayTimes.clear();
+					}
 				}
 
 				if (zoneDayTimes.isEmpty()) {
@@ -554,7 +581,7 @@ public class AntennaDataGenerator {
 
 					ZoneStay lastStay = stays.get(turkey).get(stays.get(turkey).size() - 1);
 
-					if (lastStay.getZone().equals(currentZone.get(turkey))) {
+					if (currentZone.containsKey(turkey) && lastStay.getZone().equals(currentZone.get(turkey))) {
 						if (downtime == null || lastStay.getEntryCal().getTimeInMillis() >= downtime.getValue()) {
 							if (lastStay.getEntryCal().before(endCal)) {
 								lastStay.setExitTime(endCal);
@@ -566,6 +593,16 @@ public class AntennaDataGenerator {
 							&& currentZone.containsKey(turkey)) {
 						stays.get(turkey)
 								.add(new ZoneStay(turkey, currentZone.get(turkey), lastStay.getExitCal(), endCal));
+					} else if (args.fillDays && !currentZone.containsKey(turkey) && lastZone.containsKey(turkey)
+							&& lastStay.getZone().equals(lastZone.get(turkey)) && downtime != null && downtimeStart != 0
+							&& downtimeStart < downtime.getKey()) {
+						Calendar dtsCal = new GregorianCalendar();
+						dtsCal.setTimeInMillis(downtimeStart);
+						if (dtsCal.after(lastStay.getEntryCal())) {
+							lastStay.setExitTime(dtsCal);
+						} else {
+							stays.get(turkey).remove(stays.get(turkey).size() - 1);
+						}
 					}
 
 					if (!args.fillDays && lastRecord.get(turkey) == -1 && !stays.get(turkey).isEmpty()) {
@@ -868,6 +905,17 @@ public class AntennaDataGenerator {
 						continue;
 					}
 
+					if (args.fillDays && !TimeUtils.encodeDate(lastZoneChange.get(turkeyName)).equals(date)) {
+						if (zoneTimes.containsKey(turkeyName)) {
+							zoneTimes.get(turkeyName).clear();
+						}
+						zoneChanges.put(turkeyName, 0);
+						if (stays.containsKey(turkeyName)) {
+							stays.get(turkeyName).clear();
+						}
+						continue;
+					}
+
 					String cZone = currentZone.get(turkeyName);
 					int zoneTime = (int) (turkey.getEndCal().getTimeInMillis() - lastZoneChange.get(turkeyName));
 					Calendar lastChangeCal = new GregorianCalendar();
@@ -1149,54 +1197,65 @@ public class AntennaDataGenerator {
 			lastTime = changeTime;
 		}
 
+		Map<String, Calendar> endTime = new HashMap<String, Calendar>();
+		for (TurkeyInfo turkey : turkeys) {
+			if (turkey.getEndCal() != null) {
+				endTime.put(turkey.getId(), turkey.getEndCal());
+			}
+		}
+
 		if (args.fillDays) {
 			for (String turkey : zoneTimes.keySet()) {
+				String zone = currentZone.get(turkey);
+				Calendar endCal = null;
 				if (!downtime || recordAfter.contains(turkey)) {
-					int zoneTime = (int) (TimeUtils.parseDate(date).getTimeInMillis() + (24 * 3600000)
-							- lastZoneChange.get(turkey));
-
-					String zone = currentZone.get(turkey);
-
-					if (zoneTimes.get(turkey).containsKey(zone)) {
-						zoneTimes.get(turkey).put(zone, zoneTimes.get(turkey).get(zone) + zoneTime);
-					} else {
-						zoneTimes.get(turkey).put(zone, zoneTime);
+					endCal = TimeUtils.parseDate(date);
+					endCal.add(Calendar.DATE, 1);
+				} else if (endTime.containsKey(turkey)
+						&& TimeUtils.isSameDay(TimeUtils.parseDate(date), endTime.get(turkey))) {
+					endCal = endTime.get(turkey);
+					if (dt != null && dt.getKey() < endCal.getTimeInMillis()) {
+						endCal = new GregorianCalendar();
+						endCal.setTimeInMillis(dt.getKey());
 					}
-
-					if (stays.containsKey(turkey)) {
-						ZoneStay lastStay = stays.get(turkey).get(stays.get(turkey).size() - 1);
-						Calendar endCal = TimeUtils.parseDate(date);
-						endCal.add(Calendar.DATE, 1);
-						if (lastStay.getZone().equals(zone)) {
-							lastStay.setExitTime(endCal);
-						} else {
-							stays.get(turkey).add(new ZoneStay(turkey, zone, lastStay.getExitCal(), endCal));
-						}
-					}
-				} else {
+					lastZone.put(turkey, zone);
 					currentZone.remove(turkey);
+				} else {
+					endCal = new GregorianCalendar();
+					endCal.setTimeInMillis(dt.getKey());
+					lastZone.put(turkey, zone);
+					currentZone.remove(turkey);
+				}
+
+				int zoneTime = (int) (endCal.getTimeInMillis() - lastZoneChange.get(turkey));
+
+				if (zoneTimes.get(turkey).containsKey(zone)) {
+					zoneTimes.get(turkey).put(zone, zoneTimes.get(turkey).get(zone) + zoneTime);
+				} else if (zoneTime > 0) {
+					zoneTimes.get(turkey).put(zone, zoneTime);
+				}
+
+				if (stays.containsKey(turkey)) {
+					ZoneStay lastStay = stays.get(turkey).get(stays.get(turkey).size() - 1);
+					if (lastStay.getZone().equals(zone)) {
+						lastStay.setExitTime(endCal);
+					} else if (endCal.after(lastStay.getExitCal())) {
+						stays.get(turkey).add(new ZoneStay(turkey, zone, lastStay.getExitCal(), endCal));
+					}
 				}
 			}
 		} else if (!complete) {
 			Calendar startCal = new GregorianCalendar();
 			startCal.setTimeInMillis(startTime);
-			Map<String, TurkeyInfo> ignoredIdToTurkey = new HashMap<String, TurkeyInfo>();
-			for (TurkeyInfo ti : turkeys) {
-				if (ignoredTurkeys.contains(ti.getId())) {
-					ignoredIdToTurkey.put(ti.getId(), ti);
-				}
-			}
 
 			for (String turkey : ignoredTurkeys) {
-				if (ignoredIdToTurkey.get(turkey).getEndCal() != null
-						&& ignoredIdToTurkey.get(turkey).getEndCal().before(startCal)) {
+				if (endTime.containsKey(turkey) && endTime.get(turkey).before(startCal)) {
 					continue;
 				}
 				Calendar lastCal = new GregorianCalendar();
 				lastCal.setTimeInMillis(lastTime);
-				if (ignoredIdToTurkey.get(turkey).getEndCal() != null
-						&& ignoredIdToTurkey.get(turkey).getEndCal().before(lastCal)) {
-					lastCal = ignoredIdToTurkey.get(turkey).getEndCal();
+				if (endTime.containsKey(turkey) && endTime.get(turkey).before(lastCal)) {
+					lastCal = endTime.get(turkey);
 				}
 
 				if (currentZone.containsKey(turkey) && lastZoneChange.containsKey(turkey)) {
@@ -1219,9 +1278,8 @@ public class AntennaDataGenerator {
 
 							stays.put(turkey, new ArrayList<ZoneStay>());
 							if (lastZone.containsKey(turkey)) {
-								if (ignoredIdToTurkey.get(turkey).getEndCal() != null
-										&& ignoredIdToTurkey.get(turkey).getEndCal().before(dtsCal)) {
-									Calendar endCal = ignoredIdToTurkey.get(turkey).getEndCal();
+								if (endTime.containsKey(turkey) && endTime.get(turkey).before(dtsCal)) {
+									Calendar endCal = endTime.get(turkey);
 									zoneTimes.get(turkey).put(currentZone.get(turkey),
 											(int) (dt.getKey() - endCal.getTimeInMillis()));
 									stays.get(turkey)
@@ -1236,8 +1294,7 @@ public class AntennaDataGenerator {
 								}
 							}
 
-							if (ignoredIdToTurkey.get(turkey).getEndCal() != null
-									&& !ignoredIdToTurkey.get(turkey).getEndCal().after(dteCal)) {
+							if (endTime.containsKey(turkey) && !endTime.get(turkey).after(dteCal)) {
 								continue;
 							}
 
@@ -1262,9 +1319,8 @@ public class AntennaDataGenerator {
 							stays.put(turkey, new ArrayList<ZoneStay>());
 							if (lastZone.containsKey(turkey)
 									&& (!lastRecord.containsKey(turkey) || lastRecord.get(turkey) != -1)) {
-								if (ignoredIdToTurkey.get(turkey).getEndCal() != null
-										&& ignoredIdToTurkey.get(turkey).getEndCal().before(dtsCal)) {
-									Calendar endCal = ignoredIdToTurkey.get(turkey).getEndCal();
+								if (endTime.containsKey(turkey) && endTime.get(turkey).before(dtsCal)) {
+									Calendar endCal = endTime.get(turkey);
 									zoneTimes.get(turkey).put(currentZone.get(turkey),
 											(int) (TimeUtils.getMsOfDay(endCal)));
 									stays.get(turkey)
@@ -1280,8 +1336,7 @@ public class AntennaDataGenerator {
 								}
 							}
 
-							if (ignoredIdToTurkey.get(turkey).getEndCal() != null
-									&& !ignoredIdToTurkey.get(turkey).getEndCal().after(dteCal)) {
+							if (endTime.containsKey(turkey) && !endTime.get(turkey).after(dteCal)) {
 								continue;
 							}
 

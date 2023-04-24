@@ -11,9 +11,11 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -574,7 +576,13 @@ public class OutputDataTest {
 
 					// FIXME find a way to make this work with the segment before a sub 1-day
 					// FIXME downtime having no data for that turkey.
-					if (args.fillDays && parsed.downtimes == null) {
+					if (args.fillDays && parsed.downtimes == null && turkeys.get(turkey).getEndCal() != null
+							&& TimeUtils.isSameDay(turkeys.get(turkey).getEndCal(), TimeUtils.parseDate(date))) {
+						assertEquals(
+								"The sum of all zone totals of turkey \"" + turkey + "\" for day \"" + date
+										+ "\" didn't match the time until the turkeys end time.",
+								TimeUtils.getMsOfDay(turkeys.get(turkey).getEndCal()) - dtTime, dayTotal);
+					} else if (args.fillDays && parsed.downtimes == null) {
 						assertEquals("The sum of all zone totals of turkey \"" + turkey + "\" for day \"" + date
 								+ "\" wasn't a full day.", 24 * 3600000 - dtTime, dayTotal);
 					} else {
@@ -620,6 +628,11 @@ public class OutputDataTest {
 				assertFalse("The last zone stay for turkey \"" + turkey + "\" ends after its end time.",
 						parsed.zoneStays.get(turkey).get(parsed.zoneStays.get(turkey).size() - 1).getExitCal()
 								.after(turkeys.get(turkey).getEndCal()));
+			}
+
+			Set<ZoneStay> uniqueStays = new HashSet<ZoneStay>();
+			for (ZoneStay stay : parsed.zoneStays.get(turkey)) {
+				assertTrue("The parsed stays contained a duplicate ZoneStay.", uniqueStays.add(stay));
 			}
 		}
 	}
