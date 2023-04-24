@@ -618,7 +618,7 @@ public class OutputDataTest {
 
 			if (turkeys.get(turkey).getEndCal() != null) {
 				assertFalse("The last zone stay for turkey \"" + turkey + "\" ends after its end time.",
-						parsed.zoneStays.get(turkey).get(parsed.zoneStays.size() - 1).getExitCal()
+						parsed.zoneStays.get(turkey).get(parsed.zoneStays.get(turkey).size() - 1).getExitCal()
 								.after(turkeys.get(turkey).getEndCal()));
 			}
 		}

@@ -292,10 +292,10 @@ public class TurkeyGenerator {
 			}
 
 			Calendar endTime = null;
-			if (AntennaDataGenerator.nextInt(1) == 2) {
+			if (AntennaDataGenerator.nextInt(1) == 0) {
 				endTime = new GregorianCalendar();
 				endTime.setTimeZone(TimeZone.getTimeZone("GMT"));
-				endTime.setTimeInMillis(start + AntennaDataGenerator.nextInt((int) (end - start)));
+				endTime.setTimeInMillis(start + AntennaDataGenerator.nextInt((int) (end - start)) / 10 * 10);
 			}
 
 			turkey = new TurkeyInfo(turkey.getId(), turkey.getTransponders(), null, startZone, null, null, endTime,

@@ -72,9 +72,19 @@ public class GeneratedOutputDataTest {
     public final boolean DEBUG = false;
 
     /**
+     * The decimal separator to use for these tests.
+     */
+    public final char DECIMAL_SEPARATOR = '.';
+
+    /**
      * Whether debug mode was previously enabled.
      */
     private boolean wasDebug;
+
+    /**
+     * The decimal separator that was being used before it was changed for these tests.
+     */
+    private char initialDecimalSeparator;
 
     /**
      * An {@link Arguments} to be used for a single test.<br/>
@@ -98,6 +108,7 @@ public class GeneratedOutputDataTest {
 
     /**
      * Initializes some common elements required for every test.<br/>
+     * Sets the decimal separator and enables/disables debug logging.<br/>
      * Also resets the seed of the {@link AntennaDataGenerator}.
      *
      * @throws IOException If creating a temporary file fails.
@@ -109,19 +120,22 @@ public class GeneratedOutputDataTest {
         AntennaDataGenerator.resetSeed();
         antennaPair = tempFolder.newTempIOFile("antenna.csv");
         downtimesPair = tempFolder.newTempIOFile("downtimes.csv");
+        initialDecimalSeparator = TimeUtils.getDecimalSeparator();
+        TimeUtils.setDecimalSeparator(DECIMAL_SEPARATOR);
         wasDebug = LogHandler.isDebug();
         LogHandler.setDebug(DEBUG);
     }
 
     /**
      * Resets some things after every test.<br/>
-     * Currently resets the {@link AntennaDataGenerator} seed and debug logging.
+     * Currently resets the {@link AntennaDataGenerator} seed, the decimal separator, and debug logging.
      *
      * @see #initialize()
      */
     @After
     public void reset() {
         LogHandler.setDebug(wasDebug);
+        TimeUtils.setDecimalSeparator(initialDecimalSeparator);
         AntennaDataGenerator.resetSeed();
     }"""
 

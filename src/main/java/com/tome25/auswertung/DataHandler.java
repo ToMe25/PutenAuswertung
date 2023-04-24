@@ -133,10 +133,12 @@ public class DataHandler {
 			if (downtimes != null) {
 				for (Pair<Long, Long> downtime : downtimes) {
 					if (recordMs > downtime.getValue()) {
-						// Last record was before the downtime, current one is after.
-						if (lastDate != null && lastTimes.get(lastDate).getTimeInMillis() < downtime.getKey()) {
-							downtimeStart = new GregorianCalendar();
-							downtimeStart.setTimeInMillis(downtime.getKey());
+						// Last record was before or during the downtime, current one is after.
+						if (lastDate != null && lastTimes.get(lastDate).getTimeInMillis() < downtime.getValue()) {
+							if (downtimeStart == null) {
+								downtimeStart = new GregorianCalendar();
+								downtimeStart.setTimeInMillis(downtime.getKey());
+							}
 							downtimeEnd = new GregorianCalendar();
 							downtimeEnd.setTimeInMillis(downtime.getValue());
 						}
@@ -160,6 +162,9 @@ public class DataHandler {
 								TimeUtils.encodeTime(TimeUtils.getMsOfDay(downtimeStart)),
 								TimeUtils.encodeDate(downtimeEnd),
 								TimeUtils.encodeTime(TimeUtils.getMsOfDay(downtimeEnd)), args);
+						if (lastTimes.containsKey(record.date) && record.cal.after(lastTimes.get(record.date))) {
+							lastTimes.put(record.date, record.cal);
+						}
 						continue read_loop;
 					} else {
 						break;
@@ -208,20 +213,29 @@ public class DataHandler {
 					lastDts = downtimeStart;
 				} else {
 					for (TurkeyInfo ti : turkeyInfos.values()) {
-						if (!args.fillDays) {
-							if (ti.tryUpdate(downtimeStart)) {
-								ti.endDay(downtimeStart);
+						if (ti.getCurrentCal() != null && ti.getCurrentCal().after(startTime)) {
+							if (!args.fillDays) {
+								if (ti.tryUpdate(downtimeStart)) {
+									ti.endDay(ti.getCurrentCal());
+									ti.printCurrentStay(false);
+								}
+							} else if (args.fillDays && ti.getCurrentCal() != null) {
+								if (downtimes != null && ti.hasDay(lastDate)) {
+									if (ti.tryUpdate(downtimeStart)) {
+										ti.endDay(downtimeStart, false);
+									}
+								} else if (downtimes == null) {
+									Calendar end = ti.getCurrentCal();
+									end.set(Calendar.HOUR_OF_DAY, 23);
+									end.set(Calendar.MINUTE, 59);
+									end.set(Calendar.SECOND, 59);
+									end.set(Calendar.MILLISECOND, 999);
+									if (ti.tryUpdate(end)) {
+										ti.endDay(ti.getCurrentCal(), false);
+									}
+								}
 								ti.printCurrentStay(false);
 							}
-						} else if (args.fillDays && ti.getCurrentCal() != null) {
-							if (downtimes != null && ti.hasDay(lastDate)) {
-								if (ti.tryUpdate(downtimeStart)) {
-									ti.endDay(downtimeStart, false);
-								}
-							} else if (downtimes == null) {
-								ti.endDay(ti.getCurrentCal());
-							}
-							ti.printCurrentStay(false);
 						}
 
 						if (!args.fillDays || downtimes != null) {
@@ -256,9 +270,21 @@ public class DataHandler {
 
 					for (TurkeyInfo ti : turkeyInfos.values()) {
 						if (!args.fillDays && ti.getCurrentCal() != null && !ti.getCurrentCal().before(startTime)) {
-							ti.endDay(lastDate);
+							ti.endDay(ti.getCurrentCal());
 						} else if (args.fillDays && ti.hasDay(lastDate)) {
-							ti.endDay(ti.getCurrentCal(), downtimes == null || !ti.getCurrentCal().before(startTime));
+							if (ti.getEndCal() != null && TimeUtils.isSameDay(ti.getEndCal(), ti.getCurrentCal())) {
+								Calendar end = ti.getCurrentCal();
+								end.set(Calendar.HOUR_OF_DAY, 23);
+								end.set(Calendar.MINUTE, 59);
+								end.set(Calendar.SECOND, 59);
+								end.set(Calendar.MILLISECOND, 999);
+								if (ti.tryUpdate(end)) {
+									ti.endDay(ti.getCurrentCal(), false);
+								}
+							} else {
+								ti.endDay(ti.getCurrentCal(),
+										downtimes == null || !ti.getCurrentCal().before(startTime));
+							}
 						}
 					}
 
@@ -323,7 +349,7 @@ public class DataHandler {
 								TimeUtils.encodeTime(TimeUtils.getMsOfDay(ti.getEndCal())),
 								TimeUtils.encodeDate(ti.getEndCal()), ti);
 						if (ti.tryUpdate(record.cal)) {
-							ti.endDay(record.cal);
+							ti.endDay(ti.getCurrentCal(), false);
 							ti.printCurrentStay(false);
 						}
 						continue;
@@ -345,8 +371,20 @@ public class DataHandler {
 			}
 
 			if (!args.fillDays) {
-				if (ti.tryUpdate(lastTimes.get(lastDate))) {
-					ti.endDay(lastDate);
+				Calendar endCal = lastTimes.get(lastDate);
+				if (downtimes != null) {
+					for (Pair<Long, Long> downtime : downtimes) {
+						if (downtime.getKey() <= endCal.getTimeInMillis()
+								&& downtime.getValue() >= endCal.getTimeInMillis()) {
+							endCal = new GregorianCalendar();
+							endCal.setTimeInMillis(downtime.getKey());
+							break;
+						}
+					}
+				}
+
+				if (ti.tryUpdate(endCal)) {
+					ti.endDay(ti.getCurrentCal());
 					ti.printCurrentStay(false);
 				}
 			} else {
@@ -374,10 +412,24 @@ public class DataHandler {
 								ti.endDay(dtsCal, false);
 							}
 						} else {
-							ti.endDay(ti.getCurrentCal());
+							Calendar end = ti.getCurrentCal();
+							end.set(Calendar.HOUR_OF_DAY, 23);
+							end.set(Calendar.MINUTE, 59);
+							end.set(Calendar.SECOND, 59);
+							end.set(Calendar.MILLISECOND, 999);
+							if (ti.tryUpdate(end)) {
+								ti.endDay(ti.getCurrentCal(), false);
+							}
 						}
 					} else {
-						ti.endDay(ti.getCurrentCal());
+						Calendar end = ti.getCurrentCal();
+						end.set(Calendar.HOUR_OF_DAY, 23);
+						end.set(Calendar.MINUTE, 59);
+						end.set(Calendar.SECOND, 59);
+						end.set(Calendar.MILLISECOND, 999);
+						if (ti.tryUpdate(end)) {
+							ti.endDay(ti.getCurrentCal(), false);
+						}
 					}
 					ti.printCurrentStay(false);
 				}
