@@ -9,7 +9,7 @@ Ergebnis-Dateien:
 ## Allgemein
 Die Ergebnisdateien werden in dem Verzeichnis angelegt in dem das Programm ausgeführt wird.  
 Also da wo sich auch die [Input-Dateien](input.md) befinden müssen.  
-Wie auch die [Input-Dateien](input.md) sind die Ergebnis-Dateien im [CSV Format](formats.md#csv).
+Wie auch die [Input-Dateien](input.md) sind die Ergebnis-Dateien im [CSV-Format](formats.md#csv).
 
 Die Namen und Positionen dieser Dateien können mittels [Programm-Argumenten](arguments.md) verändert werden.
 
@@ -44,7 +44,7 @@ Diese Zeilen haben `total` als Datum.
 
 ## PutenAuswertungAufenthalte.csv
 Die Datei `PutenAuswertungAufenthalte.csv` enthält die individuellen Aufenthalte in einem Bereich pro Pute.  
-Diese Datei hat die folgenden Spalten in dieser Reihenfolge:
+Diese Datei hat die folgenden sieben(7) Spalten in dieser Reihenfolge:
  1. Tier: Die Id der Pute der dieser Aufenthalt zugeordnet ist.
  2. Bereich: Der Bereich in dem sich die Pute aufgehalten hat.
  3. Startdatum: Das Datum an welchem die Pute den Bereich betreten hat.

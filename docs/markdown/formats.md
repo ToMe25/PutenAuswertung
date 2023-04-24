@@ -11,9 +11,9 @@ Erklärte Formate:
 
 ## CSV
 Dieses Programm verwendet eine [CSV](https://de.wikipedia.org/wiki/CSV_(Dateiformat)) Version für seine [Input-][Input-Dateien]/[Ergebnis-](output.md)Dateien.  
-Das CSV Format das dieses Programm verwendet ist darauf ausgelegt die notwendigen Funktionen für dieses Programm zu haben, und möglichst universell einlesbar zu sein, nicht auf eine offizielle Spezifikation.
+Das CSV-Format das dieses Programm verwendet ist darauf ausgelegt die notwendigen Funktionen für dieses Programm zu haben, und möglichst universell einlesbar zu sein, nicht auf eine offizielle Spezifikation.
 
-**Achtung:** Dieses CSV Format ist **NICHT VOLLSTÄNDIG [RFC 4180](https://www.rfc-editor.org/rfc/rfc4180) KONFORM**.
+**Achtung:** Dieses CSV-Format ist **NICHT VOLLSTÄNDIG [RFC 4180](https://www.rfc-editor.org/rfc/rfc4180) KONFORM**.
 
 In [Ergebnis-Dateien](output.md) verwendet dieses Programm Semikolons als Werte-Trennzeichen.  
 In [Input-Dateien] für dieses Programm können Kommas, Semikolons und Tabulatoren als Trennzeichen verwendet werden.  
@@ -50,6 +50,6 @@ Das Datumsformat dieses Programms, sowohl für [Input-Dateien], als auch für Er
 
 In Ergebnissen hat das Format immer zwei Ziffern für Tag und Monat, und vier\* für das Jahr.  
 In Inputs kann ein Datum ein oder zwei Ziffern für den Tag und Monat, und ein oder mehr für das Jahr haben.  
-Wenn Daten im Input weniger als vier Ziffern für das Jahr haben, werden Nullen vor diesen in die Ergebnisse geschrieben.
+Wenn Daten im Input weniger als zwei Ziffern für den Tag oder den Monat, vier Ziffern für das Jahr haben, werden Nullen vor diesen in die Ergebnisse geschrieben.
 
 \* Außer wenn Inputs ein Datum mit mehr als vier Ziffern enthalten.

@@ -6,8 +6,8 @@ Weitere Konfiguration ist mittels [Programm-Argumenten](arguments.md) möglich.
 Die vier Input-Dateien sind:
  * [Puten.csv](#puten-csv)
  * [Bereiche.csv](#bereiche-csv)
- * [AntennenDaten.csv](#antennendaten-csv)
  * [Ausfälle.csv](#ausfaelle-csv)
+ * [AntennenDaten.csv](#antennendaten-csv)
 
 Die ersten zwei dieser Dateien werden in dieser Dokumentation "Zuordnungs-Dateien" genannt.  
 Dies ist da diese Zuordnungen von Ids zu anderen Ids enthalten.  
@@ -18,7 +18,7 @@ Diese werden an einigen Stellen gleich behandelt.
 ## Allgemein
 Dieser Abschnitt enthält allgemeine Informationen die für alle Input-Dateien gelten.
 
-Alle Input-Dateien müssen dem [CSV Format](formats.md#csv) entsprechen.  
+Alle Input-Dateien müssen dem [CSV-Format](formats.md#csv) entsprechen.  
 Zeiten und Daten müssen entsprechend der [Zeit-](formats.md#zeit)/[Datums-](formats.md#datum)Formate für dieses Programm formatiert sein.  
 Ungültige Zeilen werden mit einer [Fehlermeldung] ignoriert, führen also nicht zum Abbruch der Auswertung.  
 Die Namen und Positionen der zu verwendenden Dateien können mittels [Programm-Argumenten](arguments.md) verändert werden.
@@ -28,17 +28,31 @@ Informationen über die Standard-Dateien die eingelesen werden, wenn diese nicht
  2. Diese Dateien müssen sich in dem Verzeichnis befinden in dem das Programm ausgeführt wird, nicht in dem Verzeichnis in dem das Programm gespeichert ist.
 
 ## Puten.csv
-Die `Puten.csv` Datei muss zuerst eine Spalte mit der Id der Pute, und dann eine oder mehrere Spalten mit den Transponder-Ids die zu dieser Pute gehören, enthalten.  
-Diese Datei muss eine Pute pro Zeile enthalten.  
+Die `Puten.csv` Datei muss mindestens fünf(5) Spalten enthalten:  
+ * Die erste Spalte enthält die Id der Pute,
+ * Die zweite Spalte kann den Start-Bereich der Pute enthalten, oder leer sein,
+ * Die dritte Spalte kann die End-Zeit der Pute enthalten, oder leer sein,
+ * Die vierte Spalte kann das End-Datum der Pute enthalten, oder leer sein und
+ * Alle weiteren Spalten, von welchen mindestens eine vorhanden sein muss, enthalten Transponder-Ids.
+
+Diese Datei enthält Informationen über eine Pute pro Zeile.  
 Sowohl die Puten-Ids als auch die Transponder-Ids können Buchstaben, Ziffern und Leerzeichen enthalten.  
-Nicht alle Puten müssen die selbe Anzahl Transponder haben.
+Nicht alle Puten müssen die selbe Anzahl Transponder-Spalten haben.
+
+Der Start-Bereich gibt an in welchem Bereich sich die Pute vom Anfang **der ersten Aufzeichnung**, bis zu ihrem ersten Auftreten in der [Antennen-Daten-Datei](#antennendaten-csv) befindet.
+
+**Achtung:** In dieser Datei ist die Zeit vor dem Datum, in allen anderen Dateien steht die Uhrzeit nach dem Datum.  
+Dies ist aus technischen Gründen nötig, und wird sich voraussichtlich nicht ändern.
+
+Wenn eine Zeile eine End-Uhrzeit, aber kein End-Datum enthält, wird diese End-Uhrzeit mit einer [Fehlermeldung] ignoriert.  
+Wenn eine Zeile ein End-Datum, aber keine End-Uhrzeit enthält, wird eine [Fehlermeldung] ausgegeben, und die Pute am Anfang des Tages entfernt.
 
 Wenn das Programm mehrere Puten mit der selben Id findet, ignoriert es alle Zeilen die diese Puten-Id haben, außer der ersten.  
 Wenn eine Transponder Id mehreren Puten zugeordnet ist, ordnet das Programm diese nur der ersten dieser Puten zu.  
 Beide dieser Fehler verursachen eine [Fehlermeldung].
 
 Die erste Zeile wird als Spaltentitel-Zeile behandelt, falls sie mit `Tier` beginnt.  
-Da die Spalten-Titel für diese Datei irrelevant sind, wird diese dann ignoriert.
+Da das Programm nicht in der Lage ist die Spalten nach Titel zu sortieren, wird diese dann ignoriert.
 
 ## Bereiche.csv
 Die Datei namens `Bereiche.csv` muss zuerst eine Spalte mit dem Namen des Bereiches, und dann eine oder mehr Spalten mit den Ids der Antennen die diesem Bereich zugeordnet sind, enthalten.  
@@ -98,7 +112,7 @@ Die Groß/Klein Schreibung der Titel wird hierbei ignoriert.
 Wenn keine gültige Titel-Zeile vorhanden ist verwendet das Programm diese Reihenfolge:  
 `Transponder`, `Datum`, `Zeit` und `Antenne`.
 
-Eine Zeile in dieser Datei darf nicht für ein Datum bevor dem Datum der spätesten Zeile über dieser haben.  
+Eine Zeile in dieser Datei kein Datum bevor dem Datum der spätesten Zeile über dieser haben.  
 Falls sie dennoch ein früheres Datum hat wird sie mit einer [Fehlermeldung] wie dieser ignoriert:
 
 ```

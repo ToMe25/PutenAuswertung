@@ -39,6 +39,8 @@ Standardmäßig ist diese fünf Minuten.
 
 **Falls eine Aufzeichnung während eines Ausfalles ist**, wird diese mit einer [Fehlermeldung] ignoriert, und die nächste eingelesen.
 
+**Falls eine Aufzeichnung nach dem End-Zeitpunkt für diese Pute ist**, wird diese mit einer [Fehlermeldung] ignoriert, und die nächste Zeile eingelesen.
+
 **Falls eine Aufzeichnung die erste nach einem Ausfall ist**, werden alle Puten so behandelt als hätten sie sich bis zum Anfang des Ausfalles in ihrem aktuellen Bereich aufgehalten.  
 Danach wird alles so behandelt als hätten eine neue Aufzeichnung am Ende des Ausfalles begonnen.  
 Mit der Ausnahme das die [Aufenthalts-Zeiten](output.md#putenauswertungaufenthalte-csv) für beide Aufzeichnungen zusammen sind.
@@ -49,7 +51,7 @@ Mit der Ausnahme das die [Aufenthalts-Zeiten](output.md#putenauswertungaufenthal
  1. Falls das `fill-days` [Argument](arguments.md#argument-erklaerung) verwendet wird und die letzte Aufzeichnung von einem vorherigen Tag ist:  
     In diesem Fall wird die Pute so behandelt was wäre ihre letzte Aufzeichnung um Mitternacht, mehr als die Mindest-Aufenthaltsdauer her und in dem Bereich in dem sie nun ist.
  2. Falls der letzte aufgezeichnete Bereichswechsel mehr als die Mindest-Aufenthaltsdauer her ist:  
-    In diesem Fall wird aufgezeichnet, das die Pute sich für den Zeitraum seit diese Bereichswechsel, in dem Bereich in dem sie zuvor Aufgezeichnet wurde befand.  
+    In diesem Fall wird aufgezeichnet, das die Pute sich für den Zeitraum seit diesem Bereichswechsel, in dem Bereich in dem sie zuvor Aufgezeichnet wurde befand.  
     Der vorläufige Endzeitpunkt dieses Aufenthalts ist der Zeitpunkt der neuen Aufzeichnung.  
     Außerdem wird der Aufenthalt vor dem nun beendeten in die Datei [PutenAuswertungAufenthalte.csv](output.md#putenauswertungaufenthalte-csv) geschrieben.
  3. Falls der letzte Aufenthalts-Zeitraum weniger als die Mindest-Aufenthaltsdauer lang war:  
@@ -58,9 +60,9 @@ Mit der Ausnahme das die [Aufenthalts-Zeiten](output.md#putenauswertungaufenthal
 Danach wird die Pute Vorläufig als in dem Bereich der neuesten Aufzeichnung befindlich markiert.  
 Dann wird die Anzahl der Bereichswechsel aktualisiert.
 
-**Falls die Pute noch nicht aufgezeichnet wurde**, wird eine neue interne Repräsentation für diese Pute erzeugt.  
-Diese wird so behandelt, als ob sie sich seit dem Anfang der Aufzeichnungen im ersten Bereich in dem sie Aufgezeichnet wurde aufgehalten hätte.  
-Egal ob dies mehr als die Mindest-Aufenthaltsdauer ist.  
+**Falls die Pute noch nicht aufgezeichnet wurde**, wird diese so behandelt, als ob sie sich seit dem Anfang der Aufzeichnungen in ihrem Start-Bereich aufgehalten.  
+Falls diese Pute keinen Start-Bereich in der [Puten.csv-Datei](input.md#puten-csv) hat, wird der erste Bereich in dem sie Aufgezeichnet wurde verwendet.  
+Egal ob der Anfang der Aufzeichnungen mehr als die Mindest-Aufenthaltsdauer her ist.  
 Der Anfang der Aufzeichnungen kann je nach [Konfiguration](arguments.md) der Zeitpunkt der ersten Aufzeichnung der ersten Pute, oder der Anfang des Tages der ersten Aufzeichnung dieser Pute sein.
 
 ### Wenn eine Aufzeichnung ein anderes Datum hat
@@ -73,7 +75,7 @@ Was in diesem Fall passiert hängt davon ab ob das neue Datum der nächste Tag n
 **Falls das neue Datum nicht auf das vorherige folgt**, wird die alte Aufzeichnung als beendet betrachtet und eine neue gestartet.  
 Das heißt falls das `fill-days` [Argument](arguments.md#argument-erklaerung) übergeben wurde werden alle Puten so behandelt als hätten sie sich bis Mitternacht in ihrem momentanen Bereich aufgehalten.  
 Andernfalls werden alle Puten so behandelt als ob sie bis zu der letzten Aufzeichnung der letzten Pute in ihrem momentanen Bereich geblieben sind.  
-An diesem Punkt werden die Aufenthalts-Zeiten pro Tag pro Pute in die `PutenAuswertungZeiten.csv` Datei geschrieben.
+An diesem Punkt werden die Aufenthalts-Zeiten pro Tag pro Pute in die [PutenAuswertungZeiten.csv-Datei](output.md#putenauswertungzeiten-csv) geschrieben.
 
 Danach wird alles so behandelt als ob hier der Anfang einer neuen [AntennenDaten.csv] wäre, mit zwei Ausnahmen.
  1. Der neue Anfangs-Zeitpunkt kann nicht vor dem Ende der letzten Aufzeichnung sein.
@@ -83,4 +85,4 @@ Danach wird alles so behandelt als ob hier der Anfang einer neuen [AntennenDaten
 Wenn die [AntennenDaten.csv] Datei vollständig eingelesen wurde passieren drei Dinge.  
 Erstens werden alle Puten aktualisiert, als hätten sie sich bis zu der letzten Aufzeichnung der letzten Pute, oder mit `fill-days` dem Ende des letzten Tages, in ihrem momentanen Bereich aufgehalten.  
 Danach werden die letzten Aufenthalte in [PutenAuswertungAufenthalte.csv](output.md#putenauswertungaufenthalte-csv) geschrieben.  
-Und zu allerletzt werden alle Aufenthaltszeiten in die [PutenAuswertungZeiten.csv](output.md#putenauswertungzeiten-csv) Datei geschrieben.
+Und zu allerletzt werden alle Aufenthaltszeiten in die [PutenAuswertungZeiten.csv-Datei](output.md#putenauswertungzeiten-csv) geschrieben.

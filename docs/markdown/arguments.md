@@ -21,7 +21,9 @@ Wenn der Start-Befehl zum Beispiel `java -jar PutenAuswertung.jar` ist, und das 
 
 Die Reihenfolge der Argumente ist irrelevant, es ist allerdings darauf zu achten das alle Argumente nach dem Dateinamen kommen müssen.  
 Das heißt zum Beispiel dieser Befehl würde nicht funktionieren: `java --help -jar PutenAuswertung.jar`  
-Dies ist der Fall da dieser Befehl das Argument `--help` an java übergeben würde, nicht an `PutenAuswertung.jar`.
+Dies ist der Fall da dieser Befehl das Argument `--help` an `java` übergeben würde, nicht an `PutenAuswertung.jar`.
+
+Sowohl bei der kurzen Repräsentation von Argumenten, als auch bei der langen Repräsentation ist auf die Groß-/Klein-Schreibung zu achten.
 
 ### Kurze Argumente
 Alle Argumente haben eine kurze und eine oder mehrere lange Repräsentationen.  
@@ -214,7 +216,7 @@ java -jar PutenAuswertung.jar -D "Some  Dir"
 Dies teilt dem Terminal mit das diese Leerzeichen nicht zum trennen des Wertes verwendet werden sollen.
 
 Eine Alternative ist es vor die Leerzeichen je einen Backslash zu machen.  
-Auch diese teilt dem Terminal mit den Wert hier nicht zu trennen.
+Auch diese teilt dem Terminal mit den Wert hier nicht zu trennen.  
 Beispiel:
 
 ```
