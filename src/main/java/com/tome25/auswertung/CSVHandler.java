@@ -371,15 +371,18 @@ public class CSVHandler {
 	 * @param input The stream handler containing the data to be read.
 	 * @param args  The {@link Arguments} instance to use for the {@link TurkeyInfo}
 	 *              objects.
+	 * @param zones A {@link Collection} containing the valid zone names, to be used
+	 *              to check the turkeys start zones.<br/>
+	 *              Use an empty collection to disable start zones.
 	 * @return A pair containing the two maps described above. Or {@code null} if
 	 *         there was no valid data in the input.
-	 * @throws NullPointerException if {@code input} or {@code args} is
-	 *                              {@code null}.
+	 * @throws NullPointerException if one of the arguments is {@code null}.
 	 */
 	public static Pair<Map<String, TurkeyInfo>, Map<String, String>> readTurkeyCSV(IInputStreamHandler input,
-			final Arguments args) throws NullPointerException {
+			final Arguments args, final Collection<String> zones) throws NullPointerException {
 		Objects.requireNonNull(input, "The to read cannot be null.");
 		Objects.requireNonNull(args, "The arguments to use to create TurkeyInfos cannot be null.");
+		Objects.requireNonNull(zones, "The valid zone names cannot be null.");
 		try {
 			checkInput(input);
 		} catch (EOFException e) {
@@ -431,13 +434,33 @@ public class CSVHandler {
 					continue;
 				}
 
+				String startZone = null;
 				if (!tokens[1].isEmpty() && !ID_REGEX.matcher(tokens[1]).matches()) {
 					LogHandler.err_println("Found invalid start zone id \"" + tokens[1] + "\" for turkey \"" + tokens[0]
-							+ "\". Skipping line.");
+							+ "\". Ignoring.");
 					LogHandler.print_debug_info(
 							"Separator Chars: %s, Tokens: [%s], Line: \"%s\", Input Stream Handler: %s",
 							SEPARATOR_REGEX.toString(), StringUtils.join(", ", tokens), line, input.toString());
-					continue;
+				} else if (!tokens[1].isEmpty()) {
+					startZone = tokens[1];
+				}
+
+				if (startZone != null && zones.isEmpty()) {
+					LogHandler.err_println("Found start zone \"" + startZone + "\" for turkey \"" + tokens[0]
+							+ "\" with start zones disabled. Ignoring.");
+					LogHandler.print_debug_info(
+							"Separator Chars: %s, Tokens: [%s], Zones: %s, Line: \"%s\", Input Stream Handler: %s",
+							SEPARATOR_REGEX.toString(), StringUtils.join(", ", tokens), zones.toString(), line,
+							input.toString());
+					startZone = null;
+				} else if (startZone != null && !zones.contains(startZone)) {
+					LogHandler.err_println("Found unknown start zone \"" + startZone + "\" for turkey \"" + tokens[0]
+							+ "\". Ignoring.");
+					LogHandler.print_debug_info(
+							"Separator Chars: %s, Tokens: [%s], Zones: [%s], Line: \"%s\", Input Stream Handler: %s",
+							SEPARATOR_REGEX.toString(), StringUtils.join(", ", tokens),
+							StringUtils.collectionToString(", ", zones), line, input.toString());
+					startZone = null;
 				}
 
 				Calendar endTime = null;
@@ -511,7 +534,7 @@ public class CSVHandler {
 					continue;
 				}
 
-				first.put(tokens[0], new TurkeyInfo(tokens[0], list, null, tokens[1], null, null, endTime, args));
+				first.put(tokens[0], new TurkeyInfo(tokens[0], list, null, startZone, null, null, endTime, args));
 				last_failed = false;
 			} catch (IOException e) {
 				if (last_failed) {

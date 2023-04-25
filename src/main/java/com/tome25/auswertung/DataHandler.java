@@ -7,6 +7,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -63,7 +64,8 @@ public class DataHandler {
 			LogHandler.print_debug_info("Zones Input Stream Handler: %s", zonesStream);
 		}
 
-		Pair<Map<String, TurkeyInfo>, Map<String, String>> turkeys = CSVHandler.readTurkeyCSV(turkeyStream, args);
+		Pair<Map<String, TurkeyInfo>, Map<String, String>> turkeys = CSVHandler.readTurkeyCSV(turkeyStream, args,
+				zones == null ? new HashSet<String>() : zones.getKey().keySet());
 		if (turkeys == null) {
 			LogHandler.err_println("Failed to read turkey mappings from the input file.");
 			LogHandler.print_debug_info("Turkey Input Stream Handler: %s", turkeyStream);

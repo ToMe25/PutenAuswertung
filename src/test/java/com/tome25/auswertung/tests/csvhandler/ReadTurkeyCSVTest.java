@@ -11,6 +11,7 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -64,10 +65,11 @@ public class ReadTurkeyCSVTest {
 		PrintStream out = tempFile.getValue();
 		FileInputStreamHandler fiin = tempFile.getKey();
 
-		out.println("Turkey 0;;;;Value 1;val 2");
+		out.println("Turkey 0;;;;Transponder 1;trans 2");
 		out.println("test;;;;test1;test2");
 
-		Pair<Map<String, TurkeyInfo>, Map<String, String>> pair = CSVHandler.readTurkeyCSV(fiin, Arguments.empty());
+		Pair<Map<String, TurkeyInfo>, Map<String, String>> pair = CSVHandler.readTurkeyCSV(fiin, Arguments.empty(),
+				new HashSet<String>());
 		assertNotNull("Reading a basic turkey csv returned null.", pair);
 
 		assertTrue("Basic turkeys.csv representation did not containg first line key.",
@@ -75,23 +77,23 @@ public class ReadTurkeyCSVTest {
 		assertTrue("Basic turkeys.csv representation did not containg second line key.",
 				pair.getKey().containsKey("test"));
 		assertTrue("Basic turkeys.csv didn't contain first value line first value.",
-				pair.getKey().get("Turkey 0").getTransponders().contains("Value 1"));
+				pair.getKey().get("Turkey 0").getTransponders().contains("Transponder 1"));
 		assertTrue("Basic turkeys.csv didn't contain first value line second value.",
-				pair.getKey().get("Turkey 0").getTransponders().contains("val 2"));
+				pair.getKey().get("Turkey 0").getTransponders().contains("trans 2"));
 
 		assertTrue("Basic turkeys.csv didn't contain first value line first value.",
-				pair.getValue().containsKey("Value 1"));
+				pair.getValue().containsKey("Transponder 1"));
 		assertTrue("Basic turkeys.csv didn't contain first value line second value.",
-				pair.getValue().containsKey("val 2"));
+				pair.getValue().containsKey("trans 2"));
 
 		Pair<Map<String, TurkeyInfo>, Map<String, String>> refPair = new Pair<Map<String, TurkeyInfo>, Map<String, String>>(
 				new LinkedHashMap<String, TurkeyInfo>(), new HashMap<String, String>());
-		refPair.getKey().put("Turkey 0", new TurkeyInfo("Turkey 0", Arrays.asList("Value 1", "val 2"), null, null, null,
-				null, null, Arguments.empty()));
+		refPair.getKey().put("Turkey 0", new TurkeyInfo("Turkey 0", Arrays.asList("Transponder 1", "trans 2"), null,
+				null, null, null, null, Arguments.empty()));
 		refPair.getKey().put("test", new TurkeyInfo("test", Arrays.asList("test1", "test2"), null, null, null, null,
 				null, Arguments.empty()));
-		refPair.getValue().put("Value 1", "Turkey 0");
-		refPair.getValue().put("val 2", "Turkey 0");
+		refPair.getValue().put("Transponder 1", "Turkey 0");
+		refPair.getValue().put("trans 2", "Turkey 0");
 		refPair.getValue().put("test1", "test");
 		refPair.getValue().put("test2", "test");
 
@@ -127,7 +129,8 @@ public class ReadTurkeyCSVTest {
 			refPair.getValue().put("v" + i, "Turkey " + i);
 		}
 
-		Pair<Map<String, TurkeyInfo>, Map<String, String>> pair = CSVHandler.readTurkeyCSV(fiin, Arguments.empty());
+		Pair<Map<String, TurkeyInfo>, Map<String, String>> pair = CSVHandler.readTurkeyCSV(fiin, Arguments.empty(),
+				new HashSet<String>());
 		assertEquals("The size of the first map of the longer basic turkey csv did not match.", 300,
 				pair.getKey().size());
 		assertEquals("The size of the second map of the longer basic turkey csv did not match.", 900,
@@ -149,7 +152,8 @@ public class ReadTurkeyCSVTest {
 		out.println("Turkey 1;Start 1;;;Transponder 1");
 		out.println("Turkey 2;Start 2;;;Transponder 2;Transponder 3");
 
-		Pair<Map<String, TurkeyInfo>, Map<String, String>> pair = CSVHandler.readTurkeyCSV(fiin, Arguments.empty());
+		Pair<Map<String, TurkeyInfo>, Map<String, String>> pair = CSVHandler.readTurkeyCSV(fiin, Arguments.empty(),
+				Arrays.asList("Start 1", "Start 2"));
 		assertNotNull("Reading a turkey csv with start zones returned null.", pair);
 
 		Pair<Map<String, TurkeyInfo>, Map<String, String>> refPair = new Pair<Map<String, TurkeyInfo>, Map<String, String>>(
@@ -180,7 +184,8 @@ public class ReadTurkeyCSVTest {
 		out.println("Turkey 1;;12:05:13.56;;Transponder 1;Transponder 2");
 		out.println("Turkey 2;;00:12:51.12;;Transponder 3;Transponder 4");
 
-		Pair<Map<String, TurkeyInfo>, Map<String, String>> pair = CSVHandler.readTurkeyCSV(fiin, Arguments.empty());
+		Pair<Map<String, TurkeyInfo>, Map<String, String>> pair = CSVHandler.readTurkeyCSV(fiin, Arguments.empty(),
+				new HashSet<String>());
 		assertNotNull("Reading a turkey csv with end times returned null.", pair);
 
 		Pair<Map<String, TurkeyInfo>, Map<String, String>> refPair = new Pair<Map<String, TurkeyInfo>, Map<String, String>>(
@@ -215,7 +220,8 @@ public class ReadTurkeyCSVTest {
 		out.println("Turkey 1;;;12.02.2022;Transponder 1;Transponder 2");
 		out.println("Turkey 2;;;31.12.2022;Transponder 3");
 
-		Pair<Map<String, TurkeyInfo>, Map<String, String>> pair = CSVHandler.readTurkeyCSV(fiin, Arguments.empty());
+		Pair<Map<String, TurkeyInfo>, Map<String, String>> pair = CSVHandler.readTurkeyCSV(fiin, Arguments.empty(),
+				new HashSet<String>());
 		assertNotNull("Reading a turkey csv with end times returned null.", pair);
 
 		Pair<Map<String, TurkeyInfo>, Map<String, String>> refPair = new Pair<Map<String, TurkeyInfo>, Map<String, String>>(
@@ -253,7 +259,8 @@ public class ReadTurkeyCSVTest {
 		out.println("Turkey 1;;12:00:00.00;15.03.2023;Transponder 1");
 		out.println("Turkey 2;;23:41:36.12;21.09.2023;Transponder 2;Transponder 3");
 
-		Pair<Map<String, TurkeyInfo>, Map<String, String>> pair = CSVHandler.readTurkeyCSV(fiin, Arguments.empty());
+		Pair<Map<String, TurkeyInfo>, Map<String, String>> pair = CSVHandler.readTurkeyCSV(fiin, Arguments.empty(),
+				new HashSet<String>());
 		assertNotNull("Reading a turkey csv with end times returned null.", pair);
 
 		Pair<Map<String, TurkeyInfo>, Map<String, String>> refPair = new Pair<Map<String, TurkeyInfo>, Map<String, String>>(
@@ -287,7 +294,8 @@ public class ReadTurkeyCSVTest {
 		out.println("Turkey 1,,13:07:54,71,12.12.2012,Transponder 1,Transponder 2");
 		out.println("Turkey 2,,20:15:07,12,,Transponder 3,Transponder 4");
 
-		Pair<Map<String, TurkeyInfo>, Map<String, String>> pair = CSVHandler.readTurkeyCSV(fiin, Arguments.empty());
+		Pair<Map<String, TurkeyInfo>, Map<String, String>> pair = CSVHandler.readTurkeyCSV(fiin, Arguments.empty(),
+				new HashSet<String>());
 		assertNotNull("Reading a turkey csv with end times returned null.", pair);
 
 		Pair<Map<String, TurkeyInfo>, Map<String, String>> refPair = new Pair<Map<String, TurkeyInfo>, Map<String, String>>(
@@ -320,22 +328,23 @@ public class ReadTurkeyCSVTest {
 		FileInputStreamHandler fiin = tempFile.getKey();
 
 		out.println("Tier;Start Bereich;End Zeit;End Datum;Transponder 1;Transponder 2");
-		out.println("Turkey 1;;;;Value 1;Value 2");
-		out.println("Turkey 2;;;;Value 3;Value 4");
+		out.println("Turkey 1;;;;Transponder 1;Transponder 2");
+		out.println("Turkey 2;;;;Transponder 3;Transponder 4");
 
 		Pair<Map<String, TurkeyInfo>, Map<String, String>> refPair = new Pair<Map<String, TurkeyInfo>, Map<String, String>>(
 				new LinkedHashMap<String, TurkeyInfo>(), new HashMap<String, String>());
-		refPair.getKey().put("Turkey 1", new TurkeyInfo("Turkey 1", Arrays.asList("Value 1", "Value 2"), null, null,
-				null, null, null, Arguments.empty()));
-		refPair.getKey().put("Turkey 2", new TurkeyInfo("Turkey 2", Arrays.asList("Value 3", "Value 4"), null, null,
-				null, null, null, Arguments.empty()));
+		refPair.getKey().put("Turkey 1", new TurkeyInfo("Turkey 1", Arrays.asList("Transponder 1", "Transponder 2"),
+				null, null, null, null, null, Arguments.empty()));
+		refPair.getKey().put("Turkey 2", new TurkeyInfo("Turkey 2", Arrays.asList("Transponder 3", "Transponder 4"),
+				null, null, null, null, null, Arguments.empty()));
 
-		refPair.getValue().put("Value 1", "Turkey 1");
-		refPair.getValue().put("Value 2", "Turkey 1");
-		refPair.getValue().put("Value 3", "Turkey 2");
-		refPair.getValue().put("Value 4", "Turkey 2");
+		refPair.getValue().put("Transponder 1", "Turkey 1");
+		refPair.getValue().put("Transponder 2", "Turkey 1");
+		refPair.getValue().put("Transponder 3", "Turkey 2");
+		refPair.getValue().put("Transponder 4", "Turkey 2");
 
-		Pair<Map<String, TurkeyInfo>, Map<String, String>> pair = CSVHandler.readTurkeyCSV(fiin, Arguments.empty());
+		Pair<Map<String, TurkeyInfo>, Map<String, String>> pair = CSVHandler.readTurkeyCSV(fiin, Arguments.empty(),
+				new HashSet<String>());
 		assertFalse("The parsed turkeys contained the key of the header line.", pair.getKey().containsKey("Tier"));
 		assertEquals("The turkeys parsed from a file with header line did not match.", refPair, pair);
 	}
@@ -352,7 +361,7 @@ public class ReadTurkeyCSVTest {
 
 		assertTrue("File input stream handle for an empty file wasn't done.", fiin.done());
 		assertNull("The result of reading an empty turkey file was not null.",
-				CSVHandler.readTurkeyCSV(fiin, Arguments.empty()));
+				CSVHandler.readTurkeyCSV(fiin, Arguments.empty(), new HashSet<String>()));
 
 		errorLog.checkLine("Input file did not contain any data.", 0);
 	}
@@ -365,7 +374,7 @@ public class ReadTurkeyCSVTest {
 	 */
 	@Test(expected = NullPointerException.class)
 	public void readNullInput() throws NullPointerException {
-		CSVHandler.readTurkeyCSV(null, Arguments.empty());
+		CSVHandler.readTurkeyCSV(null, Arguments.empty(), new HashSet<String>());
 	}
 
 	/**
@@ -380,7 +389,21 @@ public class ReadTurkeyCSVTest {
 	public void readNullArgs() throws NullPointerException, IOException {
 		Pair<FileInputStreamHandler, PrintStream> tempFile = tempFolder.newTempInputFile("null_args_turkeys.csv");
 		FileInputStreamHandler fiin = tempFile.getKey();
-		CSVHandler.readTurkeyCSV(fiin, null);
+		CSVHandler.readTurkeyCSV(fiin, null, new HashSet<String>());
+	}
+
+	/**
+	 * A unit test confirming that {@link CSVHandler#readTurkeyCSV} throws a
+	 * {@link NullPointerException} when given a {@code null} zones collection.
+	 * 
+	 * @throws NullPointerException Always.
+	 * @throws IOException          When creating the temp file fails.
+	 */
+	@Test(expected = NullPointerException.class)
+	public void readNullZones() throws NullPointerException, IOException {
+		Pair<FileInputStreamHandler, PrintStream> tempFile = tempFolder.newTempInputFile("null_args_turkeys.csv");
+		FileInputStreamHandler fiin = tempFile.getKey();
+		CSVHandler.readTurkeyCSV(fiin, Arguments.empty(), null);
 	}
 
 	/**
@@ -409,7 +432,8 @@ public class ReadTurkeyCSVTest {
 			refPair.getValue().put("val " + i, "Turkey " + i);
 		}
 
-		Pair<Map<String, TurkeyInfo>, Map<String, String>> pair = CSVHandler.readTurkeyCSV(fiin, Arguments.empty());
+		Pair<Map<String, TurkeyInfo>, Map<String, String>> pair = CSVHandler.readTurkeyCSV(fiin, Arguments.empty(),
+				new HashSet<String>());
 		assertEquals("The size of the first map of the mixed separator turkey did not match.", 15,
 				pair.getKey().size());
 		assertEquals("The size of the second map of the mixed separator turkey did not match.", 30,
@@ -448,7 +472,8 @@ public class ReadTurkeyCSVTest {
 					new TurkeyInfo("Turkey " + i, values, null, null, null, null, null, Arguments.empty()));
 		}
 
-		Pair<Map<String, TurkeyInfo>, Map<String, String>> pair = CSVHandler.readTurkeyCSV(fiin, Arguments.empty());
+		Pair<Map<String, TurkeyInfo>, Map<String, String>> pair = CSVHandler.readTurkeyCSV(fiin, Arguments.empty(),
+				new HashSet<String>());
 		assertEquals("The size of the first map of the mixed line length turkey did not match.", 20,
 				pair.getKey().size());
 		assertEquals("The result of parsing the mixed line length turkey csv did not match.", refPair, pair);
@@ -466,24 +491,25 @@ public class ReadTurkeyCSVTest {
 		PrintStream out = tempFile.getValue();
 		FileInputStreamHandler fiin = tempFile.getKey();
 
-		out.println("Key;;;;Value 1;Value 2");
-		out.println("Key;;;;Value 3;Value 4");
+		out.println("Turkey;;;;Transponder 1;Transponder 2");
+		out.println("Turkey;;;;Transponder 3;Transponder 4");
 
 		Pair<Map<String, TurkeyInfo>, Map<String, String>> refPair = new Pair<Map<String, TurkeyInfo>, Map<String, String>>(
 				new LinkedHashMap<String, TurkeyInfo>(), new HashMap<String, String>());
-		refPair.getKey().put("Key", new TurkeyInfo("Key", Arrays.asList("Value 1", "Value 2"), null, null, null, null,
-				null, Arguments.empty()));
-		refPair.getValue().put("Value 1", "Key");
-		refPair.getValue().put("Value 2", "Key");
+		refPair.getKey().put("Turkey", new TurkeyInfo("Turkey", Arrays.asList("Transponder 1", "Transponder 2"), null, null,
+				null, null, null, Arguments.empty()));
+		refPair.getValue().put("Transponder 1", "Turkey");
+		refPair.getValue().put("Transponder 2", "Turkey");
 
-		Pair<Map<String, TurkeyInfo>, Map<String, String>> pair = CSVHandler.readTurkeyCSV(fiin, Arguments.empty());
+		Pair<Map<String, TurkeyInfo>, Map<String, String>> pair = CSVHandler.readTurkeyCSV(fiin, Arguments.empty(),
+				new HashSet<String>());
 		assertFalse("The second map of the parsed turkeys contains a value from the second line.",
-				pair.getValue().containsKey("Value 3"));
+				pair.getValue().containsKey("Transponder 3"));
 		assertEquals("The size of the first map of the duplicate key turkeys did not match.", 1, pair.getKey().size());
 		assertEquals("The size of the second map of the duplicate key turkeys did not match.", 2,
 				pair.getValue().size());
 		assertEquals("The result of parsing the duplicate key turkey csv did not match.", refPair, pair);
-		errorLog.checkLine("Found duplicate turkey id \"Key\". Skipping line.", 0);
+		errorLog.checkLine("Found duplicate turkey id \"Turkey\". Skipping line.", 0);
 	}
 
 	/**
@@ -498,34 +524,35 @@ public class ReadTurkeyCSVTest {
 		PrintStream out = tempFile.getValue();
 		FileInputStreamHandler fiin = tempFile.getKey();
 
-		out.println("Turkey 1;;;;Value 1;Value 2");
-		out.println("Turkey 2;;;;Value 3;Value 4");
-		out.println("Turkey 3;;;;Value 5;Value 2");
+		out.println("Turkey 1;;;;Transponder 1;Transponder 2");
+		out.println("Turkey 2;;;;Transponder 3;Transponder 4");
+		out.println("Turkey 3;;;;Transponder 5;Transponder 2");
 
 		Pair<Map<String, TurkeyInfo>, Map<String, String>> refPair = new Pair<Map<String, TurkeyInfo>, Map<String, String>>(
 				new LinkedHashMap<String, TurkeyInfo>(), new HashMap<String, String>());
-		refPair.getKey().put("Turkey 1", new TurkeyInfo("Turkey 1", Arrays.asList("Value 1", "Value 2"), null, null,
-				null, null, null, Arguments.empty()));
-		refPair.getKey().put("Turkey 2", new TurkeyInfo("Turkey 2", Arrays.asList("Value 3", "Value 4"), null, null,
-				null, null, null, Arguments.empty()));
-		refPair.getKey().put("Turkey 3",
-				new TurkeyInfo("Turkey 3", Arrays.asList("Value 5"), null, null, null, null, null, Arguments.empty()));
+		refPair.getKey().put("Turkey 1", new TurkeyInfo("Turkey 1", Arrays.asList("Transponder 1", "Transponder 2"),
+				null, null, null, null, null, Arguments.empty()));
+		refPair.getKey().put("Turkey 2", new TurkeyInfo("Turkey 2", Arrays.asList("Transponder 3", "Transponder 4"),
+				null, null, null, null, null, Arguments.empty()));
+		refPair.getKey().put("Turkey 3", new TurkeyInfo("Turkey 3", Arrays.asList("Transponder 5"), null, null, null,
+				null, null, Arguments.empty()));
 
-		refPair.getValue().put("Value 1", "Turkey 1");
-		refPair.getValue().put("Value 2", "Turkey 1");
-		refPair.getValue().put("Value 3", "Turkey 2");
-		refPair.getValue().put("Value 4", "Turkey 2");
-		refPair.getValue().put("Value 5", "Turkey 3");
+		refPair.getValue().put("Transponder 1", "Turkey 1");
+		refPair.getValue().put("Transponder 2", "Turkey 1");
+		refPair.getValue().put("Transponder 3", "Turkey 2");
+		refPair.getValue().put("Transponder 4", "Turkey 2");
+		refPair.getValue().put("Transponder 5", "Turkey 3");
 
-		Pair<Map<String, TurkeyInfo>, Map<String, String>> pair = CSVHandler.readTurkeyCSV(fiin, Arguments.empty());
+		Pair<Map<String, TurkeyInfo>, Map<String, String>> pair = CSVHandler.readTurkeyCSV(fiin, Arguments.empty(),
+				new HashSet<String>());
 		assertTrue("The second map did not contain the duplicate value at all.",
-				pair.getValue().containsKey("Value 2"));
+				pair.getValue().containsKey("Transponder 2"));
 		assertEquals("The size of the first map of the duplicate value turkeys did not match.", 3,
 				pair.getKey().size());
 		assertEquals("The size of the second map of the duplicate value turkeys did not match.", 5,
 				pair.getValue().size());
 		assertEquals("The result of parsing the duplicate value turkey csv did not match.", refPair, pair);
-		errorLog.checkLine("Found duplicate id \"Value 2\". Ignoring the occurrence for turkey \"Turkey 3\".", 0);
+		errorLog.checkLine("Found duplicate id \"Transponder 2\". Ignoring the occurrence for turkey \"Turkey 3\".", 0);
 	}
 
 	/**
@@ -539,22 +566,23 @@ public class ReadTurkeyCSVTest {
 		PrintStream out = tempFile.getValue();
 		FileInputStreamHandler fiin = tempFile.getKey();
 
-		out.println("Turkey 1;;;;Value 1");
+		out.println("Turkey 1;;;;Transponder 1");
 		out.println("Turkey 2;;;;");
-		out.println("Turkey 3;;;;Value 2;Value 3");
+		out.println("Turkey 3;;;;Transponder 2;Transponder 3");
 
-		Pair<Map<String, TurkeyInfo>, Map<String, String>> pair = CSVHandler.readTurkeyCSV(fiin, Arguments.empty());
+		Pair<Map<String, TurkeyInfo>, Map<String, String>> pair = CSVHandler.readTurkeyCSV(fiin, Arguments.empty(),
+				new HashSet<String>());
 
 		Pair<Map<String, TurkeyInfo>, Map<String, String>> refPair = new Pair<Map<String, TurkeyInfo>, Map<String, String>>(
 				new LinkedHashMap<String, TurkeyInfo>(), new HashMap<String, String>());
-		refPair.getKey().put("Turkey 1",
-				new TurkeyInfo("Turkey 1", Arrays.asList("Value 1"), null, null, null, null, null, Arguments.empty()));
-		refPair.getKey().put("Turkey 3", new TurkeyInfo("Turkey 3", Arrays.asList("Value 2", "Value 3"), null, null,
-				null, null, null, Arguments.empty()));
+		refPair.getKey().put("Turkey 1", new TurkeyInfo("Turkey 1", Arrays.asList("Transponder 1"), null, null, null,
+				null, null, Arguments.empty()));
+		refPair.getKey().put("Turkey 3", new TurkeyInfo("Turkey 3", Arrays.asList("Transponder 2", "Transponder 3"),
+				null, null, null, null, null, Arguments.empty()));
 
-		refPair.getValue().put("Value 1", "Turkey 1");
-		refPair.getValue().put("Value 2", "Turkey 3");
-		refPair.getValue().put("Value 3", "Turkey 3");
+		refPair.getValue().put("Transponder 1", "Turkey 1");
+		refPair.getValue().put("Transponder 2", "Turkey 3");
+		refPair.getValue().put("Transponder 3", "Turkey 3");
 
 		assertFalse("The parsed turkeys contained a key without value.", pair.getKey().containsKey("Turkey 2"));
 		assertEquals("The parsed turkeys didn't match.", refPair, pair);
@@ -573,21 +601,22 @@ public class ReadTurkeyCSVTest {
 		PrintStream out = tempFile.getValue();
 		FileInputStreamHandler fiin = tempFile.getKey();
 
-		out.println("Turkey 1;;;;Value 1");
+		out.println("Turkey 1;;;;Transponder 1");
 		out.println("Turkey 2");
-		out.println("Turkey 3;;;;Value 2");
+		out.println("Turkey 3;;;;Transponder 2");
 
-		Pair<Map<String, TurkeyInfo>, Map<String, String>> pair = CSVHandler.readTurkeyCSV(fiin, Arguments.empty());
+		Pair<Map<String, TurkeyInfo>, Map<String, String>> pair = CSVHandler.readTurkeyCSV(fiin, Arguments.empty(),
+				new HashSet<String>());
 
 		Pair<Map<String, TurkeyInfo>, Map<String, String>> refPair = new Pair<Map<String, TurkeyInfo>, Map<String, String>>(
 				new LinkedHashMap<String, TurkeyInfo>(), new HashMap<String, String>());
-		refPair.getKey().put("Turkey 1",
-				new TurkeyInfo("Turkey 1", Arrays.asList("Value 1"), null, null, null, null, null, Arguments.empty()));
-		refPair.getKey().put("Turkey 3",
-				new TurkeyInfo("Turkey 3", Arrays.asList("Value 2"), null, null, null, null, null, Arguments.empty()));
+		refPair.getKey().put("Turkey 1", new TurkeyInfo("Turkey 1", Arrays.asList("Transponder 1"), null, null, null,
+				null, null, Arguments.empty()));
+		refPair.getKey().put("Turkey 3", new TurkeyInfo("Turkey 3", Arrays.asList("Transponder 2"), null, null, null,
+				null, null, Arguments.empty()));
 
-		refPair.getValue().put("Value 1", "Turkey 1");
-		refPair.getValue().put("Value 2", "Turkey 3");
+		refPair.getValue().put("Transponder 1", "Turkey 1");
+		refPair.getValue().put("Transponder 2", "Turkey 3");
 
 		assertFalse("The parsed turkeys contained a key without value.", pair.getKey().containsKey("Turkey 2"));
 		assertEquals("The parsed turkeys didn't match.", refPair, pair);
@@ -606,29 +635,30 @@ public class ReadTurkeyCSVTest {
 		PrintStream out = tempFile.getValue();
 		FileInputStreamHandler fiin = tempFile.getKey();
 
-		out.println("Turkey 1;;;;Value 1");
-		out.println("Turkey 2;;;;;Value 2");
-		out.println("Turkey 3;;;;Value 3;Value 4");
+		out.println("Turkey 1;;;;Transponder 1");
+		out.println("Turkey 2;;;;;Transponder 2");
+		out.println("Turkey 3;;;;Transponder 3;Transponder 4");
 
-		Pair<Map<String, TurkeyInfo>, Map<String, String>> pair = CSVHandler.readTurkeyCSV(fiin, Arguments.empty());
+		Pair<Map<String, TurkeyInfo>, Map<String, String>> pair = CSVHandler.readTurkeyCSV(fiin, Arguments.empty(),
+				new HashSet<String>());
 
 		Pair<Map<String, TurkeyInfo>, Map<String, String>> refPair = new Pair<Map<String, TurkeyInfo>, Map<String, String>>(
 				new LinkedHashMap<String, TurkeyInfo>(), new HashMap<String, String>());
-		refPair.getKey().put("Turkey 1",
-				new TurkeyInfo("Turkey 1", Arrays.asList("Value 1"), null, null, null, null, null, Arguments.empty()));
-		refPair.getKey().put("Turkey 2",
-				new TurkeyInfo("Turkey 2", Arrays.asList("Value 2"), null, null, null, null, null, Arguments.empty()));
-		refPair.getKey().put("Turkey 3", new TurkeyInfo("Turkey 3", Arrays.asList("Value 3", "Value 4"), null, null,
-				null, null, null, Arguments.empty()));
+		refPair.getKey().put("Turkey 1", new TurkeyInfo("Turkey 1", Arrays.asList("Transponder 1"), null, null, null,
+				null, null, Arguments.empty()));
+		refPair.getKey().put("Turkey 2", new TurkeyInfo("Turkey 2", Arrays.asList("Transponder 2"), null, null, null,
+				null, null, Arguments.empty()));
+		refPair.getKey().put("Turkey 3", new TurkeyInfo("Turkey 3", Arrays.asList("Transponder 3", "Transponder 4"),
+				null, null, null, null, null, Arguments.empty()));
 
-		refPair.getValue().put("Value 1", "Turkey 1");
-		refPair.getValue().put("Value 2", "Turkey 2");
-		refPair.getValue().put("Value 3", "Turkey 3");
-		refPair.getValue().put("Value 4", "Turkey 3");
+		refPair.getValue().put("Transponder 1", "Turkey 1");
+		refPair.getValue().put("Transponder 2", "Turkey 2");
+		refPair.getValue().put("Transponder 3", "Turkey 3");
+		refPair.getValue().put("Transponder 4", "Turkey 3");
 
 		assertEquals("The parsed turkeys with an empty value didn't match.", refPair, pair);
 
-		errorLog.checkLine("Found empty value in line \"Turkey 2;;;;;Value 2\". Skipping.", 0);
+		errorLog.checkLine("Found empty value in line \"Turkey 2;;;;;Transponder 2\". Skipping.", 0);
 	}
 
 	/**
@@ -642,22 +672,23 @@ public class ReadTurkeyCSVTest {
 		PrintStream out = tempFile.getValue();
 		FileInputStreamHandler fiin = tempFile.getKey();
 
-		out.println("Turkey 1;;;;Value 1");
-		out.println("Turkey #2;;;;Value 2");
-		out.println("Turkey 3;;;;Value 3;Value 4");
+		out.println("Turkey 1;;;;Transponder 1");
+		out.println("Turkey #2;;;;Transponder 2");
+		out.println("Turkey 3;;;;Transponder 3;Transponder 4");
 
-		Pair<Map<String, TurkeyInfo>, Map<String, String>> pair = CSVHandler.readTurkeyCSV(fiin, Arguments.empty());
+		Pair<Map<String, TurkeyInfo>, Map<String, String>> pair = CSVHandler.readTurkeyCSV(fiin, Arguments.empty(),
+				new HashSet<String>());
 
 		Pair<Map<String, TurkeyInfo>, Map<String, String>> refPair = new Pair<Map<String, TurkeyInfo>, Map<String, String>>(
 				new LinkedHashMap<String, TurkeyInfo>(), new HashMap<String, String>());
-		refPair.getKey().put("Turkey 1",
-				new TurkeyInfo("Turkey 1", Arrays.asList("Value 1"), null, null, null, null, null, Arguments.empty()));
-		refPair.getKey().put("Turkey 3", new TurkeyInfo("Turkey 3", Arrays.asList("Value 3", "Value 4"), null, null,
-				null, null, null, Arguments.empty()));
+		refPair.getKey().put("Turkey 1", new TurkeyInfo("Turkey 1", Arrays.asList("Transponder 1"), null, null, null,
+				null, null, Arguments.empty()));
+		refPair.getKey().put("Turkey 3", new TurkeyInfo("Turkey 3", Arrays.asList("Transponder 3", "Transponder 4"),
+				null, null, null, null, null, Arguments.empty()));
 
-		refPair.getValue().put("Value 1", "Turkey 1");
-		refPair.getValue().put("Value 3", "Turkey 3");
-		refPair.getValue().put("Value 4", "Turkey 3");
+		refPair.getValue().put("Transponder 1", "Turkey 1");
+		refPair.getValue().put("Transponder 3", "Turkey 3");
+		refPair.getValue().put("Transponder 4", "Turkey 3");
 
 		assertFalse("The parsed turkeys contained the invalid key.", pair.getKey().containsKey("Turkey #2"));
 		assertEquals("The parsed turkeys didn't match.", refPair, pair);
@@ -666,7 +697,7 @@ public class ReadTurkeyCSVTest {
 	}
 
 	/**
-	 * Reads a turkey csv containing an invalid starting zone.
+	 * Reads a turkey csv containing an invalid start zone.
 	 * 
 	 * @throws IOException If reading/writing/creating the temp file fails.
 	 */
@@ -681,24 +712,117 @@ public class ReadTurkeyCSVTest {
 		out.println("Turkey 2;Start #2;;;Transponder 3");
 		out.println("Turkey 3;Start 3;;;Transponder 4");
 
-		Pair<Map<String, TurkeyInfo>, Map<String, String>> pair = CSVHandler.readTurkeyCSV(fiin, Arguments.empty());
+		Pair<Map<String, TurkeyInfo>, Map<String, String>> pair = CSVHandler.readTurkeyCSV(fiin, Arguments.empty(),
+				Arrays.asList("Start 1", "Start 3"));
 
 		Pair<Map<String, TurkeyInfo>, Map<String, String>> refPair = new Pair<Map<String, TurkeyInfo>, Map<String, String>>(
 				new LinkedHashMap<String, TurkeyInfo>(), new HashMap<String, String>());
 		refPair.getKey().put("Turkey 1", new TurkeyInfo("Turkey 1", Arrays.asList("Transponder 1", "Transponder 2"),
 				null, "Start 1", null, null, null, Arguments.empty()));
+		refPair.getKey().put("Turkey 2", new TurkeyInfo("Turkey 2", Arrays.asList("Transponder 3"), null, null, null,
+				null, null, Arguments.empty()));
 		refPair.getKey().put("Turkey 3", new TurkeyInfo("Turkey 3", Arrays.asList("Transponder 4"), null, "Start 3",
 				null, null, null, Arguments.empty()));
 
 		refPair.getValue().put("Transponder 1", "Turkey 1");
 		refPair.getValue().put("Transponder 2", "Turkey 1");
+		refPair.getValue().put("Transponder 3", "Turkey 2");
 		refPair.getValue().put("Transponder 4", "Turkey 3");
 
-		assertFalse("The parsed turkeys contained the turkey with an invalid start zone.",
+		assertTrue("The parsed turkeys didn't contain the turkey with an invalid start zone.",
 				pair.getKey().containsKey("Turkey 2"));
+		assertNull("The turkey with an invalid start zone had a start zone.",
+				pair.getKey().get("Turkey 2").getCurrentZone());
 		assertEquals("The parsed turkeys didn't match.", refPair, pair);
 
-		errorLog.checkLine("Found invalid start zone id \"Start #2\" for turkey \"Turkey 2\". Skipping line.", 0);
+		errorLog.checkLine("Found invalid start zone id \"Start #2\" for turkey \"Turkey 2\". Ignoring.", 0);
+	}
+
+	/**
+	 * Reads a turkey csv containing start zone that isn't in the zones collection.
+	 * 
+	 * @throws IOException If reading/writing/creating the temp file fails.
+	 */
+	@Test
+	public void readUnknownStartZone() throws IOException {
+		Pair<FileInputStreamHandler, PrintStream> tempFile = tempFolder
+				.newTempInputFile("invalid_start_zone_turkeys.csv");
+		PrintStream out = tempFile.getValue();
+		FileInputStreamHandler fiin = tempFile.getKey();
+
+		out.println("Turkey 1;Start 1;;;Transponder 1;Transponder 2");
+		out.println("Turkey 2;Start 2;;;Transponder 3");
+		out.println("Turkey 3;Start 3;;;Transponder 4");
+
+		Pair<Map<String, TurkeyInfo>, Map<String, String>> pair = CSVHandler.readTurkeyCSV(fiin, Arguments.empty(),
+				Arrays.asList("Start 1", "Start 3"));
+
+		Pair<Map<String, TurkeyInfo>, Map<String, String>> refPair = new Pair<Map<String, TurkeyInfo>, Map<String, String>>(
+				new LinkedHashMap<String, TurkeyInfo>(), new HashMap<String, String>());
+		refPair.getKey().put("Turkey 1", new TurkeyInfo("Turkey 1", Arrays.asList("Transponder 1", "Transponder 2"),
+				null, "Start 1", null, null, null, Arguments.empty()));
+		refPair.getKey().put("Turkey 2", new TurkeyInfo("Turkey 2", Arrays.asList("Transponder 3"), null, null, null,
+				null, null, Arguments.empty()));
+		refPair.getKey().put("Turkey 3", new TurkeyInfo("Turkey 3", Arrays.asList("Transponder 4"), null, "Start 3",
+				null, null, null, Arguments.empty()));
+
+		refPair.getValue().put("Transponder 1", "Turkey 1");
+		refPair.getValue().put("Transponder 2", "Turkey 1");
+		refPair.getValue().put("Transponder 3", "Turkey 2");
+		refPair.getValue().put("Transponder 4", "Turkey 3");
+
+		assertTrue("The parsed turkeys didn't contain the turkey with an invalid start zone.",
+				pair.getKey().containsKey("Turkey 2"));
+		assertNull("The turkey with an invalid start zone had a start zone.",
+				pair.getKey().get("Turkey 2").getCurrentZone());
+		assertEquals("The parsed turkeys didn't match.", refPair, pair);
+
+		errorLog.checkLine("Found unknown start zone \"Start 2\" for turkey \"Turkey 2\". Ignoring.", 0);
+	}
+
+	/**
+	 * Reads a turkey csv containing a start zone, despite start zones being
+	 * disabled.
+	 * 
+	 * @throws IOException If reading/writing/creating the temp file fails.
+	 */
+	@Test
+	public void readDisabledStartZone() throws IOException {
+		Pair<FileInputStreamHandler, PrintStream> tempFile = tempFolder
+				.newTempInputFile("invalid_start_zone_turkeys.csv");
+		PrintStream out = tempFile.getValue();
+		FileInputStreamHandler fiin = tempFile.getKey();
+
+		out.println("Turkey 1;;;;Transponder 1;Transponder 2");
+		out.println("Turkey 2;Start Zone;;;Transponder 3;Transponder 4");
+		out.println("Turkey 3;;;;Transponder 5");
+
+		Pair<Map<String, TurkeyInfo>, Map<String, String>> pair = CSVHandler.readTurkeyCSV(fiin, Arguments.empty(),
+				new HashSet<String>());
+
+		Pair<Map<String, TurkeyInfo>, Map<String, String>> refPair = new Pair<Map<String, TurkeyInfo>, Map<String, String>>(
+				new LinkedHashMap<String, TurkeyInfo>(), new HashMap<String, String>());
+		refPair.getKey().put("Turkey 1", new TurkeyInfo("Turkey 1", Arrays.asList("Transponder 1", "Transponder 2"),
+				null, null, null, null, null, Arguments.empty()));
+		refPair.getKey().put("Turkey 2", new TurkeyInfo("Turkey 2", Arrays.asList("Transponder 3", "Transponder 4"),
+				null, null, null, null, null, Arguments.empty()));
+		refPair.getKey().put("Turkey 3", new TurkeyInfo("Turkey 3", Arrays.asList("Transponder 5"), null, null, null,
+				null, null, Arguments.empty()));
+
+		refPair.getValue().put("Transponder 1", "Turkey 1");
+		refPair.getValue().put("Transponder 2", "Turkey 1");
+		refPair.getValue().put("Transponder 3", "Turkey 2");
+		refPair.getValue().put("Transponder 4", "Turkey 2");
+		refPair.getValue().put("Transponder 5", "Turkey 3");
+
+		assertTrue("The parsed turkeys didn't contain the turkey with an invalid start zone.",
+				pair.getKey().containsKey("Turkey 2"));
+		assertNull("The turkey with an invalid start zone had a start zone.",
+				pair.getKey().get("Turkey 2").getCurrentZone());
+		assertEquals("The parsed turkeys didn't match.", refPair, pair);
+
+		errorLog.checkLine(
+				"Found start zone \"Start Zone\" for turkey \"Turkey 2\" with start zones disabled. Ignoring.", 0);
 	}
 
 	/**
@@ -720,7 +844,8 @@ public class ReadTurkeyCSVTest {
 		out.println("Turkey 5;;13:45 AM;02.01.2023;Transponder 7");
 		out.println("Turkey 6;;09:07:37.51;03.01.2023;Transponder 8");
 
-		Pair<Map<String, TurkeyInfo>, Map<String, String>> pair = CSVHandler.readTurkeyCSV(fiin, Arguments.empty());
+		Pair<Map<String, TurkeyInfo>, Map<String, String>> pair = CSVHandler.readTurkeyCSV(fiin, Arguments.empty(),
+				new HashSet<String>());
 
 		Pair<Map<String, TurkeyInfo>, Map<String, String>> refPair = new Pair<Map<String, TurkeyInfo>, Map<String, String>>(
 				new LinkedHashMap<String, TurkeyInfo>(), new HashMap<String, String>());
@@ -774,7 +899,8 @@ public class ReadTurkeyCSVTest {
 		out.println("Turkey 3;;00:07:15.00;12#2022;Transponder 4;Transponder 5");
 		out.println("Turkey 4;;14:27:59.06;01.10.2022;Transponder 6");
 
-		Pair<Map<String, TurkeyInfo>, Map<String, String>> pair = CSVHandler.readTurkeyCSV(fiin, Arguments.empty());
+		Pair<Map<String, TurkeyInfo>, Map<String, String>> pair = CSVHandler.readTurkeyCSV(fiin, Arguments.empty(),
+				new HashSet<String>());
 
 		Pair<Map<String, TurkeyInfo>, Map<String, String>> refPair = new Pair<Map<String, TurkeyInfo>, Map<String, String>>(
 				new LinkedHashMap<String, TurkeyInfo>(), new HashMap<String, String>());
@@ -815,30 +941,31 @@ public class ReadTurkeyCSVTest {
 		PrintStream out = tempFile.getValue();
 		FileInputStreamHandler fiin = tempFile.getKey();
 
-		out.println("Turkey 1;;;;Value 1");
-		out.println("Turkey 2;;;;Value #2;Value 3");
-		out.println("Turkey 3;;;;Value 4;Value 5");
+		out.println("Turkey 1;;;;Transponder 1");
+		out.println("Turkey 2;;;;Transponder #2;Transponder 3");
+		out.println("Turkey 3;;;;Transponder 4;Transponder 5");
 
-		Pair<Map<String, TurkeyInfo>, Map<String, String>> pair = CSVHandler.readTurkeyCSV(fiin, Arguments.empty());
+		Pair<Map<String, TurkeyInfo>, Map<String, String>> pair = CSVHandler.readTurkeyCSV(fiin, Arguments.empty(),
+				new HashSet<String>());
 
 		Pair<Map<String, TurkeyInfo>, Map<String, String>> refPair = new Pair<Map<String, TurkeyInfo>, Map<String, String>>(
 				new LinkedHashMap<String, TurkeyInfo>(), new HashMap<String, String>());
-		refPair.getKey().put("Turkey 1",
-				new TurkeyInfo("Turkey 1", Arrays.asList("Value 1"), null, null, null, null, null, Arguments.empty()));
-		refPair.getKey().put("Turkey 2",
-				new TurkeyInfo("Turkey 2", Arrays.asList("Value 3"), null, null, null, null, null, Arguments.empty()));
-		refPair.getKey().put("Turkey 3", new TurkeyInfo("Turkey 3", Arrays.asList("Value 4", "Value 5"), null, null,
-				null, null, null, Arguments.empty()));
+		refPair.getKey().put("Turkey 1", new TurkeyInfo("Turkey 1", Arrays.asList("Transponder 1"), null, null, null,
+				null, null, Arguments.empty()));
+		refPair.getKey().put("Turkey 2", new TurkeyInfo("Turkey 2", Arrays.asList("Transponder 3"), null, null, null,
+				null, null, Arguments.empty()));
+		refPair.getKey().put("Turkey 3", new TurkeyInfo("Turkey 3", Arrays.asList("Transponder 4", "Transponder 5"),
+				null, null, null, null, null, Arguments.empty()));
 
-		refPair.getValue().put("Value 1", "Turkey 1");
-		refPair.getValue().put("Value 3", "Turkey 2");
-		refPair.getValue().put("Value 4", "Turkey 3");
-		refPair.getValue().put("Value 5", "Turkey 3");
+		refPair.getValue().put("Transponder 1", "Turkey 1");
+		refPair.getValue().put("Transponder 3", "Turkey 2");
+		refPair.getValue().put("Transponder 4", "Turkey 3");
+		refPair.getValue().put("Transponder 5", "Turkey 3");
 
-		assertFalse("The parsed turkeys contained the invalid value.", pair.getValue().containsKey("Value #2"));
+		assertFalse("The parsed turkeys contained the invalid value.", pair.getValue().containsKey("Transponder #2"));
 		assertEquals("The parsed turkeys didn't match.", refPair, pair);
 
-		errorLog.checkLine("Found invalid id \"Value #2\" for turkey \"Turkey 2\". Skipping.", 0);
+		errorLog.checkLine("Found invalid id \"Transponder #2\" for turkey \"Turkey 2\". Skipping.", 0);
 	}
 
 	/**
@@ -852,29 +979,30 @@ public class ReadTurkeyCSVTest {
 		PrintStream out = tempFile.getValue();
 		FileInputStreamHandler fiin = tempFile.getKey();
 
-		out.println("Turkey 1;;;;Value 1");
-		out.println("Turkey 2;;;;Value #2");
-		out.println("Turkey 3;;;;Value 3;Value 4");
+		out.println("Turkey 1;;;;Transponder 1");
+		out.println("Turkey 2;;;;Transponder #2");
+		out.println("Turkey 3;;;;Transponder 3;Transponder 4");
 
-		Pair<Map<String, TurkeyInfo>, Map<String, String>> pair = CSVHandler.readTurkeyCSV(fiin, Arguments.empty());
+		Pair<Map<String, TurkeyInfo>, Map<String, String>> pair = CSVHandler.readTurkeyCSV(fiin, Arguments.empty(),
+				new HashSet<String>());
 
 		Pair<Map<String, TurkeyInfo>, Map<String, String>> refPair = new Pair<Map<String, TurkeyInfo>, Map<String, String>>(
 				new LinkedHashMap<String, TurkeyInfo>(), new HashMap<String, String>());
-		refPair.getKey().put("Turkey 1",
-				new TurkeyInfo("Turkey 1", Arrays.asList("Value 1"), null, null, null, null, null, Arguments.empty()));
-		refPair.getKey().put("Turkey 3", new TurkeyInfo("Turkey 3", Arrays.asList("Value 3", "Value 4"), null, null,
-				null, null, null, Arguments.empty()));
+		refPair.getKey().put("Turkey 1", new TurkeyInfo("Turkey 1", Arrays.asList("Transponder 1"), null, null, null,
+				null, null, Arguments.empty()));
+		refPair.getKey().put("Turkey 3", new TurkeyInfo("Turkey 3", Arrays.asList("Transponder 3", "Transponder 4"),
+				null, null, null, null, null, Arguments.empty()));
 
-		refPair.getValue().put("Value 1", "Turkey 1");
-		refPair.getValue().put("Value 3", "Turkey 3");
-		refPair.getValue().put("Value 4", "Turkey 3");
+		refPair.getValue().put("Transponder 1", "Turkey 1");
+		refPair.getValue().put("Transponder 3", "Turkey 3");
+		refPair.getValue().put("Transponder 4", "Turkey 3");
 
 		assertFalse("The parsed turkeys contained the key without valid.", pair.getKey().containsKey("Turkey 2"));
 		assertEquals("The parsed turkeys didn't match.", refPair, pair);
 
-		errorLog.checkLine("Found invalid id \"Value #2\" for turkey \"Turkey 2\". Skipping.", 0);
+		errorLog.checkLine("Found invalid id \"Transponder #2\" for turkey \"Turkey 2\". Skipping.", 0);
 		errorLog.checkLine(
-				"Input line \"Turkey 2;;;;Value #2\" did not contain at least one valid value. Skipping line.");
+				"Input line \"Turkey 2;;;;Transponder #2\" did not contain at least one valid value. Skipping line.");
 	}
 
 }
