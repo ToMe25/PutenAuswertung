@@ -10,6 +10,7 @@ import java.util.Set;
 import java.util.TimeZone;
 
 import com.tome25.auswertung.TurkeyInfo;
+import com.tome25.auswertung.ZoneInfo;
 import com.tome25.auswertung.args.Arguments;
 
 /**
@@ -132,7 +133,7 @@ public class TurkeyGenerator {
 	 *                                  {@link #MAX_TRANSPONDER_ID}.
 	 */
 	public static TurkeyInfo generateTurkey(String id, int maxTransponders, Arguments args,
-			Collection<String> transponderIdBlacklist, String initZone, Calendar initTime)
+			Collection<String> transponderIdBlacklist, ZoneInfo initZone, Calendar initTime)
 			throws IllegalArgumentException {
 		if (maxTransponders > MAX_TRANSPONDER_ID) {
 			throw new IllegalArgumentException("Cannot generate more than MAX_TRANSPONDER_ID(" + MAX_TRANSPONDER_ID
@@ -258,7 +259,7 @@ public class TurkeyGenerator {
 	 * @throws NullPointerException     If {@code zones} is {@code null}.
 	 */
 	public static List<TurkeyInfo> generateTurkeysAdvanced(final short number, final int maxTransponders,
-			final List<String> zones, final long start, final long end)
+			final List<ZoneInfo> zones, final long start, final long end)
 			throws IllegalArgumentException, NullPointerException {
 		if (number < 1) {
 			throw new IllegalArgumentException("Cannot generate less than 1 turkey.");
@@ -286,7 +287,7 @@ public class TurkeyGenerator {
 			TurkeyInfo turkey = generateTurkey(String.format("T%03X", tId), maxTransponders, EMPTY_ARGS, transponders);
 			ids.add(tId);
 
-			String startZone = null;
+			ZoneInfo startZone = null;
 			if (zones != null && AntennaDataGenerator.nextInt(1) == 0) {
 				startZone = zones.get(AntennaDataGenerator.nextInt(zones.size() - 1));
 			}

@@ -1,13 +1,13 @@
 package com.tome25.auswertung.testdata;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import com.tome25.auswertung.ZoneInfo;
 import com.tome25.auswertung.utils.Pair;
 
 /**
@@ -32,13 +32,30 @@ public class ZoneGenerator {
 	 * 
 	 * @param id The id of the new zone.
 	 * @return A Pair representing the newly created zone.
-	 * @throws IllegalArgumentException If {@code id} is empty or
-	 *                                  {@code maxAntennas} is less than 1.
+	 * @throws IllegalArgumentException If {@code id} is empty, {@code maxAntennas}
+	 *                                  is less than 1, or {@code maxAntennas} is
+	 *                                  greater than {@link #MAX_ANTENNA_ID}.
 	 * @throws NullPointerException     If {@code id} is {@code null}.
 	 */
-	public static Pair<String, List<String>> generateZone(String id)
-			throws IllegalArgumentException, NullPointerException {
+	public static ZoneInfo generateZone(String id) throws IllegalArgumentException, NullPointerException {
 		return generateZone(id, DEFAULT_MAX_ANTENNAS);
+	}
+
+	/**
+	 * Generates a new zone with the given id and a random number of up to
+	 * {@code maxAntennas} antennas.
+	 * 
+	 * @param id                 The id/name of the zone to generate.
+	 * @param antennaIdBlacklist A collection of possible ids that may not be used.
+	 * @return A {@link Pair} containing the zone id and antennas list.
+	 * @throws IllegalArgumentException If {@code id} is empty, {@code maxAntennas}
+	 *                                  is less than 1, or {@code maxAntennas} is
+	 *                                  greater than {@link #MAX_ANTENNA_ID}.
+	 * @throws NullPointerException     If {@code id} is {@code null}.
+	 */
+	public static ZoneInfo generateZone(String id, Collection<String> antennaIdBlacklist)
+			throws IllegalArgumentException, NullPointerException {
+		return generateZone(id, DEFAULT_MAX_ANTENNAS, antennaIdBlacklist);
 	}
 
 	/**
@@ -49,11 +66,31 @@ public class ZoneGenerator {
 	 * @param maxAntennas The max number of antennas to give the zone.<br/>
 	 *                    A zone has at least one antenna.
 	 * @return A {@link Pair} containing the zone id and antennas list.
-	 * @throws IllegalArgumentException If {@code id} is empty or
-	 *                                  {@code maxAntennas} is less than 1.
+	 * @throws IllegalArgumentException If {@code id} is empty, {@code maxAntennas}
+	 *                                  is less than 1, or {@code maxAntennas} is
+	 *                                  greater than {@link #MAX_ANTENNA_ID}.
 	 * @throws NullPointerException     If {@code id} is {@code null}.
 	 */
-	public static Pair<String, List<String>> generateZone(String id, int maxAntennas)
+	public static ZoneInfo generateZone(String id, int maxAntennas)
+			throws IllegalArgumentException, NullPointerException {
+		return generateZone(id, maxAntennas, null);
+	}
+
+	/**
+	 * Generates a new zone with the given id and a random number of up to
+	 * {@code maxAntennas} antennas.
+	 * 
+	 * @param id                 The id/name of the zone to generate.
+	 * @param maxAntennas        The max number of antennas to give the zone.<br/>
+	 *                           A zone has at least one antenna.
+	 * @param antennaIdBlacklist A collection of possible ids that may not be used.
+	 * @return A {@link Pair} containing the zone id and antennas list.
+	 * @throws IllegalArgumentException If {@code id} is empty, {@code maxAntennas}
+	 *                                  is less than 1, or {@code maxAntennas} is
+	 *                                  greater than {@link #MAX_ANTENNA_ID}.
+	 * @throws NullPointerException     If {@code id} is {@code null}.
+	 */
+	public static ZoneInfo generateZone(String id, int maxAntennas, Collection<String> antennaIdBlacklist)
 			throws IllegalArgumentException, NullPointerException {
 		Objects.requireNonNull(id, "The id for the newly generated zone can't be null.");
 		id = id.trim();
@@ -64,19 +101,26 @@ public class ZoneGenerator {
 
 		if (maxAntennas < 1) {
 			throw new IllegalArgumentException("maxAntennas cannot be <= 0.");
+		} else if (maxAntennas > MAX_ANTENNA_ID) {
+			throw new IllegalArgumentException(
+					"Cannot generate more than MAX_ANTENNA_ID(" + MAX_ANTENNA_ID + ") antennas.");
+		}
+
+		if (antennaIdBlacklist == null) {
+			antennaIdBlacklist = new HashSet<String>();
 		}
 
 		int nAnt = AntennaDataGenerator.nextInt(maxAntennas, 1);
 		List<String> antennas = new ArrayList<String>();
 		for (int i = 0; i < nAnt; i++) {
 			String antenna = Integer.toHexString(AntennaDataGenerator.nextInt(MAX_ANTENNA_ID));
-			while (antennas.contains(antenna)) {
+			while (antennas.contains(antenna) || antennaIdBlacklist.contains(antenna)) {
 				antenna = Integer.toHexString(AntennaDataGenerator.nextInt(MAX_ANTENNA_ID));
 			}
 			antennas.add(antenna);
 		}
 
-		return new Pair<String, List<String>>(id, antennas);
+		return new ZoneInfo(id, true, antennas);
 	}
 
 	/**
@@ -87,7 +131,7 @@ public class ZoneGenerator {
 	 * @return A map containing all the generated zones.
 	 * @throws IllegalArgumentException If {@code number} is less than 1.
 	 */
-	public static Map<String, List<String>> generateZones(int number) throws IllegalArgumentException {
+	public static List<ZoneInfo> generateZones(int number) throws IllegalArgumentException {
 		return generateZones(number, DEFAULT_MAX_ANTENNAS);
 	}
 
@@ -101,31 +145,19 @@ public class ZoneGenerator {
 	 * @throws IllegalArgumentException If {@code number} or {@code maxAntennas} is
 	 *                                  less than 1.
 	 */
-	public static Map<String, List<String>> generateZones(int number, int maxAntennas) throws IllegalArgumentException {
+	public static List<ZoneInfo> generateZones(int number, int maxAntennas) throws IllegalArgumentException {
 		if (number < 1) {
 			throw new IllegalArgumentException("Cannot generate less than one zone.");
 		} else if (maxAntennas < 1) {
 			throw new IllegalArgumentException("Cannot generate zones with less than one antenna.");
 		}
 
-		Map<String, List<String>> zones = new LinkedHashMap<String, List<String>>();
+		List<ZoneInfo> zones = new ArrayList<ZoneInfo>();
 		Set<String> antennas = new HashSet<String>();
 		for (int i = 1; i <= number; i++) {
-			Pair<String, List<String>> zone = generateZone("Zone " + i, maxAntennas);
-			for (int j = 0; j < zone.getValue().size(); j++) {
-				String antenna = zone.getValue().get(j);
-				boolean changed = false;
-				while (antennas.contains(antenna) || (changed && zone.getValue().contains(antenna))) {
-					antenna = Integer.toHexString(AntennaDataGenerator.nextInt(MAX_ANTENNA_ID));
-					changed = true;
-				}
-
-				if (changed) {
-					zone.getValue().set(j, antenna);
-				}
-			}
-			zones.put(zone.getKey(), zone.getValue());
-			antennas.addAll(zone.getValue());
+			ZoneInfo zone = generateZone("Zone " + i, maxAntennas, antennas);
+			zones.add(zone);
+			antennas.addAll(zone.getAntennas());
 		}
 
 		return zones;

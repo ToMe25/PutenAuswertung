@@ -2,14 +2,17 @@ package com.tome25.auswertung.tests.csvhandler;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.List;
 import java.util.Objects;
 
 import org.junit.Test;
 
 import com.tome25.auswertung.CSVHandler;
 import com.tome25.auswertung.TurkeyInfo;
+import com.tome25.auswertung.ZoneInfo;
 import com.tome25.auswertung.args.Arguments;
 import com.tome25.auswertung.testdata.TurkeyGenerator;
 import com.tome25.auswertung.utils.TimeUtils;
@@ -161,13 +164,18 @@ public class TurkeyCSVTest {
 
 		Arguments args = Arguments.empty();
 		args.fillDays = true;
-		TurkeyInfo info = TurkeyGenerator.generateTurkey("0", 5, args, null, "Z1", TimeUtils.parseTime(day, 10510));
-		info.changeZone("Zone 2", TimeUtils.parseTime(day, 20410));
-		info.changeZone("Zone 2", TimeUtils.parseTime(day, 100060));
-		info.changeZone("Z1", TimeUtils.parseTime(day, 599610));
-		info.changeZone("#3", TimeUtils.parseTime(day, 1004720));
-		info.changeZone("Zone 2", TimeUtils.parseTime(day, 43000000));
-		info.changeZone("Z1", TimeUtils.parseTime(day, 81512330));
+		List<ZoneInfo> zones = new ArrayList<ZoneInfo>();
+		zones.add(new ZoneInfo("Z1", true, "Antenna Z1"));
+		zones.add(new ZoneInfo("Zone 2", true, "Antenna 2", "Antenna 3"));
+		zones.add(new ZoneInfo("#3", true, "Antenna #3"));
+		TurkeyInfo info = TurkeyGenerator.generateTurkey("0", 5, args, null, zones.get(0),
+				TimeUtils.parseTime(day, 10510));
+		info.changeZone(zones.get(1), TimeUtils.parseTime(day, 20410));
+		info.changeZone(zones.get(1), TimeUtils.parseTime(day, 100060));
+		info.changeZone(zones.get(0), TimeUtils.parseTime(day, 599610));
+		info.changeZone(zones.get(2), TimeUtils.parseTime(day, 1004720));
+		info.changeZone(zones.get(1), TimeUtils.parseTime(day, 43000000));
+		info.changeZone(zones.get(0), TimeUtils.parseTime(day, 81512330));
 		info.endDay(day);
 
 		return info;
@@ -189,12 +197,17 @@ public class TurkeyCSVTest {
 		TurkeyInfo ti = getBasicInfo(firstDate);
 		Calendar cal = TimeUtils.parseDate(firstDate);
 		cal.add(Calendar.DATE, 1);
+		List<ZoneInfo> zones = new ArrayList<ZoneInfo>();
+		zones.add(new ZoneInfo("Z1", true, "Antenna Z1"));
+		zones.add(new ZoneInfo("Zone 2", true, "Antenna 2", "Antenna 3"));
+		zones.add(new ZoneInfo("#3", true, "Antenna #3"));
+		zones.add(new ZoneInfo("Z4", true, "Antenna Z4"));
 		String secondDate = TimeUtils.encodeDate(cal);
-		ti.changeZone("Z4", TimeUtils.parseTime(secondDate, 87234));
-		ti.changeZone("Zone 2", TimeUtils.parseTime(secondDate, 2345054));
-		ti.changeZone("#3", TimeUtils.parseTime(secondDate, 3485034));
-		ti.changeZone("Z4", TimeUtils.parseTime(secondDate, 34534555));
-		ti.changeZone("Z1", TimeUtils.parseTime(secondDate, 76234657));
+		ti.changeZone(zones.get(3), TimeUtils.parseTime(secondDate, 87234));
+		ti.changeZone(zones.get(1), TimeUtils.parseTime(secondDate, 2345054));
+		ti.changeZone(zones.get(2), TimeUtils.parseTime(secondDate, 3485034));
+		ti.changeZone(zones.get(3), TimeUtils.parseTime(secondDate, 34534555));
+		ti.changeZone(zones.get(0), TimeUtils.parseTime(secondDate, 76234657));
 		ti.endDay(secondDate);
 
 		return ti;

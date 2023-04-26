@@ -21,7 +21,7 @@ public class ZoneStay {
 	/**
 	 * The zone in which the record time was spent.
 	 */
-	private final String zone;
+	private final ZoneInfo zone;
 
 	/**
 	 * The date and time at which the zone was entered.
@@ -43,7 +43,8 @@ public class ZoneStay {
 	 *                                  {@code entry} is {@code null}.
 	 * @throws IllegalArgumentException If the exit time is before the entry time.
 	 */
-	public ZoneStay(String turkey, String zone, Calendar entry) throws NullPointerException, IllegalArgumentException {
+	public ZoneStay(String turkey, ZoneInfo zone, Calendar entry)
+			throws NullPointerException, IllegalArgumentException {
 		this(turkey, zone, entry, null);
 	}
 
@@ -59,7 +60,7 @@ public class ZoneStay {
 	 *                                  {@code entry} is {@code null}.
 	 * @throws IllegalArgumentException If the exit time isn't after the entry time.
 	 */
-	public ZoneStay(final String turkey, final String zone, final Calendar entry, Calendar exit)
+	public ZoneStay(final String turkey, final ZoneInfo zone, final Calendar entry, Calendar exit)
 			throws NullPointerException, IllegalArgumentException {
 		Objects.requireNonNull(turkey, "The turkey spending the time can't be null.");
 		Objects.requireNonNull(zone, "The zone in which the turkey spends its time can't be null.");
@@ -106,7 +107,7 @@ public class ZoneStay {
 	 * 
 	 * @return This object's zone.
 	 */
-	public String getZone() {
+	public ZoneInfo getZone() {
 		return zone;
 	}
 
@@ -225,7 +226,7 @@ public class ZoneStay {
 	@Override
 	public String toString() {
 		return String.format("ZoneStay[turkey=%s, zone=%s, entry date=%s, entry time=%s, exit date=%s, exit time=%s]",
-				turkey, zone, TimeUtils.encodeDate(entry), TimeUtils.encodeTime(TimeUtils.getMsOfDay(entry)),
+				turkey, zone.getId(), TimeUtils.encodeDate(entry), TimeUtils.encodeTime(TimeUtils.getMsOfDay(entry)),
 				exit == null ? "null" : TimeUtils.encodeDate(exit),
 				exit == null ? "null" : TimeUtils.encodeTime(TimeUtils.getMsOfDay(exit)));
 	}

@@ -16,7 +16,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -26,6 +25,7 @@ import com.tome25.auswertung.stream.FileInputStreamHandler;
 import com.tome25.auswertung.stream.IInputStreamHandler;
 import com.tome25.auswertung.stream.IOutputStreamHandler;
 import com.tome25.auswertung.utils.IntOrStringComparator;
+import com.tome25.auswertung.utils.MapUtils;
 import com.tome25.auswertung.utils.Pair;
 import com.tome25.auswertung.utils.StringUtils;
 import com.tome25.auswertung.utils.TimeUtils;
@@ -181,20 +181,19 @@ public class CSVHandler {
 	}
 
 	/**
-	 * Reads the data from the stream handler as a CSV file and converts it to a two
-	 * maps.<br/>
-	 * The format of the first map is
-	 * {@code column 1 -> list(column 2, column 3...)}.<br/>
-	 * The second map format is {@code column X -> column 1} for each column except
-	 * the first one.
+	 * Reads the data from the stream handler as a CSV file and converts it to a
+	 * map.<br/>
+	 * Creates a {@link ZoneInfo} object for each valid line.<br/>
+	 * The format of the map is The second map format is
+	 * {@code antenna id -> zone info}.
 	 * 
 	 * @param input The stream handler containing the data to be read.
-	 * @return A pair containing the two maps described above. Or {@code null} if
-	 *         there was no valid data in the input.
-	 * @throws NullPointerException if input is null.
+	 * @return A map containing the {@link ZoneInfo} object for each antenna
+	 *         id.<br/>
+	 *         Or {@code null} if there was no valid data in the input.
+	 * @throws NullPointerException if input is {@code null}.
 	 */
-	public static Pair<Map<String, List<String>>, Map<String, String>> readZonesCSV(IInputStreamHandler input)
-			throws NullPointerException {
+	public static Map<String, ZoneInfo> readZonesCSV(IInputStreamHandler input) throws NullPointerException {
 		try {
 			checkInput(input);
 		} catch (EOFException e) {
@@ -203,8 +202,8 @@ public class CSVHandler {
 			return null;
 		}
 
-		Map<String, List<String>> first = new LinkedHashMap<>();
-		Map<String, String> second = new HashMap<>();
+		Map<String, ZoneInfo> zones = new HashMap<String, ZoneInfo>();
+		Set<String> zoneIds = new HashSet<String>();
 		boolean last_failed = false;
 		while (!input.done()) {
 			try {
@@ -232,7 +231,7 @@ public class CSVHandler {
 					continue;
 				}
 
-				if (first.containsKey(tokens[0])) {
+				if (zoneIds.contains(tokens[0])) {
 					LogHandler.err_println("Found duplicate zone id \"" + tokens[0] + "\". Skipping line.");
 					LogHandler.print_debug_info(
 							"Separator Chars: %s, Tokens: [%s], Line: \"%s\", Input Stream Handler: %s",
@@ -246,9 +245,9 @@ public class CSVHandler {
 					continue;
 				}
 
-				List<String> list = new ArrayList<>();
+				List<String> antennas = new ArrayList<String>();
 				for (int i = 1; i < tokens.length; i++) {
-					if (second.containsKey(tokens[i])) {
+					if (zones.containsKey(tokens[i])) {
 						LogHandler.err_println("Found duplicate id \"" + tokens[i]
 								+ "\". Ignoring the occurrence for zone \"" + tokens[0] + "\".");
 						LogHandler.print_debug_info(
@@ -266,12 +265,11 @@ public class CSVHandler {
 								"Separator Chars: %s, Tokens: [%s], Line: \"%s\", Input Stream Handler: %s",
 								SEPARATOR_REGEX.toString(), StringUtils.join(", ", tokens), line, input.toString());
 					} else {
-						list.add(tokens[i]);
-						second.put(tokens[i], tokens[0]);
+						antennas.add(tokens[i]);
 					}
 				}
 
-				if (list.isEmpty()) {
+				if (antennas.isEmpty()) {
 					LogHandler.err_println(
 							"Input line \"" + line + "\" did not contain at least one valid value. Skipping line.");
 					LogHandler.print_debug_info(
@@ -280,7 +278,11 @@ public class CSVHandler {
 					continue;
 				}
 
-				first.put(tokens[0], list);
+				ZoneInfo zone = new ZoneInfo(tokens[0], true, antennas);
+				for (String antenna : antennas) {
+					zones.put(antenna, zone);
+				}
+				zoneIds.add(tokens[0]);
 				last_failed = false;
 			} catch (IOException e) {
 				if (last_failed) {
@@ -304,12 +306,12 @@ public class CSVHandler {
 					true);
 		}
 
-		if (first.isEmpty() && second.isEmpty()) {
+		if (zones.isEmpty()) {
 			LogHandler.err_println("Zones input file did not contain any valid data.");
 			LogHandler.print_debug_info("Input Stream Handler: %s", input.toString());
 			return null;
 		} else {
-			return new Pair<>(first, second);
+			return zones;
 		}
 	}
 
@@ -320,15 +322,15 @@ public class CSVHandler {
 	 * @param output The output stream handler to write the zones to.
 	 * @throws NullPointerException If one of the parameters if {@code null}.
 	 */
-	public static void writeZonesCSV(Map<String, List<String>> zones, IOutputStreamHandler output)
+	public static void writeZonesCSV(final List<ZoneInfo> zones, IOutputStreamHandler output)
 			throws NullPointerException {
 		Objects.requireNonNull(zones, "The map of zones to write to the file cannot be null.");
 		Objects.requireNonNull(output, "The output stream handler to write to cannot be null.");
 
 		int numAntennas = 0;
-		for (List<String> zone : zones.values()) {
-			if (zone.size() > numAntennas) {
-				numAntennas = zone.size();
+		for (ZoneInfo zone : zones) {
+			if (zone.getAntennaCount() > numAntennas) {
+				numAntennas = zone.getAntennaCount();
 			}
 		}
 
@@ -342,17 +344,16 @@ public class CSVHandler {
 
 		output.println(headers.toString());
 
-		for (String zone : zones.keySet()) {
+		for (ZoneInfo zone : zones) {
 			StringBuilder sb = new StringBuilder();
-			sb.append(zone);
+			sb.append(zone.getId());
 
-			List<String> antennas = zones.get(zone);
-			for (String antenna : antennas) {
+			for (String antenna : zone.getAntennas()) {
 				sb.append(DEFAULT_SEPARATOR);
 				sb.append(antenna);
 			}
 
-			for (int i = numAntennas - antennas.size(); i > 0; i--) {
+			for (int i = numAntennas - zone.getAntennaCount(); i > 0; i--) {
 				sb.append(DEFAULT_SEPARATOR);
 			}
 
@@ -362,11 +363,9 @@ public class CSVHandler {
 
 	/**
 	 * Reads the data from the stream handler as a turkeys CSV file and converts it
-	 * to a two maps.<br/>
-	 * A {@link TurkeyInfo} object is created for every line.<br/>
-	 * The format of the first map is {@code turkey id -> turkey info}.<br/>
-	 * The second map format is {@code transponder id -> turkey id} for each column
-	 * except the first one.
+	 * to a map.<br/>
+	 * A {@link TurkeyInfo} object is created for every valid line.<br/>
+	 * The format of the output map is {@code transponder id -> turkey info}.
 	 * 
 	 * @param input The stream handler containing the data to be read.
 	 * @param args  The {@link Arguments} instance to use for the {@link TurkeyInfo}
@@ -374,12 +373,13 @@ public class CSVHandler {
 	 * @param zones A {@link Collection} containing the valid zone names, to be used
 	 *              to check the turkeys start zones.<br/>
 	 *              Use an empty collection to disable start zones.
-	 * @return A pair containing the two maps described above. Or {@code null} if
-	 *         there was no valid data in the input.
+	 * @return A map containing the {@link TurkeyInfo} object for each transponder
+	 *         id.<br/>
+	 *         Or {@code null} if there was no valid data in the input.
 	 * @throws NullPointerException if one of the arguments is {@code null}.
 	 */
-	public static Pair<Map<String, TurkeyInfo>, Map<String, String>> readTurkeyCSV(IInputStreamHandler input,
-			final Arguments args, final Collection<String> zones) throws NullPointerException {
+	public static Map<String, TurkeyInfo> readTurkeyCSV(IInputStreamHandler input, final Arguments args,
+			final Collection<ZoneInfo> zones) throws NullPointerException {
 		Objects.requireNonNull(input, "The to read cannot be null.");
 		Objects.requireNonNull(args, "The arguments to use to create TurkeyInfos cannot be null.");
 		Objects.requireNonNull(zones, "The valid zone names cannot be null.");
@@ -391,8 +391,13 @@ public class CSVHandler {
 			return null;
 		}
 
-		Map<String, TurkeyInfo> first = new TreeMap<String, TurkeyInfo>(IntOrStringComparator.INSTANCE);
-		Map<String, String> second = new HashMap<>();
+		Map<String, ZoneInfo> idToZone = new HashMap<String, ZoneInfo>();
+		for (ZoneInfo zone : zones) {
+			idToZone.put(zone.getId(), zone);
+		}
+
+		Map<String, TurkeyInfo> turkeys = new HashMap<String, TurkeyInfo>();
+		Set<String> turkeyIds = new HashSet<String>();
 		boolean last_failed = false;
 		while (!input.done()) {
 			try {
@@ -420,7 +425,7 @@ public class CSVHandler {
 					continue;
 				}
 
-				if (first.containsKey(tokens[0])) {
+				if (turkeyIds.contains(tokens[0])) {
 					LogHandler.err_println("Found duplicate turkey id \"" + tokens[0] + "\". Skipping line.");
 					LogHandler.print_debug_info(
 							"Separator Chars: %s, Tokens: [%s], Line: \"%s\", Input Stream Handler: %s",
@@ -453,7 +458,7 @@ public class CSVHandler {
 							SEPARATOR_REGEX.toString(), StringUtils.join(", ", tokens), zones.toString(), line,
 							input.toString());
 					startZone = null;
-				} else if (startZone != null && !zones.contains(startZone)) {
+				} else if (startZone != null && !idToZone.containsKey(startZone)) {
 					LogHandler.err_println("Found unknown start zone \"" + startZone + "\" for turkey \"" + tokens[0]
 							+ "\". Ignoring.");
 					LogHandler.print_debug_info(
@@ -500,9 +505,9 @@ public class CSVHandler {
 					}
 				}
 
-				List<String> list = new ArrayList<>();
+				List<String> transponders = new ArrayList<String>();
 				for (int i = 4; i < tokens.length; i++) {
-					if (second.containsKey(tokens[i])) {
+					if (turkeys.containsKey(tokens[i])) {
 						LogHandler.err_println("Found duplicate id \"" + tokens[i]
 								+ "\". Ignoring the occurrence for turkey \"" + tokens[0] + "\".");
 						LogHandler.print_debug_info(
@@ -520,12 +525,11 @@ public class CSVHandler {
 								"Separator Chars: %s, Tokens: [%s], Line: \"%s\", Input Stream Handler: %s",
 								SEPARATOR_REGEX.toString(), StringUtils.join(", ", tokens), line, input.toString());
 					} else {
-						list.add(tokens[i]);
-						second.put(tokens[i], tokens[0]);
+						transponders.add(tokens[i]);
 					}
 				}
 
-				if (list.isEmpty()) {
+				if (transponders.isEmpty()) {
 					LogHandler.err_println(
 							"Input line \"" + line + "\" did not contain at least one valid value. Skipping line.");
 					LogHandler.print_debug_info(
@@ -534,7 +538,12 @@ public class CSVHandler {
 					continue;
 				}
 
-				first.put(tokens[0], new TurkeyInfo(tokens[0], list, null, startZone, null, null, endTime, args));
+				TurkeyInfo turkey = new TurkeyInfo(tokens[0], transponders, null, idToZone.get(startZone), null, null,
+						endTime, args);
+				for (String transponder : transponders) {
+					turkeys.put(transponder, turkey);
+				}
+				turkeyIds.add(tokens[0]);
 				last_failed = false;
 			} catch (IOException e) {
 				if (last_failed) {
@@ -558,12 +567,14 @@ public class CSVHandler {
 					true);
 		}
 
-		if (first.isEmpty() && second.isEmpty()) {
+		turkeys = MapUtils.sortByValue(turkeys, null);
+
+		if (turkeys.isEmpty()) {
 			LogHandler.err_println("Turkey input file did not contain any valid data.");
 			LogHandler.print_debug_info("Input Stream Handler: %s", input.toString());
 			return null;
 		} else {
-			return new Pair<>(first, second);
+			return turkeys;
 		}
 	}
 
@@ -603,7 +614,7 @@ public class CSVHandler {
 			sb.append(ti.getId());
 			sb.append(DEFAULT_SEPARATOR);
 			if (ti.getCurrentZone() != null) {
-				sb.append(ti.getCurrentZone());
+				sb.append(ti.getCurrentZone().getId());
 			}
 
 			sb.append(DEFAULT_SEPARATOR);
@@ -1197,7 +1208,7 @@ public class CSVHandler {
 			throw new IllegalArgumentException("The zone to convert has no exit time.");
 		}
 
-		return StringUtils.join(DEFAULT_SEPARATOR, stay.getTurkey(), stay.getZone(), stay.getEntryDate(),
+		return StringUtils.join(DEFAULT_SEPARATOR, stay.getTurkey(), stay.getZone().getId(), stay.getEntryDate(),
 				TimeUtils.encodeTime(stay.getEntryTime()), stay.getExitDate(), TimeUtils.encodeTime(stay.getExitTime()),
 				TimeUtils.encodeTime(stay.getStayTime()));
 	}
@@ -1207,13 +1218,17 @@ public class CSVHandler {
 	 * Returns a {@code turkey -> stays} map with the parsed data.
 	 * 
 	 * @param input The input stream handler to read the file from.
+	 * @param zones The possible zones for stays.
 	 * @return The parsed stays map. Or {@code null} if the file did not contain any
 	 *         valid data.
 	 * @throws IOException          If reading the header line fails.
-	 * @throws NullPointerException If {@code input} is {@code null}.
+	 * @throws NullPointerException If {@code input} or {@code zones} is
+	 *                              {@code null}.
 	 */
-	public static Map<String, List<ZoneStay>> readStaysCSV(IInputStreamHandler input)
+	public static Map<String, List<ZoneStay>> readStaysCSV(IInputStreamHandler input, final Collection<ZoneInfo> zones)
 			throws IOException, NullPointerException {
+		Objects.requireNonNull(input, "The input to read cannot be null.");
+		Objects.requireNonNull(zones, "The zones to use cannot be null.");
 		try {
 			checkInput(input);
 		} catch (EOFException e) {
@@ -1237,6 +1252,11 @@ public class CSVHandler {
 			LogHandler.print_debug_info("Separator Chars: %s, Tokens: [%s], Line: \"%s\", Input Stream Handler: %s",
 					SEPARATOR_REGEX.toString(), StringUtils.join(", ", headers), headerLine, input.toString());
 			throw new IOException("Invalid input file");
+		}
+
+		Map<String, ZoneInfo> idToZone = new HashMap<String, ZoneInfo>();
+		for (ZoneInfo zone : zones) {
+			idToZone.put(zone.getId(), zone);
 		}
 
 		Map<String, List<ZoneStay>> stays = new HashMap<String, List<ZoneStay>>();
@@ -1276,13 +1296,24 @@ public class CSVHandler {
 					stays.put(turkey, new ArrayList<ZoneStay>());
 				}
 
+				if (!idToZone.containsKey(tokens[1])) {
+					LogHandler.err_println(
+							"Input line \"" + line + "\" had unknown zone \"" + tokens[1] + "\". Skipping line.");
+					LogHandler.print_debug_info(
+							"Separator Chars: %s, Tokens: [%s], Line: \"%s\", Zones: [%s], Input Stream Handler: %s",
+							SEPARATOR_REGEX.toString(), StringUtils.join(", ", tokens), line,
+							StringUtils.collectionToString(", ", zones), input.toString());
+					continue;
+				}
+
 				Calendar entryCal = TimeUtils.parseTime(tokens[2], tokens[3]);
 				Calendar exitCal = TimeUtils.parseTime(tokens[4], tokens[5]);
 				long fileStayTime = TimeUtils.parseTime(tokens[6]);
 				long calcStayTime = exitCal.getTimeInMillis() - entryCal.getTimeInMillis();
 
 				if (fileStayTime != calcStayTime) {
-					LogHandler.err_println("Stay time did not match match entry and exit time. Skipping line.");
+					LogHandler.err_println("Input line \"" + line
+							+ "\" + stay time did not match match entry and exit time. Skipping line.");
 					LogHandler.print_debug_info(
 							"File Stay Time: %s, Calculated Stay Time: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\", Input Stream Handler: %s",
 							TimeUtils.encodeTime(fileStayTime), TimeUtils.encodeTime(calcStayTime),
@@ -1290,7 +1321,7 @@ public class CSVHandler {
 					continue;
 				}
 
-				stays.get(turkey).add(new ZoneStay(turkey, tokens[1], entryCal, exitCal));
+				stays.get(turkey).add(new ZoneStay(turkey, idToZone.get(tokens[1]), entryCal, exitCal));
 			} catch (IOException e) {
 				if (last_failed) {
 					LogHandler.err_println("Reading an input line failed. Returning output data set.");

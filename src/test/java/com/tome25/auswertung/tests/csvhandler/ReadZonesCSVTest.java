@@ -9,16 +9,14 @@ import static org.junit.Assert.assertTrue;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.junit.Rule;
 import org.junit.Test;
 
 import com.tome25.auswertung.CSVHandler;
+import com.tome25.auswertung.ZoneInfo;
 import com.tome25.auswertung.stream.FileInputStreamHandler;
 import com.tome25.auswertung.tests.rules.ErrorLogRule;
 import com.tome25.auswertung.tests.rules.TempFileStreamHandler;
@@ -62,36 +60,24 @@ public class ReadZonesCSVTest {
 		PrintStream out = tempFile.getValue();
 		FileInputStreamHandler fiin = tempFile.getKey();
 
-		out.println("Key 0;Value 1;val 2");
+		out.println("Zone 0;Antenna 1;ant 2");
 		out.println("test;test1;test2");
 
-		Pair<Map<String, List<String>>, Map<String, String>> pair = CSVHandler.readZonesCSV(fiin);
-		assertNotNull("Reading a basic zones csv returned null.", pair);
+		Map<String, ZoneInfo> zones = CSVHandler.readZonesCSV(fiin);
+		assertNotNull("Reading a basic zones csv returned null.", zones);
 
-		assertTrue("Basic zones.csv representation did not containg first line key.",
-				pair.getKey().containsKey("Key 0"));
-		assertTrue("Basic zones.csv representation did not containg second line key.",
-				pair.getKey().containsKey("test"));
-		assertTrue("Basic zones.csv didn't contain first value line first value.",
-				pair.getKey().get("Key 0").contains("Value 1"));
-		assertTrue("Basic zones.csv didn't contain first value line second value.",
-				pair.getKey().get("Key 0").contains("val 2"));
+		assertTrue("Basic zones.csv didn't contain first line first value.", zones.containsKey("Antenna 1"));
+		assertTrue("Basic zones.csv didn't contain first value line second value.", zones.containsKey("ant 2"));
+		assertTrue("Basic zones.csv didn't contain second line first value.", zones.containsKey("test1"));
+		assertTrue("Basic zones.csv didn't contain second value line second value.", zones.containsKey("test2"));
 
-		assertTrue("Basic zones.csv didn't contain first value line first value.",
-				pair.getValue().containsKey("Value 1"));
-		assertTrue("Basic zones.csv didn't contain first value line second value.",
-				pair.getValue().containsKey("val 2"));
+		Map<String, ZoneInfo> refMap = new HashMap<String, ZoneInfo>();
+		refMap.put("Antenna 1", new ZoneInfo("Zone 0", true, "Antenna 1", "ant 2"));
+		refMap.put("ant 2", refMap.get("Antenna 1"));
+		refMap.put("test1", new ZoneInfo("test", true, "test1", "test2"));
+		refMap.put("test2", refMap.get("test1"));
 
-		Pair<Map<String, List<String>>, Map<String, String>> refPair = new Pair<Map<String, List<String>>, Map<String, String>>(
-				new LinkedHashMap<String, List<String>>(), new HashMap<String, String>());
-		refPair.getKey().put("Key 0", Arrays.asList("Value 1", "val 2"));
-		refPair.getKey().put("test", Arrays.asList("test1", "test2"));
-		refPair.getValue().put("Value 1", "Key 0");
-		refPair.getValue().put("val 2", "Key 0");
-		refPair.getValue().put("test1", "test");
-		refPair.getValue().put("test2", "test");
-
-		assertEquals("The result of CSVHandler.readZonesCSV did not match what was expected.", refPair, pair);
+		assertEquals("The result of CSVHandler.readZonesCSV did not match what was expected.", refMap, zones);
 	}
 
 	/**
@@ -112,22 +98,18 @@ public class ReadZonesCSVTest {
 		PrintStream out = tempFile.getValue();
 		FileInputStreamHandler fiin = tempFile.getKey();
 
-		Pair<Map<String, List<String>>, Map<String, String>> refPair = new Pair<Map<String, List<String>>, Map<String, String>>(
-				new LinkedHashMap<String, List<String>>(), new HashMap<String, String>());
+		Map<String, ZoneInfo> refMap = new HashMap<String, ZoneInfo>();
 		for (int i = 0; i < 300; i++) {
-			out.println(String.format("Key %1$d,Value %1$d,val %1$d,v%1$d,", i));
-			refPair.getKey().put("Key " + i, Arrays.asList("Value " + i, "val " + i, "v" + i));
-			refPair.getValue().put("Value " + i, "Key " + i);
-			refPair.getValue().put("val " + i, "Key " + i);
-			refPair.getValue().put("v" + i, "Key " + i);
+			out.println(String.format("Zone %1$d,Value %1$d,val %1$d,v%1$d,", i));
+			ZoneInfo zi = new ZoneInfo("Zone " + i, true, "Value " + i, "val " + i, "v" + i);
+			refMap.put("Value " + i, zi);
+			refMap.put("val " + i, zi);
+			refMap.put("v" + i, zi);
 		}
 
-		Pair<Map<String, List<String>>, Map<String, String>> pair = CSVHandler.readZonesCSV(fiin);
-		assertEquals("The size of the first map of the longer basic zones csv did not match.", 300,
-				pair.getKey().size());
-		assertEquals("The size of the second map of the longer basic zones csv did not match.", 900,
-				pair.getValue().size());
-		assertEquals("The result of parsing the longer basic zones csv did not match.", refPair, pair);
+		Map<String, ZoneInfo> zones = CSVHandler.readZonesCSV(fiin);
+		assertEquals("The size of the longer basic zones csv map did not match.", 900, zones.size());
+		assertEquals("The result of parsing the longer basic zones csv did not match.", refMap, zones);
 	}
 
 	/**
@@ -143,26 +125,22 @@ public class ReadZonesCSVTest {
 		FileInputStreamHandler fiin = tempFile.getKey();
 
 		out.println("Bereich,Antenne 1,Antenne 2,Antenne 3");
-		out.println("Key 1,Value 1,");
-		out.println("Key 2,Value 2,Value 3,");
-		out.println("Key 3,Value 4,Value 5,Value 6,");
+		out.println("Zone 1,Antenna 1,");
+		out.println("Zone 2,Antenna 2,Antenna 3,");
+		out.println("Zone 3,Antenna 4,Antenna 5,Antenna 6,");
 
-		Pair<Map<String, List<String>>, Map<String, String>> refPair = new Pair<Map<String, List<String>>, Map<String, String>>(
-				new LinkedHashMap<String, List<String>>(), new HashMap<String, String>());
-		refPair.getKey().put("Key 1", Arrays.asList("Value 1"));
-		refPair.getKey().put("Key 2", Arrays.asList("Value 2", "Value 3"));
-		refPair.getKey().put("Key 3", Arrays.asList("Value 4", "Value 5", "Value 6"));
+		Map<String, ZoneInfo> zones = CSVHandler.readZonesCSV(fiin);
+		assertFalse("The parsed zones contained a value of the header line.", zones.containsKey("Antenne 1"));
 
-		refPair.getValue().put("Value 1", "Key 1");
-		refPair.getValue().put("Value 2", "Key 2");
-		refPair.getValue().put("Value 3", "Key 2");
-		refPair.getValue().put("Value 4", "Key 3");
-		refPair.getValue().put("Value 5", "Key 3");
-		refPair.getValue().put("Value 6", "Key 3");
+		Map<String, ZoneInfo> refMap = new HashMap<String, ZoneInfo>();
+		refMap.put("Antenna 1", new ZoneInfo("Zone 1", true, "Antenna 1"));
+		refMap.put("Antenna 2", new ZoneInfo("Zone 2", true, "Antenna 2", "Antenna 3"));
+		refMap.put("Antenna 3", refMap.get("Antenna 2"));
+		refMap.put("Antenna 4", new ZoneInfo("Zone 3", true, "Antenna 4", "Antenna 5", "Antenna 6"));
+		refMap.put("Antenna 5", refMap.get("Antenna 4"));
+		refMap.put("Antenna 6", refMap.get("Antenna 4"));
 
-		Pair<Map<String, List<String>>, Map<String, String>> pair = CSVHandler.readZonesCSV(fiin);
-		assertFalse("The parsed zones contained the key of the header line.", pair.getKey().containsKey("Bereich"));
-		assertEquals("The zones parsed from a file with header line did not match.", refPair, pair);
+		assertEquals("The zones parsed from a file with header line did not match.", refMap, zones);
 	}
 
 	/**
@@ -204,21 +182,18 @@ public class ReadZonesCSVTest {
 		PrintStream out = tempFile.getValue();
 		FileInputStreamHandler fiin = tempFile.getKey();
 
-		Pair<Map<String, List<String>>, Map<String, String>> refPair = new Pair<Map<String, List<String>>, Map<String, String>>(
-				new LinkedHashMap<String, List<String>>(), new HashMap<String, String>());
+		Map<String, ZoneInfo> refMap = new HashMap<String, ZoneInfo>();
 		for (int i = 0; i < 15; i++) {
-			out.println(String.format("Key %1$d%2$cValue %1$d%3$cval %1$d", i,
+			out.println(String.format("Zone %1$d%2$cValue %1$d%3$cval %1$d", i,
 					SEPARATOR_CHARS[i % SEPARATOR_CHARS.length], SEPARATOR_CHARS[(i + 1) % SEPARATOR_CHARS.length]));
-			refPair.getKey().put("Key " + i, Arrays.asList("Value " + i, "val " + i));
-			refPair.getValue().put("Value " + i, "Key " + i);
-			refPair.getValue().put("val " + i, "Key " + i);
+			ZoneInfo zi = new ZoneInfo("Zone " + i, true, "Value " + i, "val " + i);
+			refMap.put("Value " + i, zi);
+			refMap.put("val " + i, zi);
 		}
 
-		Pair<Map<String, List<String>>, Map<String, String>> pair = CSVHandler.readZonesCSV(fiin);
-		assertEquals("The size of the first map of the mixed separator zones did not match.", 15, pair.getKey().size());
-		assertEquals("The size of the second map of the mixed separator zones did not match.", 30,
-				pair.getValue().size());
-		assertEquals("The result of parsing the mixed separator zones csv did not match.", refPair, pair);
+		Map<String, ZoneInfo> zones = CSVHandler.readZonesCSV(fiin);
+		assertEquals("The size of the mixed separator zones map did not match.", 30, zones.size());
+		assertEquals("The result of parsing the mixed separator zones csv did not match.", refMap, zones);
 	}
 
 	/**
@@ -236,25 +211,27 @@ public class ReadZonesCSVTest {
 		PrintStream out = tempFile.getValue();
 		FileInputStreamHandler fiin = tempFile.getKey();
 
-		Pair<Map<String, List<String>>, Map<String, String>> refPair = new Pair<Map<String, List<String>>, Map<String, String>>(
-				new LinkedHashMap<String, List<String>>(), new HashMap<String, String>());
+		Map<String, ZoneInfo> refMap = new HashMap<String, ZoneInfo>();
+		int size = 0;
 		for (int i = 0; i < 20; i++) {
-			out.print("Key " + i + ";");
+			out.print("Zone " + i + ";");
 			ArrayList<String> values = new ArrayList<String>();
 			for (int j = 0; j < (i / 5 + 1) * (i % 5 + 1); j++) {
 				String val = "Value" + i + " " + j;
 				out.print(val + ";");
 				values.add(val);
-				refPair.getValue().put(val, "Key " + i);
+				size++;
 			}
 			out.println();
-			refPair.getKey().put("Key " + i, values);
+			ZoneInfo zi = new ZoneInfo("Zone " + i, true, values);
+			for (String value : values) {
+				refMap.put(value, zi);
+			}
 		}
 
-		Pair<Map<String, List<String>>, Map<String, String>> pair = CSVHandler.readZonesCSV(fiin);
-		assertEquals("The size of the first map of the mixed line length zones did not match.", 20,
-				pair.getKey().size());
-		assertEquals("The result of parsing the mixed line length zones csv did not match.", refPair, pair);
+		Map<String, ZoneInfo> zones = CSVHandler.readZonesCSV(fiin);
+		assertEquals("The size the mixed line length zones map did not match.", size, zones.size());
+		assertEquals("The result of parsing the mixed line length zones csv did not match.", refMap, zones);
 	}
 
 	/**
@@ -269,22 +246,19 @@ public class ReadZonesCSVTest {
 		PrintStream out = tempFile.getValue();
 		FileInputStreamHandler fiin = tempFile.getKey();
 
-		out.println("Key;Value 1;Value 2");
-		out.println("Key;Value 3;Value 4");
+		out.println("Zone;Antenna 1;Antenna 2");
+		out.println("Zone;Antenna 3;Antenna 4");
 
-		Pair<Map<String, List<String>>, Map<String, String>> refPair = new Pair<Map<String, List<String>>, Map<String, String>>(
-				new LinkedHashMap<String, List<String>>(), new HashMap<String, String>());
-		refPair.getKey().put("Key", Arrays.asList("Value 1", "Value 2"));
-		refPair.getValue().put("Value 1", "Key");
-		refPair.getValue().put("Value 2", "Key");
+		Map<String, ZoneInfo> refMap = new HashMap<String, ZoneInfo>();
+		refMap.put("Antenna 1", new ZoneInfo("Zone", true, "Antenna 1", "Antenna 2"));
+		refMap.put("Antenna 2", refMap.get("Antenna 1"));
 
-		Pair<Map<String, List<String>>, Map<String, String>> pair = CSVHandler.readZonesCSV(fiin);
-		assertFalse("The second map of the parsed zones contains a value from the second line.",
-				pair.getValue().containsKey("Value 3"));
-		assertEquals("The size of the first map of the duplicate key zones did not match.", 1, pair.getKey().size());
-		assertEquals("The size of the second map of the duplicate key zones did not match.", 2, pair.getValue().size());
-		assertEquals("The result of parsing the duplicate key zones csv did not match.", refPair, pair);
-		errorLog.checkLine("Found duplicate zone id \"Key\". Skipping line.", 0);
+		Map<String, ZoneInfo> zones = CSVHandler.readZonesCSV(fiin);
+		assertFalse("The map of the parsed zones contains a value from the second line.",
+				zones.containsKey("Antenna 3"));
+		assertEquals("The size of the duplicate key zones map did not match.", 2, zones.size());
+		assertEquals("The result of parsing the duplicate key zones csv did not match.", refMap, zones);
+		errorLog.checkLine("Found duplicate zone id \"Zone\". Skipping line.", 0);
 	}
 
 	/**
@@ -299,30 +273,22 @@ public class ReadZonesCSVTest {
 		PrintStream out = tempFile.getValue();
 		FileInputStreamHandler fiin = tempFile.getKey();
 
-		out.println("Key 1;Value 1;Value 2");
-		out.println("Key 2;Value 3;Value 4");
-		out.println("Key 3;Value 5;Value 2");
+		out.println("Zone 1;Antenna 1;Antenna 2");
+		out.println("Zone 2;Antenna 3;Antenna 4");
+		out.println("Zone 3;Antenna 5;Antenna 2");
 
-		Pair<Map<String, List<String>>, Map<String, String>> refPair = new Pair<Map<String, List<String>>, Map<String, String>>(
-				new LinkedHashMap<String, List<String>>(), new HashMap<String, String>());
-		refPair.getKey().put("Key 1", Arrays.asList("Value 1", "Value 2"));
-		refPair.getKey().put("Key 2", Arrays.asList("Value 3", "Value 4"));
-		refPair.getKey().put("Key 3", Arrays.asList("Value 5"));
+		Map<String, ZoneInfo> refMap = new HashMap<String, ZoneInfo>();
+		refMap.put("Antenna 1", new ZoneInfo("Zone 1", true, "Antenna 1", "Antenna 2"));
+		refMap.put("Antenna 2", refMap.get("Antenna 1"));
+		refMap.put("Antenna 3", new ZoneInfo("Zone 2", true, "Antenna 3", "Antenna 4"));
+		refMap.put("Antenna 4", refMap.get("Antenna 3"));
+		refMap.put("Antenna 5", new ZoneInfo("Zone 3", true, "Antenna 5"));
 
-		refPair.getValue().put("Value 1", "Key 1");
-		refPair.getValue().put("Value 2", "Key 1");
-		refPair.getValue().put("Value 3", "Key 2");
-		refPair.getValue().put("Value 4", "Key 2");
-		refPair.getValue().put("Value 5", "Key 3");
-
-		Pair<Map<String, List<String>>, Map<String, String>> pair = CSVHandler.readZonesCSV(fiin);
-		assertTrue("The second map did not contain the duplicate value at all.",
-				pair.getValue().containsKey("Value 2"));
-		assertEquals("The size of the first map of the duplicate value zones did not match.", 3, pair.getKey().size());
-		assertEquals("The size of the second map of the duplicate value zones did not match.", 5,
-				pair.getValue().size());
-		assertEquals("The result of parsing the duplicate value zones csv did not match.", refPair, pair);
-		errorLog.checkLine("Found duplicate id \"Value 2\". Ignoring the occurrence for zone \"Key 3\".", 0);
+		Map<String, ZoneInfo> zones = CSVHandler.readZonesCSV(fiin);
+		assertTrue("The second map did not contain the duplicate value at all.", zones.containsKey("Antenna 2"));
+		assertEquals("The size of the duplicate value zones map did not match.", 5, zones.size());
+		assertEquals("The result of parsing the duplicate value zones csv did not match.", refMap, zones);
+		errorLog.checkLine("Found duplicate id \"Antenna 2\". Ignoring the occurrence for zone \"Zone 3\".", 0);
 	}
 
 	/**
@@ -336,25 +302,21 @@ public class ReadZonesCSVTest {
 		PrintStream out = tempFile.getValue();
 		FileInputStreamHandler fiin = tempFile.getKey();
 
-		out.println("Key 1;Value 1");
-		out.println("Key 2;");
-		out.println("Key 3;Value 2;Value 3");
+		out.println("Zone 1;Antenna 1");
+		out.println("Zone 2;");
+		out.println("Zone 3;Antenna 2;Antenna 3");
 
-		Pair<Map<String, List<String>>, Map<String, String>> pair = CSVHandler.readZonesCSV(fiin);
+		Map<String, ZoneInfo> zones = CSVHandler.readZonesCSV(fiin);
 
-		Pair<Map<String, List<String>>, Map<String, String>> refPair = new Pair<Map<String, List<String>>, Map<String, String>>(
-				new LinkedHashMap<String, List<String>>(), new HashMap<String, String>());
-		refPair.getKey().put("Key 1", Arrays.asList("Value 1"));
-		refPair.getKey().put("Key 3", Arrays.asList("Value 2", "Value 3"));
+		Map<String, ZoneInfo> refMap = new HashMap<String, ZoneInfo>();
+		refMap.put("Antenna 1", new ZoneInfo("Zone 1", true, "Antenna 1"));
+		refMap.put("Antenna 2", new ZoneInfo("Zone 3", true, "Antenna 2", "Antenna 3"));
+		refMap.put("Antenna 3", refMap.get("Antenna 2"));
 
-		refPair.getValue().put("Value 1", "Key 1");
-		refPair.getValue().put("Value 2", "Key 3");
-		refPair.getValue().put("Value 3", "Key 3");
+		assertEquals("The size of the no value line map didn't match.", 3, zones.size());
+		assertEquals("The parsed zones didn't match.", refMap, zones);
 
-		assertFalse("The parsed zones contained a key without value.", pair.getKey().containsKey("Key 2"));
-		assertEquals("The parsed zones didn't match.", refPair, pair);
-
-		errorLog.checkLine("Input line \"Key 2;\" did not contain at least two tokens. Skipping line.", 0);
+		errorLog.checkLine("Input line \"Zone 2;\" did not contain at least two tokens. Skipping line.", 0);
 	}
 
 	/**
@@ -368,26 +330,21 @@ public class ReadZonesCSVTest {
 		PrintStream out = tempFile.getValue();
 		FileInputStreamHandler fiin = tempFile.getKey();
 
-		out.println("Key 1;Value 1");
-		out.println("Key 2;;Value 2");
-		out.println("Key 3;Value 3;Value 4");
+		out.println("Zone 1;Antenna 1");
+		out.println("Zone 2;;Antenna 2");
+		out.println("Zone 3;Antenna 3;Antenna 4");
 
-		Pair<Map<String, List<String>>, Map<String, String>> pair = CSVHandler.readZonesCSV(fiin);
+		Map<String, ZoneInfo> zones = CSVHandler.readZonesCSV(fiin);
 
-		Pair<Map<String, List<String>>, Map<String, String>> refPair = new Pair<Map<String, List<String>>, Map<String, String>>(
-				new LinkedHashMap<String, List<String>>(), new HashMap<String, String>());
-		refPair.getKey().put("Key 1", Arrays.asList("Value 1"));
-		refPair.getKey().put("Key 2", Arrays.asList("Value 2"));
-		refPair.getKey().put("Key 3", Arrays.asList("Value 3", "Value 4"));
+		Map<String, ZoneInfo> refMap = new HashMap<String, ZoneInfo>();
+		refMap.put("Antenna 1", new ZoneInfo("Zone 1", true, "Antenna 1"));
+		refMap.put("Antenna 2", new ZoneInfo("Zone 2", true, "Antenna 2"));
+		refMap.put("Antenna 3", new ZoneInfo("Zone 3", true, "Antenna 3", "Antenna 4"));
+		refMap.put("Antenna 4", refMap.get("Antenna 3"));
 
-		refPair.getValue().put("Value 1", "Key 1");
-		refPair.getValue().put("Value 2", "Key 2");
-		refPair.getValue().put("Value 3", "Key 3");
-		refPair.getValue().put("Value 4", "Key 3");
+		assertEquals("The parsed zones with an empty value didn't match.", refMap, zones);
 
-		assertEquals("The parsed zones with an empty value didn't match.", refPair, pair);
-
-		errorLog.checkLine("Found empty value in line \"Key 2;;Value 2\". Skipping.", 0);
+		errorLog.checkLine("Found empty value in line \"Zone 2;;Antenna 2\". Skipping.", 0);
 	}
 
 	/**
@@ -401,25 +358,21 @@ public class ReadZonesCSVTest {
 		PrintStream out = tempFile.getValue();
 		FileInputStreamHandler fiin = tempFile.getKey();
 
-		out.println("Key 1;Value 1");
-		out.println("Key #2;Value 2");
-		out.println("Key 3;Value 3;Value 4");
+		out.println("Zone 1;Antenna 1");
+		out.println("Zone #2;Antenna 2");
+		out.println("Zone 3;Antenna 3;Antenna 4");
 
-		Pair<Map<String, List<String>>, Map<String, String>> pair = CSVHandler.readZonesCSV(fiin);
+		Map<String, ZoneInfo> zones = CSVHandler.readZonesCSV(fiin);
 
-		Pair<Map<String, List<String>>, Map<String, String>> refPair = new Pair<Map<String, List<String>>, Map<String, String>>(
-				new LinkedHashMap<String, List<String>>(), new HashMap<String, String>());
-		refPair.getKey().put("Key 1", Arrays.asList("Value 1"));
-		refPair.getKey().put("Key 3", Arrays.asList("Value 3", "Value 4"));
+		Map<String, ZoneInfo> refMap = new HashMap<String, ZoneInfo>();
+		refMap.put("Antenna 1", new ZoneInfo("Zone 1", true, "Antenna 1"));
+		refMap.put("Antenna 3", new ZoneInfo("Zone 3", true, "Antenna 3", "Antenna 4"));
+		refMap.put("Antenna 4", refMap.get("Antenna 3"));
 
-		refPair.getValue().put("Value 1", "Key 1");
-		refPair.getValue().put("Value 3", "Key 3");
-		refPair.getValue().put("Value 4", "Key 3");
+		assertFalse("The parsed zones contained a value from the invalid key.", zones.containsKey("Key #2"));
+		assertEquals("The parsed zones didn't match.", refMap, zones);
 
-		assertFalse("The parsed zones contained the invalid key.", pair.getKey().containsKey("Key #2"));
-		assertEquals("The parsed zones didn't match.", refPair, pair);
-
-		errorLog.checkLine("Found invalid zone id \"Key #2\". Skipping line.", 0);
+		errorLog.checkLine("Found invalid zone id \"Zone #2\". Skipping line.", 0);
 	}
 
 	/**
@@ -433,27 +386,22 @@ public class ReadZonesCSVTest {
 		PrintStream out = tempFile.getValue();
 		FileInputStreamHandler fiin = tempFile.getKey();
 
-		out.println("Key 1;Value 1");
-		out.println("Key 2;Value #2;Value 3");
-		out.println("Key 3;Value 4;Value 5");
+		out.println("Zone 1;Antenna 1");
+		out.println("Zone 2;Antenna #2;Antenna 3");
+		out.println("Zone 3;Antenna 4;Antenna 5");
 
-		Pair<Map<String, List<String>>, Map<String, String>> pair = CSVHandler.readZonesCSV(fiin);
+		Map<String, ZoneInfo> zones = CSVHandler.readZonesCSV(fiin);
 
-		Pair<Map<String, List<String>>, Map<String, String>> refPair = new Pair<Map<String, List<String>>, Map<String, String>>(
-				new LinkedHashMap<String, List<String>>(), new HashMap<String, String>());
-		refPair.getKey().put("Key 1", Arrays.asList("Value 1"));
-		refPair.getKey().put("Key 2", Arrays.asList("Value 3"));
-		refPair.getKey().put("Key 3", Arrays.asList("Value 4", "Value 5"));
+		Map<String, ZoneInfo> refMap = new HashMap<String, ZoneInfo>();
+		refMap.put("Antenna 1", new ZoneInfo("Zone 1", true, "Antenna 1"));
+		refMap.put("Antenna 3", new ZoneInfo("Zone 2", true, "Antenna 3"));
+		refMap.put("Antenna 4", new ZoneInfo("Zone 3", true, "Antenna 4", "Antenna 5"));
+		refMap.put("Antenna 5", refMap.get("Antenna 4"));
 
-		refPair.getValue().put("Value 1", "Key 1");
-		refPair.getValue().put("Value 3", "Key 2");
-		refPair.getValue().put("Value 4", "Key 3");
-		refPair.getValue().put("Value 5", "Key 3");
+		assertFalse("The parsed zones contained the invalid value.", zones.containsKey("Antenna #2"));
+		assertEquals("The parsed zones didn't match.", refMap, zones);
 
-		assertFalse("The parsed zones contained the invalid value.", pair.getValue().containsKey("Value #2"));
-		assertEquals("The parsed zones didn't match.", refPair, pair);
-
-		errorLog.checkLine("Found invalid id \"Value #2\" for zone \"Key 2\". Skipping.", 0);
+		errorLog.checkLine("Found invalid id \"Antenna #2\" for zone \"Zone 2\". Skipping.", 0);
 	}
 
 	/**
@@ -467,26 +415,22 @@ public class ReadZonesCSVTest {
 		PrintStream out = tempFile.getValue();
 		FileInputStreamHandler fiin = tempFile.getKey();
 
-		out.println("Key 1;Value 1");
-		out.println("Key 2;Value #2");
-		out.println("Key 3;Value 3;Value 4");
+		out.println("Zone 1;Antenna 1");
+		out.println("Zone 2;Antenna #2");
+		out.println("Zone 3;Antenna 3;Antenna 4");
 
-		Pair<Map<String, List<String>>, Map<String, String>> pair = CSVHandler.readZonesCSV(fiin);
+		Map<String, ZoneInfo> zones = CSVHandler.readZonesCSV(fiin);
 
-		Pair<Map<String, List<String>>, Map<String, String>> refPair = new Pair<Map<String, List<String>>, Map<String, String>>(
-				new LinkedHashMap<String, List<String>>(), new HashMap<String, String>());
-		refPair.getKey().put("Key 1", Arrays.asList("Value 1"));
-		refPair.getKey().put("Key 3", Arrays.asList("Value 3", "Value 4"));
+		Map<String, ZoneInfo> refMap = new HashMap<String, ZoneInfo>();
+		refMap.put("Antenna 1", new ZoneInfo("Zone 1", true, "Antenna 1"));
+		refMap.put("Antenna 3", new ZoneInfo("Zone 3", true, "Antenna 3", "Antenna 4"));
+		refMap.put("Antenna 4", refMap.get("Antenna 3"));
 
-		refPair.getValue().put("Value 1", "Key 1");
-		refPair.getValue().put("Value 3", "Key 3");
-		refPair.getValue().put("Value 4", "Key 3");
+		assertEquals("The size of the no valid value line map didn't match.", 3, zones.size());
+		assertEquals("The parsed zones didn't match.", refMap, zones);
 
-		assertFalse("The parsed zones contained the key without valid.", pair.getKey().containsKey("Key 2"));
-		assertEquals("The parsed zones didn't match.", refPair, pair);
-
-		errorLog.checkLine("Found invalid id \"Value #2\" for zone \"Key 2\". Skipping.", 0);
-		errorLog.checkLine("Input line \"Key 2;Value #2\" did not contain at least one valid value. Skipping line.");
+		errorLog.checkLine("Found invalid id \"Antenna #2\" for zone \"Zone 2\". Skipping.", 0);
+		errorLog.checkLine("Input line \"Zone 2;Antenna #2\" did not contain at least one valid value. Skipping line.");
 	}
 
 }

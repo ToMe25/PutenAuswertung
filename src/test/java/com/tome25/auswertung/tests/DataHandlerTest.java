@@ -14,6 +14,7 @@ import org.junit.Test;
 import com.tome25.auswertung.CSVHandler;
 import com.tome25.auswertung.DataHandler;
 import com.tome25.auswertung.TurkeyInfo;
+import com.tome25.auswertung.ZoneInfo;
 import com.tome25.auswertung.ZoneStay;
 import com.tome25.auswertung.args.Arguments;
 import com.tome25.auswertung.stream.FileInputStreamHandler;
@@ -59,7 +60,7 @@ public class DataHandlerTest {
 		Pair<FileOutputStreamHandler, BufferedReader> staysCSV = tempFolder
 				.newTempOutputFile("empty_turkeys_stays.csv");
 		List<TurkeyInfo> turkeys = TurkeyGenerator.generateTurkeys(5, 2);
-		Map<String, List<String>> zones = ZoneGenerator.generateZones(2, 2);
+		List<ZoneInfo> zones = ZoneGenerator.generateZones(2, 2);
 		CSVHandler.writeZonesCSV(zones, zoneCSV.getValue());
 
 		Arguments args = Arguments.empty();
@@ -97,7 +98,7 @@ public class DataHandlerTest {
 		Pair<FileOutputStreamHandler, BufferedReader> staysCSV = tempFolder.newTempOutputFile("empty_zones_stays.csv");
 		List<TurkeyInfo> turkeys = TurkeyGenerator.generateTurkeys(5, 2);
 		CSVHandler.writeTurkeyCSV(turkeys, turkeyCSV.getValue());
-		Map<String, List<String>> zones = ZoneGenerator.generateZones(2, 2);
+		List<ZoneInfo> zones = ZoneGenerator.generateZones(2, 2);
 
 		Arguments args = Arguments.empty();
 		args.fillDays = true;
@@ -147,7 +148,7 @@ public class DataHandlerTest {
 
 		final Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>> outputTotals = CSVHandler
 				.readTotalsCSV(totalsCSV.getKey());
-		final Map<String, List<ZoneStay>> outputStays = CSVHandler.readStaysCSV(staysCSV.getKey());
+		final Map<String, List<ZoneStay>> outputStays = CSVHandler.readStaysCSV(staysCSV.getKey(), mappings.zones);
 		final TestData parsed = new TestData(outputTotals.getKey(), outputTotals.getValue(), outputStays,
 				generated.downtimes, mappings.turkeys, mappings.zones);
 
@@ -184,7 +185,7 @@ public class DataHandlerTest {
 
 		final Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>> outputTotals = CSVHandler
 				.readTotalsCSV(totalsCSV.getKey());
-		final Map<String, List<ZoneStay>> outputStays = CSVHandler.readStaysCSV(staysCSV.getKey());
+		final Map<String, List<ZoneStay>> outputStays = CSVHandler.readStaysCSV(staysCSV.getKey(), mappings.zones);
 		final TestData parsed = new TestData(outputTotals.getKey(), outputTotals.getValue(), outputStays,
 				generated.downtimes, mappings.turkeys, mappings.zones);
 
@@ -221,7 +222,7 @@ public class DataHandlerTest {
 
 		final Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>> outputTotals = CSVHandler
 				.readTotalsCSV(totalsCSV.getKey());
-		final Map<String, List<ZoneStay>> outputStays = CSVHandler.readStaysCSV(staysCSV.getKey());
+		final Map<String, List<ZoneStay>> outputStays = CSVHandler.readStaysCSV(staysCSV.getKey(), mappings.zones);
 		final TestData parsed = new TestData(outputTotals.getKey(), outputTotals.getValue(), outputStays,
 				generated.downtimes, mappings.turkeys, mappings.zones);
 

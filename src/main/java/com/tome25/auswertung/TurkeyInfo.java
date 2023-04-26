@@ -10,15 +10,21 @@ import java.util.Objects;
 
 import com.tome25.auswertung.args.Arguments;
 import com.tome25.auswertung.stream.IOutputStreamHandler;
+import com.tome25.auswertung.utils.IntOrStringComparator;
 import com.tome25.auswertung.utils.TimeUtils;
 
 /**
  * The class storing the current state of a single turkey.<br/>
- * Contains info about the current day and all days.
+ * Contains info about the current day and all days.<br/>
+ * <br/>
+ * The natural ordering for {@link TurkeyInfo} objects is to sort them by their
+ * {@link #getId() id} using an {@link IntOrStringComparator}.<br/>
+ * <br/>
+ * Note: this class has a natural ordering that is inconsistent with equals.
  * 
  * @author theodor
  */
-public class TurkeyInfo {
+public class TurkeyInfo implements Comparable<TurkeyInfo> {
 
 	/**
 	 * The last possible timestamp of a day.<br/>
@@ -78,7 +84,7 @@ public class TurkeyInfo {
 	/**
 	 * The string name of the zone the turkey is currently in.
 	 */
-	private String currentZone;
+	private ZoneInfo currentZone;
 
 	/**
 	 * A {@link ZoneStay} representing where the turkey is currently counted as
@@ -159,12 +165,10 @@ public class TurkeyInfo {
 	 *                                  args.fillDays} is {@code false} and
 	 *                                  {@code startTime} is {@code null}.
 	 * @throws IllegalArgumentException If {@code time} is before {@code startTime},
-	 *                                  {@code time} is after {@code endTime}, or
-	 *                                  {@code time} isn't {@code null} and
-	 *                                  {@code currentZone} is empty.
+	 *                                  or {@code time} is after {@code endTime}.
 	 */
 	public TurkeyInfo(final String id, final List<String> transponders, IOutputStreamHandler stayOut,
-			String currentZone, Calendar time, Calendar startTime, final Calendar endTime, final Arguments args)
+			ZoneInfo currentZone, Calendar time, Calendar startTime, final Calendar endTime, final Arguments args)
 			throws NullPointerException, IllegalArgumentException {
 		this.id = Objects.requireNonNull(id, "The turkey id cannot be null.");
 		this.args = Objects.requireNonNull(args, "The args object configuring this cannot be null.");
@@ -172,10 +176,6 @@ public class TurkeyInfo {
 		// If time is null this is just used as a static storage object.
 		if (time != null) {
 			Objects.requireNonNull(currentZone, "The current zone cannot be null when the current time isn't null.");
-			if (currentZone.trim().isEmpty()) {
-				throw new IllegalArgumentException(
-						"The current zone cannot be empty when the current time isn't null.");
-			}
 
 			if (!args.fillDays) {
 				Objects.requireNonNull(startTime, "The start time cannot be null of args.fillDays is false.");
@@ -188,10 +188,6 @@ public class TurkeyInfo {
 			if (endTime != null && time.after(endTime)) {
 				throw new IllegalArgumentException("Current time cannot be after end time.");
 			}
-		}
-
-		if (currentZone != null) {
-			currentZone = currentZone.trim().isEmpty() ? null : currentZone.trim();
 		}
 
 		this.transponders = transponders;
@@ -234,7 +230,8 @@ public class TurkeyInfo {
 	 *                                  before {@link #getStartCal() start time}, or
 	 *                                  after {@link #getEndCal() end time}.
 	 */
-	public void changeZone(String newZone, Calendar time) throws NullPointerException, IllegalArgumentException {
+	public void changeZone(final ZoneInfo newZone, final Calendar time)
+			throws NullPointerException, IllegalArgumentException {
 		Objects.requireNonNull(newZone, "The zone the turkey moved into cannot be null.");
 		Objects.requireNonNull(time, "The time at which the change occurred cannot be null.");
 
@@ -409,7 +406,7 @@ public class TurkeyInfo {
 	 * @param time The amount of time that was spent in the given zone.
 	 * @throws NullPointerException if {@code day} or {@code zone} is {@code null}.
 	 */
-	private void addTime(Calendar now, String zone, long time) throws NullPointerException {
+	private void addTime(final Calendar now, final ZoneInfo zone, long time) throws NullPointerException {
 		Objects.requireNonNull(now, "The day to add zone time to cannot be null.");
 		Objects.requireNonNull(zone, "The zone to add time to cannot be null.");
 
@@ -421,16 +418,17 @@ public class TurkeyInfo {
 
 		if (time > 0) {
 			if (time <= TimeUtils.getMsOfDay(now)) {
-				if (dayZoneTimes.get(date).containsKey(zone)) {
-					dayZoneTimes.get(date).put(zone, dayZoneTimes.get(date).get(zone) + (int) time);
+				if (dayZoneTimes.get(date).containsKey(zone.getId())) {
+					dayZoneTimes.get(date).put(zone.getId(), dayZoneTimes.get(date).get(zone.getId()) + (int) time);
 				} else {
-					dayZoneTimes.get(date).put(zone, (int) time);
+					dayZoneTimes.get(date).put(zone.getId(), (int) time);
 				}
 			} else {
-				if (dayZoneTimes.get(date).containsKey(zone)) {
-					dayZoneTimes.get(date).put(zone, dayZoneTimes.get(date).get(zone) + TimeUtils.getMsOfDay(now));
+				if (dayZoneTimes.get(date).containsKey(zone.getId())) {
+					dayZoneTimes.get(date).put(zone.getId(),
+							dayZoneTimes.get(date).get(zone.getId()) + TimeUtils.getMsOfDay(now));
 				} else {
-					dayZoneTimes.get(date).put(zone, TimeUtils.getMsOfDay(now));
+					dayZoneTimes.get(date).put(zone.getId(), TimeUtils.getMsOfDay(now));
 				}
 
 				Calendar previousDay = (Calendar) now.clone();
@@ -440,15 +438,16 @@ public class TurkeyInfo {
 					String previousDate = TimeUtils.encodeDate(previousDay);
 
 					if (dayZoneTimes.containsKey(previousDate)) {
-						if (dayZoneTimes.get(previousDate).containsKey(zone)) {
-							dayZoneTimes.get(previousDate).put(zone, dayZoneTimes.get(previousDate).get(zone)
-									+ (int) Math.min(DAY_END + 1, previousTime));
+						if (dayZoneTimes.get(previousDate).containsKey(zone.getId())) {
+							dayZoneTimes.get(previousDate).put(zone.getId(),
+									dayZoneTimes.get(previousDate).get(zone.getId())
+											+ (int) Math.min(DAY_END + 1, previousTime));
 						} else {
-							dayZoneTimes.get(previousDate).put(zone, (int) Math.min(DAY_END + 1, previousTime));
+							dayZoneTimes.get(previousDate).put(zone.getId(), (int) Math.min(DAY_END + 1, previousTime));
 						}
 					} else {
 						dayZoneTimes.put(previousDate, new HashMap<String, Integer>());
-						dayZoneTimes.get(previousDate).put(zone, (int) Math.min(DAY_END + 1, previousTime));
+						dayZoneTimes.get(previousDate).put(zone.getId(), (int) Math.min(DAY_END + 1, previousTime));
 						if (!dayZoneChanges.containsKey(previousDate)) {
 							dayZoneChanges.put(previousDate, 0);
 						}
@@ -459,17 +458,18 @@ public class TurkeyInfo {
 			}
 		} else if (time < 0) {
 			if (-time <= TimeUtils.getMsOfDay(now)) {
-				if (dayZoneTimes.get(date).containsKey(zone)) {
-					dayZoneTimes.get(date).put(zone, Math.max(0, dayZoneTimes.get(date).get(zone) + (int) time));
+				if (dayZoneTimes.get(date).containsKey(zone.getId())) {
+					dayZoneTimes.get(date).put(zone.getId(),
+							Math.max(0, dayZoneTimes.get(date).get(zone.getId()) + (int) time));
 				} else {
-					dayZoneTimes.get(date).put(zone, 0);
+					dayZoneTimes.get(date).put(zone.getId(), 0);
 				}
 			} else {
-				if (dayZoneTimes.get(date).containsKey(zone)) {
-					dayZoneTimes.get(date).put(zone,
-							Math.max(0, dayZoneTimes.get(date).get(zone) - TimeUtils.getMsOfDay(now)));
+				if (dayZoneTimes.get(date).containsKey(zone.getId())) {
+					dayZoneTimes.get(date).put(zone.getId(),
+							Math.max(0, dayZoneTimes.get(date).get(zone.getId()) - TimeUtils.getMsOfDay(now)));
 				} else {
-					dayZoneTimes.get(date).put(zone, 0);
+					dayZoneTimes.get(date).put(zone.getId(), 0);
 				}
 
 				Calendar yesterday = (Calendar) now.clone();
@@ -479,20 +479,20 @@ public class TurkeyInfo {
 
 				// FIXME not sure how to handle if it doesn't
 				if (dayZoneTimes.containsKey(yesterdayDate)) {
-					if (dayZoneTimes.get(yesterdayDate).containsKey(zone)) {
-						dayZoneTimes.get(yesterdayDate).put(zone,
-								(int) Math.max(0, dayZoneTimes.get(yesterdayDate).get(zone) + yesterdayTime));
+					if (dayZoneTimes.get(yesterdayDate).containsKey(zone.getId())) {
+						dayZoneTimes.get(yesterdayDate).put(zone.getId(),
+								(int) Math.max(0, dayZoneTimes.get(yesterdayDate).get(zone.getId()) + yesterdayTime));
 					} else {
-						dayZoneTimes.get(yesterdayDate).put(zone, 0);
+						dayZoneTimes.get(yesterdayDate).put(zone.getId(), 0);
 					}
 				}
 			}
 		}
 
-		if (totalZoneTimes.containsKey(zone)) {
-			totalZoneTimes.put(zone, Math.max(0, totalZoneTimes.get(zone) + time));
+		if (totalZoneTimes.containsKey(zone.getId())) {
+			totalZoneTimes.put(zone.getId(), Math.max(0, totalZoneTimes.get(zone.getId()) + time));
 		} else {
-			totalZoneTimes.put(zone, (long) Math.max(0, time));
+			totalZoneTimes.put(zone.getId(), (long) Math.max(0, time));
 		}
 	}
 
@@ -666,7 +666,7 @@ public class TurkeyInfo {
 	 *         turkey represented by this object.
 	 */
 	public List<String> getTransponders() {
-		return new ArrayList<>(transponders);
+		return new ArrayList<String>(transponders);
 	}
 
 	/**
@@ -708,7 +708,7 @@ public class TurkeyInfo {
 	 * 
 	 * @return The zone this turkey is currently in.
 	 */
-	public String getCurrentZone() {
+	public ZoneInfo getCurrentZone() {
 		return currentZone;
 	}
 
@@ -914,6 +914,27 @@ public class TurkeyInfo {
 				&& Objects.equals(dayZoneTimes, other.dayZoneTimes) && Objects.equals(endTime, other.endTime)
 				&& Objects.equals(lastStay, other.lastStay) && Objects.equals(startTime, other.startTime)
 				&& Objects.equals(stayOut, other.stayOut) && Objects.equals(totalZoneTimes, other.totalZoneTimes);
+	}
+
+	/**
+	 * Compares this object with the specified object for order. Returns a negative
+	 * integer, zero, or a positive integer as this object is less than, equal to,
+	 * or greater than the specified object.<br/>
+	 * <br/>
+	 * {@link TurkeyInfo} objects are compared by their {@link #getId() id}, using
+	 * the {@link IntOrStringComparator}.<br/>
+	 * <br/>
+	 * Note: this class has a natural ordering that is inconsistent with equals.
+	 * 
+	 * @param o The object to compare this object to.
+	 * @return A negative integer, zero, or a positive integer as this object is
+	 *         less than, equal to, or greater than the specified object.
+	 * @throws NullPointerException If {@code o} is {@code null}.
+	 */
+	@Override
+	public int compareTo(TurkeyInfo o) throws NullPointerException {
+		Objects.requireNonNull(o, "The object to compare this object to can't be null.");
+		return IntOrStringComparator.INSTANCE.compare(id, o.getId());
 	}
 
 }

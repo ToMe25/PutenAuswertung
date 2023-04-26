@@ -23,6 +23,7 @@ import org.junit.Test;
 import com.tome25.auswertung.CSVHandler;
 import com.tome25.auswertung.DataHandler;
 import com.tome25.auswertung.TurkeyInfo;
+import com.tome25.auswertung.ZoneInfo;
 import com.tome25.auswertung.ZoneStay;
 import com.tome25.auswertung.args.Arguments;
 import com.tome25.auswertung.stream.FileInputStreamHandler;
@@ -58,14 +59,14 @@ public class OutputDataTest {
 	public void shortCrossDate() throws IOException {
 		final TestMappings mappings = generateTestMappings(2, 3, 5, false, 0, 0, tempFolder);
 		List<TurkeyInfo> turkeys = mappings.turkeys;
-		Map<String, List<String>> zones = mappings.zones;
+		List<ZoneInfo> zones = mappings.zones;
 		FileInputStreamHandler turkeysIn = mappings.turkeysIn;
 		FileInputStreamHandler zonesIn = mappings.zonesIn;
 		String t1 = turkeys.get(0).getTransponders().get(0);
 		String t2 = turkeys.get(1).getTransponders().get(0);
-		String a1 = zones.get("Zone 1").get(0);
-		String a2 = zones.get("Zone 2").get(0);
-		String a3 = zones.get("Zone 3").get(0);
+		String a1 = zones.get(0).getAntennas().get(0);
+		String a2 = zones.get(1).getAntennas().get(0);
+		String a3 = zones.get(2).getAntennas().get(0);
 
 		Pair<FileInputStreamHandler, PrintStream> antennaPair = tempFolder.newTempInputFile("antenna.csv");
 		FileInputStreamHandler antennaIn = antennaPair.getKey();
@@ -170,23 +171,23 @@ public class OutputDataTest {
 		assertEquals("Total turkey \"1\" Zone 3 time didn't match.", TimeUtils.parseTime("00:11:02.23"),
 				(long) outputTimes.get("1").get("total").get("Zone 3"));
 
-		Map<String, List<ZoneStay>> staysData = CSVHandler.readStaysCSV(staysIn);
+		Map<String, List<ZoneStay>> staysData = CSVHandler.readStaysCSV(staysIn, mappings.zones);
 		staysIn.close();
 
 		List<ZoneStay> t1Stays = new ArrayList<ZoneStay>();
-		t1Stays.add(new ZoneStay("0", "Zone 2", TimeUtils.parseTime("06.03.2022", "02:12:45.32"),
+		t1Stays.add(new ZoneStay("0", zones.get(1), TimeUtils.parseTime("06.03.2022", "02:12:45.32"),
 				TimeUtils.parseTime("06.03.2022", "02:18:17.96")));
-		t1Stays.add(new ZoneStay("0", "Zone 3", TimeUtils.parseTime("06.03.2022", "02:18:17.96"),
+		t1Stays.add(new ZoneStay("0", zones.get(2), TimeUtils.parseTime("06.03.2022", "02:18:17.96"),
 				TimeUtils.parseTime("06.03.2022", "08:58:23.48")));
-		t1Stays.add(new ZoneStay("0", "Zone 1", TimeUtils.parseTime("06.03.2022", "08:58:23.48"),
+		t1Stays.add(new ZoneStay("0", zones.get(0), TimeUtils.parseTime("06.03.2022", "08:58:23.48"),
 				TimeUtils.parseTime("06.03.2022", "18:43:52.67")));
-		t1Stays.add(new ZoneStay("0", "Zone 2", TimeUtils.parseTime("06.03.2022", "18:43:52.67"),
+		t1Stays.add(new ZoneStay("0", zones.get(1), TimeUtils.parseTime("06.03.2022", "18:43:52.67"),
 				TimeUtils.parseTime("06.03.2022", "23:52:45.89")));
-		t1Stays.add(new ZoneStay("0", "Zone 3", TimeUtils.parseTime("06.03.2022", "23:52:45.89"),
+		t1Stays.add(new ZoneStay("0", zones.get(2), TimeUtils.parseTime("06.03.2022", "23:52:45.89"),
 				TimeUtils.parseTime("07.03.2022", "00:09:28.09")));
-		t1Stays.add(new ZoneStay("0", "Zone 2", TimeUtils.parseTime("07.03.2022", "00:09:28.09"),
+		t1Stays.add(new ZoneStay("0", zones.get(1), TimeUtils.parseTime("07.03.2022", "00:09:28.09"),
 				TimeUtils.parseTime("07.03.2022", "01:10:37.73")));
-		t1Stays.add(new ZoneStay("0", "Zone 3", TimeUtils.parseTime("07.03.2022", "01:10:37.73"),
+		t1Stays.add(new ZoneStay("0", zones.get(2), TimeUtils.parseTime("07.03.2022", "01:10:37.73"),
 				TimeUtils.parseTime("07.03.2022", "01:21:42.86")));
 
 		assertEquals("The number of zone stays for turkey \"0\" didn't match.", t1Stays.size(),
@@ -197,17 +198,17 @@ public class OutputDataTest {
 		}
 
 		List<ZoneStay> t2Stays = new ArrayList<ZoneStay>();
-		t2Stays.add(new ZoneStay("1", "Zone 1", TimeUtils.parseTime("06.03.2022", "02:12:45.32"),
+		t2Stays.add(new ZoneStay("1", zones.get(0), TimeUtils.parseTime("06.03.2022", "02:12:45.32"),
 				TimeUtils.parseTime("06.03.2022", "06:46:50.64")));
-		t2Stays.add(new ZoneStay("1", "Zone 2", TimeUtils.parseTime("06.03.2022", "06:46:50.64"),
+		t2Stays.add(new ZoneStay("1", zones.get(1), TimeUtils.parseTime("06.03.2022", "06:46:50.64"),
 				TimeUtils.parseTime("06.03.2022", "15:26:08.53")));
-		t2Stays.add(new ZoneStay("1", "Zone 1", TimeUtils.parseTime("06.03.2022", "15:26:08.53"),
+		t2Stays.add(new ZoneStay("1", zones.get(0), TimeUtils.parseTime("06.03.2022", "15:26:08.53"),
 				TimeUtils.parseTime("07.03.2022", "00:02:26.92")));
-		t2Stays.add(new ZoneStay("1", "Zone 3", TimeUtils.parseTime("07.03.2022", "00:02:26.92"),
+		t2Stays.add(new ZoneStay("1", zones.get(2), TimeUtils.parseTime("07.03.2022", "00:02:26.92"),
 				TimeUtils.parseTime("07.03.2022", "00:13:29.15")));
-		t2Stays.add(new ZoneStay("1", "Zone 2", TimeUtils.parseTime("07.03.2022", "00:13:29.15"),
+		t2Stays.add(new ZoneStay("1", zones.get(1), TimeUtils.parseTime("07.03.2022", "00:13:29.15"),
 				TimeUtils.parseTime("07.03.2022", "01:19:51.21")));
-		t2Stays.add(new ZoneStay("1", "Zone 1", TimeUtils.parseTime("07.03.2022", "01:19:51.21"),
+		t2Stays.add(new ZoneStay("1", zones.get(0), TimeUtils.parseTime("07.03.2022", "01:19:51.21"),
 				TimeUtils.parseTime("07.03.2022", "01:21:42.86")));
 
 		assertEquals("The number of zone stays for turkey \"1\" didn't match.", t2Stays.size(),
@@ -227,13 +228,13 @@ public class OutputDataTest {
 	public void oneMonthStay() throws IOException {
 		final TestMappings mappings = generateTestMappings(2, 2, 5, false, 0, 0, tempFolder);
 		List<TurkeyInfo> turkeys = mappings.turkeys;
-		Map<String, List<String>> zones = mappings.zones;
+		List<ZoneInfo> zones = mappings.zones;
 		FileInputStreamHandler turkeysIn = mappings.turkeysIn;
 		FileInputStreamHandler zonesIn = mappings.zonesIn;
 		String t1 = turkeys.get(0).getTransponders().get(0);
 		String t2 = turkeys.get(1).getTransponders().get(0);
-		String a1 = zones.get("Zone 1").get(0);
-		String a2 = zones.get("Zone 2").get(0);
+		String a1 = zones.get(0).getAntennas().get(0);
+		String a2 = zones.get(1).getAntennas().get(0);
 
 		Pair<FileInputStreamHandler, PrintStream> antennaPair = tempFolder.newTempInputFile("antenna.csv");
 		FileInputStreamHandler antennaIn = antennaPair.getKey();
@@ -423,25 +424,25 @@ public class OutputDataTest {
 		assertEquals("Zone 2 time for turkey \"1\" on date 07.06.2023 didn't match.",
 				TimeUtils.parseTime("03:12:51.00"), (long) outputTimes.get("1").get("07.06.2023").get("Zone 2"));
 
-		Map<String, List<ZoneStay>> staysData = CSVHandler.readStaysCSV(staysIn);
+		Map<String, List<ZoneStay>> staysData = CSVHandler.readStaysCSV(staysIn, mappings.zones);
 		staysIn.close();
 
 		List<ZoneStay> t1Stays = new ArrayList<ZoneStay>();
-		t1Stays.add(new ZoneStay("0", "Zone 2", TimeUtils.parseTime("06.05.2023", "02:05:42.59"),
+		t1Stays.add(new ZoneStay("0", zones.get(1), TimeUtils.parseTime("06.05.2023", "02:05:42.59"),
 				TimeUtils.parseTime("06.05.2023", "02:17:19.38")));
-		t1Stays.add(new ZoneStay("0", "Zone 1", TimeUtils.parseTime("06.05.2023", "02:17:19.38"),
+		t1Stays.add(new ZoneStay("0", zones.get(0), TimeUtils.parseTime("06.05.2023", "02:17:19.38"),
 				TimeUtils.parseTime("06.05.2023", "05:01:08.21")));
-		t1Stays.add(new ZoneStay("0", "Zone 2", TimeUtils.parseTime("06.05.2023", "05:01:08.21"),
+		t1Stays.add(new ZoneStay("0", zones.get(1), TimeUtils.parseTime("06.05.2023", "05:01:08.21"),
 				TimeUtils.parseTime("12.05.2023", "15:44:31.99")));
-		t1Stays.add(new ZoneStay("0", "Zone 1", TimeUtils.parseTime("12.05.2023", "15:44:31.99"),
+		t1Stays.add(new ZoneStay("0", zones.get(0), TimeUtils.parseTime("12.05.2023", "15:44:31.99"),
 				TimeUtils.parseTime("21.05.2023", "02:35:20.83")));
-		t1Stays.add(new ZoneStay("0", "Zone 2", TimeUtils.parseTime("21.05.2023", "02:35:20.83"),
+		t1Stays.add(new ZoneStay("0", zones.get(1), TimeUtils.parseTime("21.05.2023", "02:35:20.83"),
 				TimeUtils.parseTime("31.05.2023", "18:00:48.21")));
-		t1Stays.add(new ZoneStay("0", "Zone 1", TimeUtils.parseTime("31.05.2023", "18:00:48.21"),
+		t1Stays.add(new ZoneStay("0", zones.get(0), TimeUtils.parseTime("31.05.2023", "18:00:48.21"),
 				TimeUtils.parseTime("06.06.2023", "03:08:27.44")));
-		t1Stays.add(new ZoneStay("0", "Zone 2", TimeUtils.parseTime("06.06.2023", "03:08:27.44"),
+		t1Stays.add(new ZoneStay("0", zones.get(1), TimeUtils.parseTime("06.06.2023", "03:08:27.44"),
 				TimeUtils.parseTime("06.06.2023", "13:55:41.00")));
-		t1Stays.add(new ZoneStay("0", "Zone 1", TimeUtils.parseTime("06.06.2023", "13:55:41.00"),
+		t1Stays.add(new ZoneStay("0", zones.get(0), TimeUtils.parseTime("06.06.2023", "13:55:41.00"),
 				TimeUtils.parseTime("07.06.2023", "05:08:38.63")));
 
 		assertEquals("The number of zone stays for turkey \"0\" didn't match.", t1Stays.size(),
@@ -452,15 +453,15 @@ public class OutputDataTest {
 		}
 
 		List<ZoneStay> t2Stays = new ArrayList<ZoneStay>();
-		t2Stays.add(new ZoneStay("1", "Zone 1", TimeUtils.parseTime("06.05.2023", "02:05:42.59"),
+		t2Stays.add(new ZoneStay("1", zones.get(0), TimeUtils.parseTime("06.05.2023", "02:05:42.59"),
 				TimeUtils.parseTime("06.05.2023", "11:29:46.41")));
-		t2Stays.add(new ZoneStay("1", "Zone 2", TimeUtils.parseTime("06.05.2023", "11:29:46.41"),
+		t2Stays.add(new ZoneStay("1", zones.get(1), TimeUtils.parseTime("06.05.2023", "11:29:46.41"),
 				TimeUtils.parseTime("06.06.2023", "12:31:00.53")));
-		t2Stays.add(new ZoneStay("1", "Zone 1", TimeUtils.parseTime("06.06.2023", "12:31:00.53"),
+		t2Stays.add(new ZoneStay("1", zones.get(0), TimeUtils.parseTime("06.06.2023", "12:31:00.53"),
 				TimeUtils.parseTime("06.06.2023", "13:55:41.55")));
-		t2Stays.add(new ZoneStay("1", "Zone 2", TimeUtils.parseTime("06.06.2023", "13:55:41.55"),
+		t2Stays.add(new ZoneStay("1", zones.get(1), TimeUtils.parseTime("06.06.2023", "13:55:41.55"),
 				TimeUtils.parseTime("07.06.2023", "03:12:51.00")));
-		t2Stays.add(new ZoneStay("1", "Zone 1", TimeUtils.parseTime("07.06.2023", "03:12:51.00"),
+		t2Stays.add(new ZoneStay("1", zones.get(0), TimeUtils.parseTime("07.06.2023", "03:12:51.00"),
 				TimeUtils.parseTime("07.06.2023", "05:08:38.63")));
 
 		assertEquals("The number of zone stays for turkey \"1\" didn't match.", t2Stays.size(),
@@ -610,10 +611,10 @@ public class OutputDataTest {
 			// Compare zone stay time sum with output total
 			Map<String, Long> stayTotals = new HashMap<String, Long>();
 			for (ZoneStay stay : parsed.zoneStays.get(turkey)) {
-				if (stayTotals.containsKey(stay.getZone())) {
-					stayTotals.put(stay.getZone(), stayTotals.get(stay.getZone()) + stay.getStayTime());
+				if (stayTotals.containsKey(stay.getZone().getId())) {
+					stayTotals.put(stay.getZone().getId(), stayTotals.get(stay.getZone().getId()) + stay.getStayTime());
 				} else {
-					stayTotals.put(stay.getZone(), stay.getStayTime());
+					stayTotals.put(stay.getZone().getId(), stay.getStayTime());
 				}
 			}
 
@@ -680,8 +681,8 @@ public class OutputDataTest {
 
 		mappings.turkeysIn = turkeysPair.getKey();
 		if (advancedTurkeys) {
-			mappings.turkeys = TurkeyGenerator.generateTurkeysAdvanced((short) turkeys, maxTransponders,
-					new ArrayList<String>(mappings.zones.keySet()), startTime, endTime);
+			mappings.turkeys = TurkeyGenerator.generateTurkeysAdvanced((short) turkeys, maxTransponders, mappings.zones,
+					startTime, endTime);
 		} else {
 			mappings.turkeys = TurkeyGenerator.generateTurkeys(turkeys, maxTransponders);
 		}
@@ -788,7 +789,7 @@ public class OutputDataTest {
 				.readTotalsCSV(totalsIn);
 		totalsIn.close();
 		TestData results = new TestData(outputTotals.getKey(), outputTotals.getValue(),
-				CSVHandler.readStaysCSV(staysIn), downtimes, mappings.turkeys, mappings.zones);
+				CSVHandler.readStaysCSV(staysIn, mappings.zones), downtimes, mappings.turkeys, mappings.zones);
 		staysIn.close();
 
 		return results;
@@ -810,7 +811,7 @@ public class OutputDataTest {
 		/**
 		 * A list of zones generated for testing.
 		 */
-		public Map<String, List<String>> zones;
+		public List<ZoneInfo> zones;
 
 		/**
 		 * A {@link FileInputStreamHandler} to read the turkey mappings from.
@@ -831,14 +832,14 @@ public class OutputDataTest {
 		/**
 		 * Creates a new TestMappings object and initializes all final fields.
 		 * 
-		 * @param turkeys   A collection of turkeys generated for testing.
+		 * @param turkeys   A list of turkeys generated for testing.
 		 * @param zones     A list of zones generated for testing.
 		 * @param turkeysIn A {@link FileInputStreamHandler} to read the turkey mappings
 		 *                  from.
 		 * @param zonesIn   A {@link FileInputStreamHandler} to read the zones mappings
 		 *                  from.
 		 */
-		public TestMappings(final List<TurkeyInfo> turkeys, final Map<String, List<String>> zones,
+		public TestMappings(final List<TurkeyInfo> turkeys, final List<ZoneInfo> zones,
 				final FileInputStreamHandler turkeysIn, final FileInputStreamHandler zonesIn) {
 			this.turkeys = turkeys;
 			this.zones = zones;
