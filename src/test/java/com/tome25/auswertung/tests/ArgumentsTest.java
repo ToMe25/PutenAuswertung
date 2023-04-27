@@ -17,7 +17,7 @@ import com.tome25.auswertung.log.LogHandler;
  * A class containing tests verifying the functionality of the command line
  * argument parser.
  * 
- * @author theodor
+ * @author Theodor Meyer zu Hörste
  */
 public class ArgumentsTest {
 

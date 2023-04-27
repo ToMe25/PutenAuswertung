@@ -13,7 +13,7 @@ import java.util.Queue;
 /**
  * A class containing {@link Map} utilities.
  * 
- * @author theodor
+ * @author Theodor Meyer zu Hörste
  */
 public class MapUtils {
 

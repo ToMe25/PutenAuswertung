@@ -20,7 +20,7 @@ import com.tome25.auswertung.utils.FileUtils;
 /**
  * A class containing unit tests pertaining to the {@link FileUtils} class.
  * 
- * @author theodor
+ * @author Theodor Meyer zu Hörste
  */
 public class FileUtilsTest {
 

@@ -9,7 +9,7 @@ import com.tome25.auswertung.utils.IntOrStringComparator;
 /**
  * The class containing unit tests relating to {@link IntOrStringComparator}.
  * 
- * @author theodor
+ * @author Theodor Meyer zu Hörste
  */
 public class IntOrStringComparatorTest {
 

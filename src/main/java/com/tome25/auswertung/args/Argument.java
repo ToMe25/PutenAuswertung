@@ -16,7 +16,7 @@ import com.tome25.auswertung.utils.TimeUtils;
 /**
  * The enum specifying the possible arguments that this program can handle.
  * 
- * @author theodor
+ * @author Theodor Meyer zu Hörste
  */
 public enum Argument {
 	DEBUG('d', (short) 7, "debug") {
@@ -448,7 +448,7 @@ public enum Argument {
 	/**
 	 * An enum used to specify whether an argument gets a value when given.
 	 * 
-	 * @author theodor
+	 * @author Theodor Meyer zu Hörste
 	 */
 	public enum ArgumentValue {
 		/**
@@ -687,5 +687,7 @@ public enum Argument {
 		System.out.print(name);
 		System.out.print(' ');
 		System.out.println(version);
+		System.out.println();
+		System.out.println("Written by Theodor MzH");
 	}
 }

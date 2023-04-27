@@ -31,7 +31,7 @@ import net.jcip.annotations.NotThreadSafe;
 /**
  * A class containing unit tests relating to {@link CSVHandler#readTurkeyCSV}.
  * 
- * @author theodor
+ * @author Theodor Meyer zu Hörste
  */
 @NotThreadSafe
 public class ReadTurkeyCSVTest {
@@ -54,7 +54,7 @@ public class ReadTurkeyCSVTest {
 	 * Uses semicolon as the separator.
 	 * 
 	 * Tests keys and values with all valid character types(upper case letters,
-	 * lower case letters, digits, and spaces).
+	 * lower case letters, digits, spaces, and hyphens).
 	 * 
 	 * @throws IOException if something goes wrong with file handling, idk
 	 */
@@ -64,21 +64,21 @@ public class ReadTurkeyCSVTest {
 		PrintStream out = tempFile.getValue();
 		FileInputStreamHandler fiin = tempFile.getKey();
 
-		out.println("Turkey 0;;;;Transponder 1;trans 2");
+		out.println("Turkey - 0;;;;Transponder 1;trans-2");
 		out.println("test;;;;test1;test2");
 
 		Map<String, TurkeyInfo> turkeys = CSVHandler.readTurkeyCSV(fiin, Arguments.empty(), new ArrayList<ZoneInfo>());
 		assertNotNull("Reading a basic turkey csv returned null.", turkeys);
 
 		assertTrue("Basic turkeys.csv didn't contain first line first value.", turkeys.containsKey("Transponder 1"));
-		assertTrue("Basic turkeys.csv didn't contain first line second value.", turkeys.containsKey("trans 2"));
+		assertTrue("Basic turkeys.csv didn't contain first line second value.", turkeys.containsKey("trans-2"));
 		assertTrue("Basic turkeys.csv didn't contain second line first value.", turkeys.containsKey("test1"));
 		assertTrue("Basic turkeys.csv didn't contain second value line second value.", turkeys.containsKey("test2"));
 
 		Map<String, TurkeyInfo> refMap = new HashMap<String, TurkeyInfo>();
-		refMap.put("Transponder 1", new TurkeyInfo("Turkey 0", Arrays.asList("Transponder 1", "trans 2"), null, null,
+		refMap.put("Transponder 1", new TurkeyInfo("Turkey - 0", Arrays.asList("Transponder 1", "trans-2"), null, null,
 				null, null, null, Arguments.empty()));
-		refMap.put("trans 2", refMap.get("Transponder 1"));
+		refMap.put("trans-2", refMap.get("Transponder 1"));
 		refMap.put("test1", new TurkeyInfo("test", Arrays.asList("test1", "test2"), null, null, null, null, null,
 				Arguments.empty()));
 		refMap.put("test2", refMap.get("test1"));

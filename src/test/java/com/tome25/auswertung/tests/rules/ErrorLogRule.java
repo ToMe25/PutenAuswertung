@@ -19,7 +19,7 @@ import com.tome25.auswertung.log.LogHandler;
  * A {@link TestRule} that redirects the {@link LogHandler} error log to a
  * buffer to check its contents later.
  * 
- * @author theodor
+ * @author Theodor Meyer zu Hörste
  */
 public class ErrorLogRule implements TestRule {
 
@@ -159,7 +159,7 @@ public class ErrorLogRule implements TestRule {
 	 * A {@link Statement} subclass responsible for redirecting the error log to
 	 * check it later.
 	 * 
-	 * @author theodor
+	 * @author Theodor Meyer zu Hörste
 	 */
 	public class ErrorLogStatement extends Statement {
 

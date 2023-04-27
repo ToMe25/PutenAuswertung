@@ -17,7 +17,7 @@ import com.tome25.auswertung.utils.Pair;
 /**
  * The class responsible for handling the printing of status and debug info.
  * 
- * @author theodor
+ * @author Theodor Meyer zu Hörste
  */
 public class LogHandler {
 

@@ -16,7 +16,7 @@ import com.tome25.auswertung.utils.IntOrStringComparator;
  * <br/>
  * Note: this class has a natural ordering that is inconsistent with equals.
  * 
- * @author theodor
+ * @author Theodor Meyer zu Hörste
  */
 public class ZoneInfo implements Comparable<ZoneInfo> {
 
@@ -47,19 +47,24 @@ public class ZoneInfo implements Comparable<ZoneInfo> {
 	 */
 	public ZoneInfo(final String id, final boolean food, final String... antennas)
 			throws NullPointerException, IllegalArgumentException {
-		Objects.requireNonNull(id, "The id of the zone cannot be null.");
-		Objects.requireNonNull(antennas, "The antennas to of this zone cannot be null.");
+		this.id = Objects.requireNonNull(id, "The id of the zone cannot be null.");
 
-		if (id.trim().isEmpty()) {
-			throw new IllegalArgumentException("The id of the zone cannot be empty.");
+		if (!CSVHandler.ID_REGEX.matcher(id).matches()) {
+			throw new IllegalArgumentException("The zone id \"" + id + "\" does not match the required format.");
 		}
 
+		this.antennas = Objects.requireNonNull(antennas, "The antennas to of this zone cannot be null.");
 		if (antennas.length == 0) {
 			throw new IllegalArgumentException("The number of antennas cannot be zero.");
 		}
+		for (String antenna : antennas) {
+			Objects.requireNonNull(antenna, "The antenna ids cannot be null.");
+			if (!CSVHandler.ID_REGEX.matcher(antenna).matches()) {
+				throw new IllegalArgumentException(
+						"The antenna id \"" + antenna + "\" does not match the required format.");
+			}
+		}
 
-		this.id = id;
-		this.antennas = antennas;
 		this.food = food;
 	}
 

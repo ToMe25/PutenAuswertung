@@ -7,7 +7,7 @@ import java.util.Objects;
  * A utility class containing a few general String utilities to be used in this
  * project.
  * 
- * @author theodor
+ * @author Theodor Meyer zu Hörste
  */
 public class StringUtils {
 

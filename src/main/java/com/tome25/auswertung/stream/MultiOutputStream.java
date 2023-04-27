@@ -18,7 +18,7 @@ import java.util.Set;
  * to.<br/>
  * Cannot contain the same {@link OutputStream} twice.
  * 
- * @author theodor
+ * @author Theodor Meyer zu Hörste
  */
 public class MultiOutputStream extends OutputStream {
 

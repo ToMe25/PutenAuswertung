@@ -12,7 +12,7 @@ import com.tome25.auswertung.utils.StringUtils;
  * Not intended to completely test all functionality.<br/>
  * So far only tests {@link StringUtils#isInteger}.
  * 
- * @author theodor
+ * @author Theodor Meyer zu Hörste
  */
 public class StringUtilsTest {
 

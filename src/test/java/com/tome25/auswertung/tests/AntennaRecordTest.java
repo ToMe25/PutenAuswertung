@@ -13,7 +13,7 @@ import com.tome25.auswertung.AntennaRecord;
  * Some tests for the {@link AntennaRecord} class, currently just the
  * constructor.
  * 
- * @author theodor
+ * @author Theodor Meyer zu Hörste
  */
 public class AntennaRecordTest {
 

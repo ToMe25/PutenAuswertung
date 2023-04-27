@@ -23,7 +23,7 @@ import net.jcip.annotations.NotThreadSafe;
  * A class containing unit tests related to the reading of {@link AntennaRecord
  * AntennaRecords} from antenna data input csvs.
  * 
- * @author theodor
+ * @author Theodor Meyer zu Hörste
  */
 @NotThreadSafe
 public class ReadAntennaRecordTest {

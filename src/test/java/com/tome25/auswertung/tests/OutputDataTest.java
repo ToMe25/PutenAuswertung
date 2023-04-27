@@ -42,7 +42,7 @@ import com.tome25.auswertung.utils.TimeUtils;
  * A class containing tests to verify the correctness of the generated output
  * data.
  * 
- * @author theodor
+ * @author Theodor Meyer zu Hörste
  */
 public class OutputDataTest {
 
@@ -799,7 +799,7 @@ public class OutputDataTest {
 	 * A utility class for this unit test to transfer all mappings values and their
 	 * input stream handlers at once.
 	 * 
-	 * @author theodor
+	 * @author Theodor Meyer zu Hörste
 	 */
 	public static class TestMappings {
 

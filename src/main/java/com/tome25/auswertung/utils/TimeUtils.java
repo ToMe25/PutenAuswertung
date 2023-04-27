@@ -9,7 +9,7 @@ import java.util.TimeZone;
  * A class containing utility methods related to time stamp, time, and date
  * handling.
  * 
- * @author theodor
+ * @author Theodor Meyer zu Hörste
  */
 public class TimeUtils {
 

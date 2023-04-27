@@ -17,7 +17,7 @@ import com.tome25.auswertung.utils.StringUtils;
  * The main class primarily responsible for delegating the work to its
  * respective classes.
  * 
- * @author theodor
+ * @author Theodor Meyer zu Hörste
  */
 public class PutenAuswertung {
 

@@ -31,7 +31,7 @@ import com.tome25.auswertung.utils.Pair;
 /**
  * {@link DataHandler} tests that do not test the output data.
  * 
- * @author theodor
+ * @author Theodor Meyer zu Hörste
  */
 public class DataHandlerTest {
 

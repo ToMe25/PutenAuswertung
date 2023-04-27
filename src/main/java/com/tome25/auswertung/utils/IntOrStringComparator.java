@@ -9,7 +9,7 @@ import com.tome25.auswertung.log.LogHandler;
  * A class that compares strings first as integers, if possible, and if not as
  * strings.
  * 
- * @author theodor
+ * @author Theodor Meyer zu Hörste
  */
 public class IntOrStringComparator implements Comparator<String> {
 

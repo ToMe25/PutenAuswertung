@@ -20,7 +20,7 @@ import com.tome25.auswertung.utils.TimeUtils;
 /**
  * The class containing unit tests related to the creation of output csv lines.
  * 
- * @author theodor
+ * @author Theodor Meyer zu Hörste
  */
 public class TurkeyCSVTest {
 
@@ -35,8 +35,8 @@ public class TurkeyCSVTest {
 				CSVHandler.turkeyCsvHeader(Arrays.asList(new String[] { "Zone 1", "Zone 2" })));
 
 		assertEquals("The turkey csv header did not match.",
-				"Tier;Datum;Bereichswechsel;Aufenthalt in Zone Z1;Aufenthalt in Zone Zone 2;Aufenthalt in Zone #3",
-				CSVHandler.turkeyCsvHeader(Arrays.asList(new String[] { "Z1", "Zone 2", "#3" })));
+				"Tier;Datum;Bereichswechsel;Aufenthalt in Zone Z1;Aufenthalt in Zone Zone 2;Aufenthalt in Zone Z-3",
+				CSVHandler.turkeyCsvHeader(Arrays.asList(new String[] { "Z1", "Zone 2", "Z-3" })));
 	}
 
 	/**
@@ -49,7 +49,7 @@ public class TurkeyCSVTest {
 		TurkeyInfo info = getBasicInfo(date);
 		assertEquals("Getting single day info from a basic TurkeyInfo returned an invalid string.",
 				"0;01.01.2022;5;01:28:33.19;10:51:31.53;11:39:55.28",
-				CSVHandler.turkeyToCsvLine(info, date, Arrays.asList(new String[] { "Z1", "Zone 2", "#3" })));
+				CSVHandler.turkeyToCsvLine(info, date, Arrays.asList(new String[] { "Z1", "Zone 2", "Z-3" })));
 	}
 
 	/**
@@ -60,7 +60,7 @@ public class TurkeyCSVTest {
 	 */
 	@Test(expected = NullPointerException.class)
 	public void convertNullTurkey() throws NullPointerException {
-		CSVHandler.turkeyToCsvLine(null, "01.01.2022", Arrays.asList(new String[] { "Z1", "Zone 2", "#3" }));
+		CSVHandler.turkeyToCsvLine(null, "01.01.2022", Arrays.asList(new String[] { "Z1", "Zone 2", "Z-3" }));
 	}
 
 	/**
@@ -72,7 +72,7 @@ public class TurkeyCSVTest {
 		TurkeyInfo info = getBasicInfo(date);
 		assertEquals("Getting single day info from a basic TurkeyInfo returned an invalid string.",
 				"0;total;5;01:28:33.19;10:51:31.53;11:39:55.28",
-				CSVHandler.turkeyToCsvLine(info, null, Arrays.asList(new String[] { "Z1", "Zone 2", "#3" })));
+				CSVHandler.turkeyToCsvLine(info, null, Arrays.asList(new String[] { "Z1", "Zone 2", "Z-3" })));
 	}
 
 	/**
@@ -96,7 +96,7 @@ public class TurkeyCSVTest {
 		TurkeyInfo info = getBasicInfo(date);
 		assertEquals("Getting single day info from a basic TurkeyInfo returned an invalid string.",
 				"0;01.01.2022;5;01:28:33.19;10:51:31.53;11:39:55.28;00:00:00.00",
-				CSVHandler.turkeyToCsvLine(info, date, Arrays.asList(new String[] { "Z1", "Zone 2", "#3", "Zone 4" })));
+				CSVHandler.turkeyToCsvLine(info, date, Arrays.asList(new String[] { "Z1", "Zone 2", "Z-3", "Zone 4" })));
 	}
 
 	/**
@@ -108,7 +108,7 @@ public class TurkeyCSVTest {
 		TurkeyInfo info = getBasicInfo(date);
 		assertEquals("Getting single day info from a basic TurkeyInfo returned an invalid string.",
 				"0;01.01.2022;5;01:28:33.19;11:39:55.28",
-				CSVHandler.turkeyToCsvLine(info, date, Arrays.asList(new String[] { "Z1", "#3" })));
+				CSVHandler.turkeyToCsvLine(info, date, Arrays.asList(new String[] { "Z1", "Z-3" })));
 	}
 
 	/**
@@ -151,7 +151,7 @@ public class TurkeyCSVTest {
 	 * The generated {@link TurkeyInfo} has the transponders "T1", "Trans 2", and
 	 * "T3".<br/>
 	 * It only contains info about the given day.<br/>
-	 * It has entered the zones "Z1", "Zone 2", and "#3".<br/>
+	 * It has entered the zones "Z1", "Zone 2", and "Z-3".<br/>
 	 * Since actual input can only use hundredths this too doesn't use millisecond
 	 * times.
 	 * 
@@ -167,7 +167,7 @@ public class TurkeyCSVTest {
 		List<ZoneInfo> zones = new ArrayList<ZoneInfo>();
 		zones.add(new ZoneInfo("Z1", true, "Antenna Z1"));
 		zones.add(new ZoneInfo("Zone 2", true, "Antenna 2", "Antenna 3"));
-		zones.add(new ZoneInfo("#3", true, "Antenna #3"));
+		zones.add(new ZoneInfo("Z-3", true, "Antenna-3"));
 		TurkeyInfo info = TurkeyGenerator.generateTurkey("0", 5, args, null, zones.get(0),
 				TimeUtils.parseTime(day, 10510));
 		info.changeZone(zones.get(1), TimeUtils.parseTime(day, 20410));
@@ -185,7 +185,7 @@ public class TurkeyCSVTest {
 	 * Generates a basic turkey containing zone info for two days.<br/>
 	 * The generated {@link TurkeyInfo} has the transponders "T1", "Trans 2", and
 	 * "T3".<br/>
-	 * It has entered the zones "Z1", "Zone 2", "#3", and "Z4".
+	 * It has entered the zones "Z1", "Zone 2", "Z-3", and "Z4".
 	 * 
 	 * @param firstDate The first of the two days for which to generate zone info.
 	 * @return The generated {@link TurkeyInfo}.
@@ -200,7 +200,7 @@ public class TurkeyCSVTest {
 		List<ZoneInfo> zones = new ArrayList<ZoneInfo>();
 		zones.add(new ZoneInfo("Z1", true, "Antenna Z1"));
 		zones.add(new ZoneInfo("Zone 2", true, "Antenna 2", "Antenna 3"));
-		zones.add(new ZoneInfo("#3", true, "Antenna #3"));
+		zones.add(new ZoneInfo("Z-3", true, "Antenna-3"));
 		zones.add(new ZoneInfo("Z4", true, "Antenna Z4"));
 		String secondDate = TimeUtils.encodeDate(cal);
 		ti.changeZone(zones.get(3), TimeUtils.parseTime(secondDate, 87234));

@@ -26,7 +26,7 @@ import com.tome25.auswertung.utils.TimeUtils;
 /**
  * The main class for generating test data for this program.
  * 
- * @author theodor
+ * @author Theodor Meyer zu Hörste
  */
 public class AntennaDataGenerator {
 
@@ -1451,7 +1451,7 @@ public class AntennaDataGenerator {
 	 * This object contains all data relevant to the test, except the individual
 	 * antenna records, and except the file paths.
 	 * 
-	 * @author theodor
+	 * @author Theodor Meyer zu Hörste
 	 */
 	public static class TestData {
 

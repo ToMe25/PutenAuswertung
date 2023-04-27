@@ -14,7 +14,7 @@ import com.tome25.auswertung.log.LogHandler;
 /**
  * This class handles reading the content of a file line by line.
  * 
- * @author theodor
+ * @author Theodor Meyer zu Hörste
  */
 public class FileInputStreamHandler implements IInputStreamHandler {
 

@@ -27,7 +27,7 @@ import net.jcip.annotations.NotThreadSafe;
 /**
  * A class containing the unit tests for {@link CSVHandler#readDowntimesCSV}.
  * 
- * @author theodor
+ * @author Theodor Meyer zu Hörste
  */
 @NotThreadSafe
 public class ReadDowntimesCSVTest {

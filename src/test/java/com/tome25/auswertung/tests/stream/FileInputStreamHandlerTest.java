@@ -20,7 +20,7 @@ import com.tome25.auswertung.utils.Pair;
 /**
  * A class containing {@link FileInputStreamHandler} unit tests.
  * 
- * @author theodor
+ * @author Theodor Meyer zu Hörste
  */
 public class FileInputStreamHandlerTest {
 

@@ -12,7 +12,7 @@ import java.util.Objects;
  * Has to be registered as a {@link Runtime#addShutdownHook ShutdownHook} in
  * case of crashes.
  * 
- * @author theodor
+ * @author Theodor Meyer zu Hörste
  */
 public class LogCacheShutdownHook implements Runnable {
 

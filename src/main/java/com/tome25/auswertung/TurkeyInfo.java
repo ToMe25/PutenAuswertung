@@ -22,7 +22,7 @@ import com.tome25.auswertung.utils.TimeUtils;
  * <br/>
  * Note: this class has a natural ordering that is inconsistent with equals.
  * 
- * @author theodor
+ * @author Theodor Meyer zu Hörste
  */
 public class TurkeyInfo implements Comparable<TurkeyInfo> {
 
@@ -156,7 +156,8 @@ public class TurkeyInfo implements Comparable<TurkeyInfo> {
 	 *                     {@code false}.
 	 * @param args         An {@link Arguments} instance containing the
 	 *                     configuration for the current data analysis.
-	 * @throws NullPointerException     If {@code id} or {@code args} is
+	 * @throws NullPointerException     If {@code id}, {@code transponders}, any
+	 *                                  transponder id, or {@code args} is
 	 *                                  {@code null}.<br/>
 	 *                                  Also if {@code time} isn't {@code null}, but
 	 *                                  {@code currentZone} is {@code null}.<br/>
@@ -165,13 +166,22 @@ public class TurkeyInfo implements Comparable<TurkeyInfo> {
 	 *                                  args.fillDays} is {@code false} and
 	 *                                  {@code startTime} is {@code null}.
 	 * @throws IllegalArgumentException If {@code time} is before {@code startTime},
-	 *                                  or {@code time} is after {@code endTime}.
+	 *                                  {@code time} is after {@code endTime},
+	 *                                  {@code id} doesn't match
+	 *                                  {@link CSVHandler#ID_REGEX the required
+	 *                                  format}, or a transponder id doesn't match
+	 *                                  {@link CSVHandler#ID_REGEX the required
+	 *                                  format}.
 	 */
 	public TurkeyInfo(final String id, final List<String> transponders, IOutputStreamHandler stayOut,
 			ZoneInfo currentZone, Calendar time, Calendar startTime, final Calendar endTime, final Arguments args)
 			throws NullPointerException, IllegalArgumentException {
 		this.id = Objects.requireNonNull(id, "The turkey id cannot be null.");
 		this.args = Objects.requireNonNull(args, "The args object configuring this cannot be null.");
+
+		if (!CSVHandler.ID_REGEX.matcher(id).matches()) {
+			throw new IllegalArgumentException("The turkey id \"" + id + "\" does not match the required format.");
+		}
 
 		// If time is null this is just used as a static storage object.
 		if (time != null) {
@@ -190,7 +200,15 @@ public class TurkeyInfo implements Comparable<TurkeyInfo> {
 			}
 		}
 
-		this.transponders = transponders;
+		this.transponders = Objects.requireNonNull(transponders, "The transponder list cannot be null.");
+		for (String transponder : transponders) {
+			Objects.requireNonNull(transponder, "The transponder ids cannot be null.");
+			if (!CSVHandler.ID_REGEX.matcher(transponder).matches()) {
+				throw new IllegalArgumentException(
+						"The transponder id \"" + transponder + "\" does not match the required format.");
+			}
+		}
+
 		this.stayOut = stayOut;
 		this.currentZone = currentZone;
 		this.currentTime = time;

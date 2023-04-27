@@ -8,7 +8,7 @@ import com.tome25.auswertung.utils.TimeUtils;
 /**
  * A class storing a single stay in a zone of a single turkey.
  * 
- * @author theodor
+ * @author Theodor Meyer zu Hörste
  */
 public class ZoneStay {
 

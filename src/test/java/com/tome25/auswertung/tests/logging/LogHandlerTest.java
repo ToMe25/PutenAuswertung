@@ -24,7 +24,7 @@ import net.jcip.annotations.NotThreadSafe;
 /**
  * A class containing unit tests related to this projects {@link LogHandler}.
  * 
- * @author theodor
+ * @author Theodor Meyer zu Hörste
  */
 @NotThreadSafe
 public class LogHandlerTest {

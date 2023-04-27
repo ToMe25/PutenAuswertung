@@ -13,7 +13,7 @@ import com.tome25.auswertung.utils.Pair;
 /**
  * A class for generating random zones for test data generation.
  * 
- * @author theodor
+ * @author Theodor Meyer zu Hörste
  */
 public class ZoneGenerator {
 

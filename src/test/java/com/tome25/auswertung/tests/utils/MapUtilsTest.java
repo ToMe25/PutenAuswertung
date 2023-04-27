@@ -20,7 +20,7 @@ import com.tome25.auswertung.utils.MapUtils;
 /**
  * A unit test class for the {@link MapUtils} included in this program.
  * 
- * @author theodor
+ * @author Theodor Meyer zu Hörste
  */
 public class MapUtilsTest {
 

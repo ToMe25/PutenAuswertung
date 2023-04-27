@@ -9,7 +9,7 @@ import com.tome25.auswertung.utils.TimeUtils;
  * A class storing the data about a single time an antenna recorded a
  * transponder.
  * 
- * @author theodor
+ * @author Theodor Meyer zu Hörste
  */
 public class AntennaRecord {
 

@@ -20,7 +20,7 @@ import com.tome25.auswertung.utils.TimeUtils;
  * The class handling the parsing of command line arguments.<br/>
  * Also contains the info about all possible arguments.
  * 
- * @author theodor
+ * @author Theodor Meyer zu Hörste
  */
 public class Arguments {
 

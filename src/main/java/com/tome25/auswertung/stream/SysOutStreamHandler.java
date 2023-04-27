@@ -14,7 +14,7 @@ import com.tome25.auswertung.log.LogHandler;
  * 
  * Note: closing this will NOT close the system output stream!
  * 
- * @author theodor
+ * @author Theodor Meyer zu Hörste
  */
 // TODO unify base methods, or all methods, with File Out impl
 public class SysOutStreamHandler implements IOutputStreamHandler {

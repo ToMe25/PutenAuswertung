@@ -11,7 +11,7 @@ import com.tome25.auswertung.TurkeyInfo;
  * Currently planned are SystemOut(writing to the system output), File(writing
  * to a FileOutputStream), and Multi(printing to multiple others).
  * 
- * @author theodor
+ * @author Theodor Meyer zu Hörste
  */
 public interface IOutputStreamHandler extends Closeable {
 

@@ -24,7 +24,7 @@ import com.tome25.auswertung.utils.StringUtils;
  * read it.<br/>
  * Closes both and deletes the file after.
  * 
- * @author theodor
+ * @author Theodor Meyer zu Hörste
  */
 public class TempFileStreamHandler extends TemporaryFolder {
 

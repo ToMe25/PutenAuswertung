@@ -26,7 +26,7 @@ import com.tome25.auswertung.utils.TimeUtils;
 /**
  * The class handling the main data analysis/conversion.
  * 
- * @author theodor
+ * @author Theodor Meyer zu Hörste
  */
 public class DataHandler {
 

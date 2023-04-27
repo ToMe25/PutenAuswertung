@@ -18,7 +18,7 @@ import net.jcip.annotations.NotThreadSafe;
 /**
  * The class containing the unit tests related to {@link TimeUtils}.
  * 
- * @author theodor
+ * @author Theodor Meyer zu Hörste
  */
 @NotThreadSafe
 public class TimeUtilsTest {

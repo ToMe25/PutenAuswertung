@@ -7,7 +7,7 @@ import java.io.IOException;
  * The interface defining the common methods for all types of input handling.
  * Currently planned are one for System Input and one for a File.
  * 
- * @author theodor
+ * @author Theodor Meyer zu Hörste
  */
 public interface IInputStreamHandler extends Closeable {
 

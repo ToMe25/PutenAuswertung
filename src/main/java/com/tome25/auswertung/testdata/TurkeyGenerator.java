@@ -17,7 +17,7 @@ import com.tome25.auswertung.args.Arguments;
  * A class for generating random {@link TurkeyInfo} objects, for example for
  * random input data.
  * 
- * @author theodor
+ * @author Theodor Meyer zu Hörste
  */
 public class TurkeyGenerator {
 

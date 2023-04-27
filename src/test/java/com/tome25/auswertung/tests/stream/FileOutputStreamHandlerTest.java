@@ -25,7 +25,7 @@ import net.jcip.annotations.NotThreadSafe;
 /**
  * A class containing unit tests related to {@link FileOutputStreamHandler}.
  * 
- * @author theodor
+ * @author Theodor Meyer zu Hörste
  */
 @NotThreadSafe
 public class FileOutputStreamHandlerTest {
@@ -164,7 +164,7 @@ public class FileOutputStreamHandlerTest {
 		BufferedReader bin = tempFile.getValue();
 		TurkeyInfo ti = TurkeyCSVTest.getBasicInfo("01.01.2022");
 
-		fiout.printDay(ti, "01.01.2022", Arrays.asList(new String[] { "Z1", "Zone 2", "#3", "Zone 4" }));
+		fiout.printDay(ti, "01.01.2022", Arrays.asList(new String[] { "Z1", "Zone 2", "Z-3", "Zone 4" }));
 		assertEquals("The printed csv line for the given TurkeyInfo didn't match.",
 				"0;01.01.2022;5;01:28:33.19;10:51:31.53;11:39:55.28;00:00:00.00", bin.readLine());
 		assertNull("Printing a single day of a single TurkeyInfo produced multiple lines.", bin.readLine());

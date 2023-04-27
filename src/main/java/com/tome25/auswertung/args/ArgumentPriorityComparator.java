@@ -5,7 +5,7 @@ import java.util.Comparator;
 /**
  * A {@link Comparator} comparing {@link Argument Arguments} by their priority.
  * 
- * @author theodor
+ * @author Theodor Meyer zu Hörste
  */
 public class ArgumentPriorityComparator implements Comparator<Argument> {
 

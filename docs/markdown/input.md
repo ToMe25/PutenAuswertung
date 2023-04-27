@@ -36,7 +36,7 @@ Die `Puten.csv` Datei muss mindestens fünf(5) Spalten enthalten:
  * Alle weiteren Spalten, von welchen mindestens eine vorhanden sein muss, enthalten Transponder-Ids.
 
 Diese Datei enthält Informationen über eine Pute pro Zeile.  
-Sowohl die Puten-Ids als auch die Transponder-Ids können Buchstaben, Ziffern und Leerzeichen enthalten.  
+Sowohl die Puten-Ids als auch die Transponder-Ids können Groß-/Klein-Buchstaben, Ziffern, Leerzeichen und Bindestriche enthalten.  
 Nicht alle Puten müssen die selbe Anzahl Transponder-Spalten haben.
 
 Der Start-Bereich gibt an in welchem Bereich sich die Pute vom Anfang **der ersten Aufzeichnung**, bis zu ihrem ersten Auftreten in der [Antennen-Daten-Datei](#antennendaten-csv) befindet.
@@ -57,7 +57,7 @@ Da das Programm nicht in der Lage ist die Spalten nach Titel zu sortieren, wird 
 ## Bereiche.csv
 Die Datei namens `Bereiche.csv` muss zuerst eine Spalte mit dem Namen des Bereiches, und dann eine oder mehr Spalten mit den Ids der Antennen die diesem Bereich zugeordnet sind, enthalten.  
 Die Datei muss einen Bereich pro Zeile enthalten.  
-Sowohl die Bereichs-Namen als auch die Antennen-Ids können Buchstaben, Ziffern und Leerzeichen enthalten.  
+Sowohl die Bereichs-Namen als auch die Antennen-Ids können Groß-/Klein-Buchstaben, Ziffern, Leerzeichen und Bindestriche enthalten.  
 Verschiedene Bereiche können eine verschieden viele Antennen-Ids enthalten.
 
 Wenn das Programm mehrere Bereiche mit dem selben Namen findet, werden alle diese außer dem ersten ignoriert.  

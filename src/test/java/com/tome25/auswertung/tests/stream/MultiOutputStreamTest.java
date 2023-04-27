@@ -20,7 +20,7 @@ import com.tome25.auswertung.stream.MultiOutputStream;
 /**
  * Some unit tests relating to the {@link MultiOutputStream} class.
  * 
- * @author theodor
+ * @author Theodor Meyer zu Hörste
  */
 public class MultiOutputStreamTest {
 

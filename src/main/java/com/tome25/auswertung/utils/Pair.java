@@ -5,7 +5,7 @@ import java.util.Objects;
 /**
  * A simple key-value Pair object.
  * 
- * @author theodor
+ * @author Theodor Meyer zu Hörste
  *
  * @param <K> The type of the key object.
  * @param <V> the type of the value object.

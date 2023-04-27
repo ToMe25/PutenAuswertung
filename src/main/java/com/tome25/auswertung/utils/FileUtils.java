@@ -23,7 +23,7 @@ import com.tome25.auswertung.log.LogHandler;
 /**
  * A class containing utilities related to file handling.
  * 
- * @author theodor
+ * @author Theodor Meyer zu Hörste
  */
 public class FileUtils {
 

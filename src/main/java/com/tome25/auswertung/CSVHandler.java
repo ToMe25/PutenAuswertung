@@ -34,7 +34,7 @@ import com.tome25.auswertung.utils.TimeUtils;
  * This class is responsible for converting between internal data structures and
  * parts of a csv file.
  * 
- * @author theodor
+ * @author Theodor Meyer zu Hörste
  */
 public class CSVHandler {
 
@@ -50,9 +50,10 @@ public class CSVHandler {
 
 	/**
 	 * A regex string matching a valid id.<br/>
-	 * Ids can contain letters, digits, and spaces.
+	 * Ids can contain uppercase letters, lowercase letters, digits, spaces, and
+	 * hyphens.
 	 */
-	private static final Pattern ID_REGEX = Pattern.compile("[A-Za-z0-9\\s]+");
+	public static final Pattern ID_REGEX = Pattern.compile("[A-Za-z0-9\\s\\-]+");
 
 	/**
 	 * The {@link Comparator} used to compare downtimes for sorting.<br/>

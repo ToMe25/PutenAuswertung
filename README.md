@@ -12,7 +12,7 @@ one mapping antenna ids to zone ids,
 and one containing the actual antenna records to analyze.  
 These all have to be in the directory the program is executed in.
 
-Ids can contain letters, digits, and spaces.  
+Ids can contain letters, digits, spaces, and hyphens.  
 Time has to be formatted as `HH:MM:SS.2`.  
 Dates have to be formatted as `DD.MM.YYYY`.  
 This program supports semicolons, commas, and tabs as csv separator chars.

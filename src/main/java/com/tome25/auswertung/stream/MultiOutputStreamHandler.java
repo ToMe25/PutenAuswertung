@@ -12,7 +12,7 @@ import com.tome25.auswertung.utils.StringUtils;
  * A wrapper {@link IOutputStreamHandler} writing to multiple other
  * {@link IOutputStreamHandler IOutputStreamHandlers}.
  * 
- * @author theodor
+ * @author Theodor Meyer zu Hörste
  */
 public class MultiOutputStreamHandler implements IOutputStreamHandler {
 

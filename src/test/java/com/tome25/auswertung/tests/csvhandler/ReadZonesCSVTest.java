@@ -27,7 +27,7 @@ import net.jcip.annotations.NotThreadSafe;
 /**
  * A class containing unit tests relating to {@link CSVHandler#readZonesCSV}.
  * 
- * @author theodor
+ * @author Theodor Meyer zu Hörste
  */
 @NotThreadSafe
 public class ReadZonesCSVTest {
@@ -50,7 +50,7 @@ public class ReadZonesCSVTest {
 	 * Uses semicolon as the separator.
 	 * 
 	 * Tests keys and values with all valid character types(upper case letters,
-	 * lower case letters, digits, and spaces).
+	 * lower case letters, digits, spaces, and hyphens).
 	 * 
 	 * @throws IOException if something goes wrong with file handling, idk
 	 */
@@ -60,20 +60,20 @@ public class ReadZonesCSVTest {
 		PrintStream out = tempFile.getValue();
 		FileInputStreamHandler fiin = tempFile.getKey();
 
-		out.println("Zone 0;Antenna 1;ant 2");
+		out.println("Zone - 0;Antenna 1;ant-2");
 		out.println("test;test1;test2");
 
 		Map<String, ZoneInfo> zones = CSVHandler.readZonesCSV(fiin);
 		assertNotNull("Reading a basic zones csv returned null.", zones);
 
 		assertTrue("Basic zones.csv didn't contain first line first value.", zones.containsKey("Antenna 1"));
-		assertTrue("Basic zones.csv didn't contain first value line second value.", zones.containsKey("ant 2"));
+		assertTrue("Basic zones.csv didn't contain first value line second value.", zones.containsKey("ant-2"));
 		assertTrue("Basic zones.csv didn't contain second line first value.", zones.containsKey("test1"));
 		assertTrue("Basic zones.csv didn't contain second value line second value.", zones.containsKey("test2"));
 
 		Map<String, ZoneInfo> refMap = new HashMap<String, ZoneInfo>();
-		refMap.put("Antenna 1", new ZoneInfo("Zone 0", true, "Antenna 1", "ant 2"));
-		refMap.put("ant 2", refMap.get("Antenna 1"));
+		refMap.put("Antenna 1", new ZoneInfo("Zone - 0", true, "Antenna 1", "ant-2"));
+		refMap.put("ant-2", refMap.get("Antenna 1"));
 		refMap.put("test1", new ZoneInfo("test", true, "test1", "test2"));
 		refMap.put("test2", refMap.get("test1"));
 

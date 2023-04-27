@@ -18,7 +18,7 @@ import com.tome25.auswertung.log.LogHandler;
  * {@link FileOutputStream}.<br/>
  * File output stream handlers do not write temporary data by default.
  * 
- * @author theodor
+ * @author Theodor Meyer zu Hörste
  */
 // TODO unify with SysOut impl into generalized Stream/File handler
 public class FileOutputStreamHandler implements IOutputStreamHandler {
