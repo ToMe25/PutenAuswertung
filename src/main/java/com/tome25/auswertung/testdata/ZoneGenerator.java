@@ -120,7 +120,7 @@ public class ZoneGenerator {
 			antennas.add(antenna);
 		}
 
-		return new ZoneInfo(id, true, antennas);
+		return new ZoneInfo(id, AntennaDataGenerator.nextInt(1) == 0, antennas);
 	}
 
 	/**

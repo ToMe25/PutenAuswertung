@@ -217,7 +217,7 @@ public class CSVHandler {
 
 				String tokens[] = null;
 				try {
-					tokens = splitLine(line, 2, null);
+					tokens = splitLine(line, 3, null);
 				} catch (IllegalArgumentException e) {
 					LogHandler.err_println(
 							"Input line \"" + line + "\" did not contain at least two tokens. Skipping line.");
@@ -238,6 +238,12 @@ public class CSVHandler {
 							"Separator Chars: %s, Tokens: [%s], Line: \"%s\", Input Stream Handler: %s",
 							SEPARATOR_REGEX.toString(), StringUtils.join(", ", tokens), line, input.toString());
 					continue;
+				} else if (tokens[0].isEmpty()) {
+					LogHandler.err_println("Found empty zone id in line \"" + line + "\". Skipping line.");
+					LogHandler.print_debug_info(
+							"Separator Chars: %s, Tokens: [%s], Line: \"%s\", Input Stream Handler: %s",
+							SEPARATOR_REGEX.toString(), StringUtils.join(", ", tokens), line, input.toString());
+					continue;
 				} else if (!ID_REGEX.matcher(tokens[0]).matches()) {
 					LogHandler.err_println("Found invalid zone id \"" + tokens[0] + "\". Skipping line.");
 					LogHandler.print_debug_info(
@@ -246,22 +252,37 @@ public class CSVHandler {
 					continue;
 				}
 
+				boolean hasFood = true;
+				tokens[1] = tokens[1].trim();
+				if (!tokens[1].isEmpty() && tokens[1].length() == 1
+						&& Character.toLowerCase(tokens[1].charAt(0)) == 'x') {
+					hasFood = false;
+				} else if (!tokens[1].isEmpty()) {
+					LogHandler.err_println(
+							"Found invalid nofood value \"" + tokens[1] + "\". Treating it like a zone with food.");
+					LogHandler.err_println(
+							"Please put an 'X' to set that the zone has no food, or leave it empty if it has food.");
+					LogHandler.print_debug_info(
+							"Separator Chars: %s, Tokens: [%s], Line: \"%s\", Input Stream Handler: %s",
+							SEPARATOR_REGEX.toString(), StringUtils.join(", ", tokens), line, input.toString());
+				}
+
 				List<String> antennas = new ArrayList<String>();
-				for (int i = 1; i < tokens.length; i++) {
+				for (int i = 2; i < tokens.length; i++) {
 					if (zones.containsKey(tokens[i])) {
-						LogHandler.err_println("Found duplicate id \"" + tokens[i]
+						LogHandler.err_println("Found duplicate antenna id \"" + tokens[i]
 								+ "\". Ignoring the occurrence for zone \"" + tokens[0] + "\".");
 						LogHandler.print_debug_info(
 								"Separator Chars: %s, Tokens: [%s], Line: \"%s\", Input Stream Handler: %s",
 								SEPARATOR_REGEX.toString(), StringUtils.join(", ", tokens), line, input.toString());
 					} else if (tokens[i].isEmpty()) {
-						LogHandler.err_println("Found empty value in line \"" + line + "\". Skipping.", true);
+						LogHandler.err_println("Found empty antenna id in line \"" + line + "\". Skipping.", true);
 						LogHandler.print_debug_info(
 								"Separator Chars: %s, Tokens: [%s], Line: \"%s\", Input Stream Handler: %s",
 								SEPARATOR_REGEX.toString(), StringUtils.join(", ", tokens), line, input.toString());
 					} else if (!ID_REGEX.matcher(tokens[i]).matches()) {
-						LogHandler.err_println(
-								"Found invalid id \"" + tokens[i] + "\" for zone \"" + tokens[0] + "\". Skipping.");
+						LogHandler.err_println("Found invalid antenna id \"" + tokens[i] + "\" for zone \"" + tokens[0]
+								+ "\". Skipping.");
 						LogHandler.print_debug_info(
 								"Separator Chars: %s, Tokens: [%s], Line: \"%s\", Input Stream Handler: %s",
 								SEPARATOR_REGEX.toString(), StringUtils.join(", ", tokens), line, input.toString());
@@ -279,7 +300,7 @@ public class CSVHandler {
 					continue;
 				}
 
-				ZoneInfo zone = new ZoneInfo(tokens[0], true, antennas);
+				ZoneInfo zone = new ZoneInfo(tokens[0], hasFood, antennas);
 				for (String antenna : antennas) {
 					zones.put(antenna, zone);
 				}
@@ -337,6 +358,8 @@ public class CSVHandler {
 
 		StringBuilder headers = new StringBuilder();
 		headers.append("Bereich");
+		headers.append(DEFAULT_SEPARATOR);
+		headers.append("Kein Essen");
 		for (int i = 1; i <= numAntennas; i++) {
 			headers.append(DEFAULT_SEPARATOR);
 			headers.append("Antenne ");
@@ -348,6 +371,10 @@ public class CSVHandler {
 		for (ZoneInfo zone : zones) {
 			StringBuilder sb = new StringBuilder();
 			sb.append(zone.getId());
+			sb.append(DEFAULT_SEPARATOR);
+			if (!zone.hasFood()) {
+				sb.append('X');
+			}
 
 			for (String antenna : zone.getAntennas()) {
 				sb.append(DEFAULT_SEPARATOR);
@@ -432,6 +459,12 @@ public class CSVHandler {
 							"Separator Chars: %s, Tokens: [%s], Line: \"%s\", Input Stream Handler: %s",
 							SEPARATOR_REGEX.toString(), StringUtils.join(", ", tokens), line, input.toString());
 					continue;
+				} else if (tokens[0].isEmpty()) {
+					LogHandler.err_println("Found empty turkey id in line \"" + line + "\". Skipping line.");
+					LogHandler.print_debug_info(
+							"Separator Chars: %s, Tokens: [%s], Line: \"%s\", Input Stream Handler: %s",
+							SEPARATOR_REGEX.toString(), StringUtils.join(", ", tokens), line, input.toString());
+					continue;
 				} else if (!ID_REGEX.matcher(tokens[0]).matches()) {
 					LogHandler.err_println("Found invalid turkey id \"" + tokens[0] + "\". Skipping line.");
 					LogHandler.print_debug_info(
@@ -509,19 +542,19 @@ public class CSVHandler {
 				List<String> transponders = new ArrayList<String>();
 				for (int i = 4; i < tokens.length; i++) {
 					if (turkeys.containsKey(tokens[i])) {
-						LogHandler.err_println("Found duplicate id \"" + tokens[i]
+						LogHandler.err_println("Found duplicate transponder id \"" + tokens[i]
 								+ "\". Ignoring the occurrence for turkey \"" + tokens[0] + "\".");
 						LogHandler.print_debug_info(
 								"Separator Chars: %s, Tokens: [%s], Line: \"%s\", Input Stream Handler: %s",
 								SEPARATOR_REGEX.toString(), StringUtils.join(", ", tokens), line, input.toString());
 					} else if (tokens[i].isEmpty()) {
-						LogHandler.err_println("Found empty value in line \"" + line + "\". Skipping.", true);
+						LogHandler.err_println("Found empty transponder id in line \"" + line + "\". Skipping.", true);
 						LogHandler.print_debug_info(
 								"Separator Chars: %s, Tokens: [%s], Line: \"%s\", Input Stream Handler: %s",
 								SEPARATOR_REGEX.toString(), StringUtils.join(", ", tokens), line, input.toString());
 					} else if (!ID_REGEX.matcher(tokens[i]).matches()) {
-						LogHandler.err_println(
-								"Found invalid id \"" + tokens[i] + "\" for turkey \"" + tokens[0] + "\". Skipping.");
+						LogHandler.err_println("Found invalid transponder id \"" + tokens[i] + "\" for turkey \""
+								+ tokens[0] + "\". Skipping.");
 						LogHandler.print_debug_info(
 								"Separator Chars: %s, Tokens: [%s], Line: \"%s\", Input Stream Handler: %s",
 								SEPARATOR_REGEX.toString(), StringUtils.join(", ", tokens), line, input.toString());

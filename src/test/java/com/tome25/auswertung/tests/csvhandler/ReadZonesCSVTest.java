@@ -60,8 +60,8 @@ public class ReadZonesCSVTest {
 		PrintStream out = tempFile.getValue();
 		FileInputStreamHandler fiin = tempFile.getKey();
 
-		out.println("Zone - 0;Antenna 1;ant-2");
-		out.println("test;test1;test2");
+		out.println("Zone - 0;;Antenna 1;ant-2");
+		out.println("test;;test1;test2");
 
 		Map<String, ZoneInfo> zones = CSVHandler.readZonesCSV(fiin);
 		assertNotNull("Reading a basic zones csv returned null.", zones);
@@ -89,8 +89,7 @@ public class ReadZonesCSVTest {
 	 * Uses comma as the separator.<br/>
 	 * Each line ends with a separator.
 	 * 
-	 * @throws IOException if creating a temporary file or reading/writing the input
-	 *                     file fails.
+	 * @throws IOException If reading/writing/creating the temporary file fails.
 	 */
 	@Test
 	public void readLongBasic() throws IOException {
@@ -100,7 +99,7 @@ public class ReadZonesCSVTest {
 
 		Map<String, ZoneInfo> refMap = new HashMap<String, ZoneInfo>();
 		for (int i = 0; i < 300; i++) {
-			out.println(String.format("Zone %1$d,Value %1$d,val %1$d,v%1$d,", i));
+			out.println(String.format("Zone %1$d,,Value %1$d,val %1$d,v%1$d,", i));
 			ZoneInfo zi = new ZoneInfo("Zone " + i, true, "Value " + i, "val " + i, "v" + i);
 			refMap.put("Value " + i, zi);
 			refMap.put("val " + i, zi);
@@ -110,6 +109,36 @@ public class ReadZonesCSVTest {
 		Map<String, ZoneInfo> zones = CSVHandler.readZonesCSV(fiin);
 		assertEquals("The size of the longer basic zones csv map did not match.", 900, zones.size());
 		assertEquals("The result of parsing the longer basic zones csv did not match.", refMap, zones);
+	}
+
+	/**
+	 * Test parsing a zones csv containing zones without food.
+	 * 
+	 * @throws IOException If reading/writing/creating the temporary file fails.
+	 */
+	@Test
+	public void readNoFood() throws IOException {
+		Pair<FileInputStreamHandler, PrintStream> tempFile = tempFolder.newTempInputFile("nofood_zones.csv");
+		PrintStream out = tempFile.getValue();
+		FileInputStreamHandler fiin = tempFile.getKey();
+
+		out.println("Zone 1;;Antenna 1;Antenna 2");
+		out.println("Zone 2;X;Antenna 3");
+		out.println("Zone 3;x;Antenna 4;Antenna 5");
+		out.println("Zone 4;;Antenna 6");
+
+		Map<String, ZoneInfo> zones = CSVHandler.readZonesCSV(fiin);
+		assertNotNull("Reading a zones csv with a nofood zone returned null.", zones);
+
+		Map<String, ZoneInfo> refMap = new HashMap<String, ZoneInfo>();
+		refMap.put("Antenna 1", new ZoneInfo("Zone 1", true, "Antenna 1", "Antenna 2"));
+		refMap.put("Antenna 2", refMap.get("Antenna 1"));
+		refMap.put("Antenna 3", new ZoneInfo("Zone 2", false, "Antenna 3"));
+		refMap.put("Antenna 4", new ZoneInfo("Zone 3", false, "Antenna 4", "Antenna 5"));
+		refMap.put("Antenna 5", refMap.get("Antenna 4"));
+		refMap.put("Antenna 6", new ZoneInfo("Zone 4", true, "Antenna 6"));
+
+		assertEquals("The parsed zones didn't match.", refMap, zones);
 	}
 
 	/**
@@ -124,10 +153,10 @@ public class ReadZonesCSVTest {
 		PrintStream out = tempFile.getValue();
 		FileInputStreamHandler fiin = tempFile.getKey();
 
-		out.println("Bereich,Antenne 1,Antenne 2,Antenne 3");
-		out.println("Zone 1,Antenna 1,");
-		out.println("Zone 2,Antenna 2,Antenna 3,");
-		out.println("Zone 3,Antenna 4,Antenna 5,Antenna 6,");
+		out.println("Bereich,Kein Essen,Antenne 1,Antenne 2,Antenne 3");
+		out.println("Zone 1,,Antenna 1,");
+		out.println("Zone 2,,Antenna 2,Antenna 3,");
+		out.println("Zone 3,,Antenna 4,Antenna 5,Antenna 6,");
 
 		Map<String, ZoneInfo> zones = CSVHandler.readZonesCSV(fiin);
 		assertFalse("The parsed zones contained a value of the header line.", zones.containsKey("Antenne 1"));
@@ -184,8 +213,9 @@ public class ReadZonesCSVTest {
 
 		Map<String, ZoneInfo> refMap = new HashMap<String, ZoneInfo>();
 		for (int i = 0; i < 15; i++) {
-			out.println(String.format("Zone %1$d%2$cValue %1$d%3$cval %1$d", i,
-					SEPARATOR_CHARS[i % SEPARATOR_CHARS.length], SEPARATOR_CHARS[(i + 1) % SEPARATOR_CHARS.length]));
+			out.println(String.format("Zone %1$d%2$c%3$cValue %1$d%4$cval %1$d", i,
+					SEPARATOR_CHARS[i % SEPARATOR_CHARS.length], SEPARATOR_CHARS[(i + 1) % SEPARATOR_CHARS.length],
+					SEPARATOR_CHARS[(i + 2) % SEPARATOR_CHARS.length]));
 			ZoneInfo zi = new ZoneInfo("Zone " + i, true, "Value " + i, "val " + i);
 			refMap.put("Value " + i, zi);
 			refMap.put("val " + i, zi);
@@ -214,7 +244,7 @@ public class ReadZonesCSVTest {
 		Map<String, ZoneInfo> refMap = new HashMap<String, ZoneInfo>();
 		int size = 0;
 		for (int i = 0; i < 20; i++) {
-			out.print("Zone " + i + ";");
+			out.print("Zone " + i + ";;");
 			ArrayList<String> values = new ArrayList<String>();
 			for (int j = 0; j < (i / 5 + 1) * (i % 5 + 1); j++) {
 				String val = "Value" + i + " " + j;
@@ -246,8 +276,8 @@ public class ReadZonesCSVTest {
 		PrintStream out = tempFile.getValue();
 		FileInputStreamHandler fiin = tempFile.getKey();
 
-		out.println("Zone;Antenna 1;Antenna 2");
-		out.println("Zone;Antenna 3;Antenna 4");
+		out.println("Zone;;Antenna 1;Antenna 2");
+		out.println("Zone;;Antenna 3;Antenna 4");
 
 		Map<String, ZoneInfo> refMap = new HashMap<String, ZoneInfo>();
 		refMap.put("Antenna 1", new ZoneInfo("Zone", true, "Antenna 1", "Antenna 2"));
@@ -258,6 +288,7 @@ public class ReadZonesCSVTest {
 				zones.containsKey("Antenna 3"));
 		assertEquals("The size of the duplicate key zones map did not match.", 2, zones.size());
 		assertEquals("The result of parsing the duplicate key zones csv did not match.", refMap, zones);
+
 		errorLog.checkLine("Found duplicate zone id \"Zone\". Skipping line.", 0);
 	}
 
@@ -273,9 +304,9 @@ public class ReadZonesCSVTest {
 		PrintStream out = tempFile.getValue();
 		FileInputStreamHandler fiin = tempFile.getKey();
 
-		out.println("Zone 1;Antenna 1;Antenna 2");
-		out.println("Zone 2;Antenna 3;Antenna 4");
-		out.println("Zone 3;Antenna 5;Antenna 2");
+		out.println("Zone 1;;Antenna 1;Antenna 2");
+		out.println("Zone 2;;Antenna 3;Antenna 4");
+		out.println("Zone 3;;Antenna 5;Antenna 2");
 
 		Map<String, ZoneInfo> refMap = new HashMap<String, ZoneInfo>();
 		refMap.put("Antenna 1", new ZoneInfo("Zone 1", true, "Antenna 1", "Antenna 2"));
@@ -288,7 +319,8 @@ public class ReadZonesCSVTest {
 		assertTrue("The second map did not contain the duplicate value at all.", zones.containsKey("Antenna 2"));
 		assertEquals("The size of the duplicate value zones map did not match.", 5, zones.size());
 		assertEquals("The result of parsing the duplicate value zones csv did not match.", refMap, zones);
-		errorLog.checkLine("Found duplicate id \"Antenna 2\". Ignoring the occurrence for zone \"Zone 3\".", 0);
+
+		errorLog.checkLine("Found duplicate antenna id \"Antenna 2\". Ignoring the occurrence for zone \"Zone 3\".", 0);
 	}
 
 	/**
@@ -302,9 +334,9 @@ public class ReadZonesCSVTest {
 		PrintStream out = tempFile.getValue();
 		FileInputStreamHandler fiin = tempFile.getKey();
 
-		out.println("Zone 1;Antenna 1");
-		out.println("Zone 2;");
-		out.println("Zone 3;Antenna 2;Antenna 3");
+		out.println("Zone 1;;Antenna 1");
+		out.println("Zone 2;;");
+		out.println("Zone 3;;Antenna 2;Antenna 3");
 
 		Map<String, ZoneInfo> zones = CSVHandler.readZonesCSV(fiin);
 
@@ -316,7 +348,42 @@ public class ReadZonesCSVTest {
 		assertEquals("The size of the no value line map didn't match.", 3, zones.size());
 		assertEquals("The parsed zones didn't match.", refMap, zones);
 
-		errorLog.checkLine("Input line \"Zone 2;\" did not contain at least two tokens. Skipping line.", 0);
+		errorLog.checkLine("Input line \"Zone 2;;\" did not contain at least two tokens. Skipping line.", 0);
+	}
+
+	/**
+	 * Tests reading an input line without a zone id.
+	 * 
+	 * @throws IOException If reading/writing/creating the temporary file fails.
+	 */
+	@Test
+	public void readEmptyKey() throws IOException {
+		Pair<FileInputStreamHandler, PrintStream> tempFile = tempFolder.newTempInputFile("empty_key_zones.csv");
+		PrintStream out = tempFile.getValue();
+		FileInputStreamHandler fiin = tempFile.getKey();
+
+		out.println("Zone 1;;Antenna 1;Antenna 2");
+		out.println(";;Antenna 3;Antenna 4");
+		out.println(";X;Antenna 5");
+		out.println("Zone 4;;Antenna 6");
+
+		Map<String, ZoneInfo> zones = CSVHandler.readZonesCSV(fiin);
+		assertFalse("The parsed zones contained an antenna from a line without a zone id.",
+				zones.containsKey("Antenna 3"));
+		assertFalse("The parsed zones contained an antenna from a line without a zone id.",
+				zones.containsKey("Antenna 4"));
+		assertFalse("The parsed zones contained an antenna from a line without a zone id.",
+				zones.containsKey("Antenna 5"));
+
+		Map<String, ZoneInfo> refMap = new HashMap<String, ZoneInfo>();
+		refMap.put("Antenna 1", new ZoneInfo("Zone 1", true, "Antenna 1", "Antenna 2"));
+		refMap.put("Antenna 2", refMap.get("Antenna 1"));
+		refMap.put("Antenna 6", new ZoneInfo("Zone 4", true, "Antenna 6"));
+
+		assertEquals("The parsed zones didn't match.", refMap, zones);
+
+		errorLog.checkLine("Found empty zone id in line \";;Antenna 3;Antenna 4\". Skipping line.", 0);
+		errorLog.checkLine("Found empty zone id in line \";X;Antenna 5\". Skipping line.");
 	}
 
 	/**
@@ -330,9 +397,9 @@ public class ReadZonesCSVTest {
 		PrintStream out = tempFile.getValue();
 		FileInputStreamHandler fiin = tempFile.getKey();
 
-		out.println("Zone 1;Antenna 1");
-		out.println("Zone 2;;Antenna 2");
-		out.println("Zone 3;Antenna 3;Antenna 4");
+		out.println("Zone 1;;Antenna 1");
+		out.println("Zone 2;;;Antenna 2");
+		out.println("Zone 3;;Antenna 3;Antenna 4");
 
 		Map<String, ZoneInfo> zones = CSVHandler.readZonesCSV(fiin);
 
@@ -344,7 +411,7 @@ public class ReadZonesCSVTest {
 
 		assertEquals("The parsed zones with an empty value didn't match.", refMap, zones);
 
-		errorLog.checkLine("Found empty value in line \"Zone 2;;Antenna 2\". Skipping.", 0);
+		errorLog.checkLine("Found empty antenna id in line \"Zone 2;;;Antenna 2\". Skipping.", 0);
 	}
 
 	/**
@@ -358,21 +425,51 @@ public class ReadZonesCSVTest {
 		PrintStream out = tempFile.getValue();
 		FileInputStreamHandler fiin = tempFile.getKey();
 
-		out.println("Zone 1;Antenna 1");
-		out.println("Zone #2;Antenna 2");
-		out.println("Zone 3;Antenna 3;Antenna 4");
+		out.println("Zone 1;;Antenna 1");
+		out.println("Zone #2;;Antenna 2");
+		out.println("Zone 3;;Antenna 3;Antenna 4");
 
 		Map<String, ZoneInfo> zones = CSVHandler.readZonesCSV(fiin);
+		assertFalse("The parsed zones contained a value from the invalid key.", zones.containsKey("Antenna 2"));
 
 		Map<String, ZoneInfo> refMap = new HashMap<String, ZoneInfo>();
 		refMap.put("Antenna 1", new ZoneInfo("Zone 1", true, "Antenna 1"));
 		refMap.put("Antenna 3", new ZoneInfo("Zone 3", true, "Antenna 3", "Antenna 4"));
 		refMap.put("Antenna 4", refMap.get("Antenna 3"));
 
-		assertFalse("The parsed zones contained a value from the invalid key.", zones.containsKey("Key #2"));
 		assertEquals("The parsed zones didn't match.", refMap, zones);
 
 		errorLog.checkLine("Found invalid zone id \"Zone #2\". Skipping line.", 0);
+	}
+
+	/**
+	 * Test parsing a zones file containing an invalid nofood marker.
+	 * 
+	 * @throws IOException If reading/writing/creating the temp file fails.
+	 */
+	@Test
+	public void readInvalidNoFood() throws IOException {
+		Pair<FileInputStreamHandler, PrintStream> tempFile = tempFolder.newTempInputFile("invalid_nofood_zones.csv");
+		PrintStream out = tempFile.getValue();
+		FileInputStreamHandler fiin = tempFile.getKey();
+
+		out.println("Zone 1;;Antenna 1");
+		out.println("Zone 2;No;Antenna 2");
+		out.println("Zone 3;X;Antenna 3");
+
+		Map<String, ZoneInfo> zones = CSVHandler.readZonesCSV(fiin);
+		assertTrue("The parsed zones didn't contain the value from the line with an invalid nofood marker.",
+				zones.containsKey("Antenna 2"));
+
+		Map<String, ZoneInfo> refMap = new HashMap<String, ZoneInfo>();
+		refMap.put("Antenna 1", new ZoneInfo("Zone 1", true, "Antenna 1"));
+		refMap.put("Antenna 2", new ZoneInfo("Zone 2", true, "Antenna 2"));
+		refMap.put("Antenna 3", new ZoneInfo("Zone 3", false, "Antenna 3"));
+
+		assertEquals("The parsed zones didn't match.", refMap, zones);
+
+		errorLog.checkLine("Found invalid nofood value \"No\". Treating it like a zone with food.", 0);
+		errorLog.checkLine("Please put an 'X' to set that the zone has no food, or leave it empty if it has food.");
 	}
 
 	/**
@@ -386,9 +483,9 @@ public class ReadZonesCSVTest {
 		PrintStream out = tempFile.getValue();
 		FileInputStreamHandler fiin = tempFile.getKey();
 
-		out.println("Zone 1;Antenna 1");
-		out.println("Zone 2;Antenna #2;Antenna 3");
-		out.println("Zone 3;Antenna 4;Antenna 5");
+		out.println("Zone 1;;Antenna 1");
+		out.println("Zone 2;;Antenna #2;Antenna 3");
+		out.println("Zone 3;;Antenna 4;Antenna 5");
 
 		Map<String, ZoneInfo> zones = CSVHandler.readZonesCSV(fiin);
 
@@ -401,7 +498,7 @@ public class ReadZonesCSVTest {
 		assertFalse("The parsed zones contained the invalid value.", zones.containsKey("Antenna #2"));
 		assertEquals("The parsed zones didn't match.", refMap, zones);
 
-		errorLog.checkLine("Found invalid id \"Antenna #2\" for zone \"Zone 2\". Skipping.", 0);
+		errorLog.checkLine("Found invalid antenna id \"Antenna #2\" for zone \"Zone 2\". Skipping.", 0);
 	}
 
 	/**
@@ -415,9 +512,9 @@ public class ReadZonesCSVTest {
 		PrintStream out = tempFile.getValue();
 		FileInputStreamHandler fiin = tempFile.getKey();
 
-		out.println("Zone 1;Antenna 1");
-		out.println("Zone 2;Antenna #2");
-		out.println("Zone 3;Antenna 3;Antenna 4");
+		out.println("Zone 1;;Antenna 1");
+		out.println("Zone 2;;Antenna #2");
+		out.println("Zone 3;;Antenna 3;Antenna 4");
 
 		Map<String, ZoneInfo> zones = CSVHandler.readZonesCSV(fiin);
 
@@ -429,8 +526,9 @@ public class ReadZonesCSVTest {
 		assertEquals("The size of the no valid value line map didn't match.", 3, zones.size());
 		assertEquals("The parsed zones didn't match.", refMap, zones);
 
-		errorLog.checkLine("Found invalid id \"Antenna #2\" for zone \"Zone 2\". Skipping.", 0);
-		errorLog.checkLine("Input line \"Zone 2;Antenna #2\" did not contain at least one valid value. Skipping line.");
+		errorLog.checkLine("Found invalid antenna id \"Antenna #2\" for zone \"Zone 2\". Skipping.", 0);
+		errorLog.checkLine(
+				"Input line \"Zone 2;;Antenna #2\" did not contain at least one valid value. Skipping line.");
 	}
 
 }

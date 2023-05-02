@@ -41,6 +41,9 @@ Nicht alle Puten müssen die selbe Anzahl Transponder-Spalten haben.
 
 Der Start-Bereich gibt an in welchem Bereich sich die Pute vom Anfang **der ersten Aufzeichnung**, bis zu ihrem ersten Auftreten in der [Antennen-Daten-Datei](#antennendaten-csv) befindet.
 
+Die End-Zeit ist der Zeitpunkt zu welchem die Auswertung für diese Pute endet, falls sie andernfalls länger wäre.  
+Wenn die Aufzeichnung aus anderen Gründen früher endet wird diese ignoriert.
+
 **Achtung:** In dieser Datei ist die Zeit vor dem Datum, in allen anderen Dateien steht die Uhrzeit nach dem Datum.  
 Dies ist aus technischen Gründen nötig, und wird sich voraussichtlich nicht ändern.
 

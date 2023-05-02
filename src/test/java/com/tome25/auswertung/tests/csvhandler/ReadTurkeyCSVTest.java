@@ -454,6 +454,7 @@ public class ReadTurkeyCSVTest {
 				turkeys.containsKey("Transponder 3"));
 		assertEquals("The size the duplicate key turkeys map did not match.", 2, turkeys.size());
 		assertEquals("The result of parsing the duplicate key turkey csv did not match.", refMap, turkeys);
+
 		errorLog.checkLine("Found duplicate turkey id \"Turkey\". Skipping line.", 0);
 	}
 
@@ -487,7 +488,10 @@ public class ReadTurkeyCSVTest {
 		assertTrue("The turkeys map did not contain the duplicate value at all.", turkeys.containsKey("Transponder 2"));
 		assertEquals("The size of the duplicate value turkeys map did not match.", 5, turkeys.size());
 		assertEquals("The result of parsing the duplicate value turkey csv did not match.", refMap, turkeys);
-		errorLog.checkLine("Found duplicate id \"Transponder 2\". Ignoring the occurrence for turkey \"Turkey 3\".", 0);
+
+		errorLog.checkLine(
+				"Found duplicate transponder id \"Transponder 2\". Ignoring the occurrence for turkey \"Turkey 3\".",
+				0);
 	}
 
 	/**
@@ -550,6 +554,42 @@ public class ReadTurkeyCSVTest {
 	}
 
 	/**
+	 * Test reading a turkey csv containing an empty key.
+	 * 
+	 * @throws IOException If reading/writing/creating the temporary file fails.
+	 */
+	@Test
+	public void readEmptyKey() throws IOException {
+		Pair<FileInputStreamHandler, PrintStream> tempFile = tempFolder.newTempInputFile("empty_key_turkeys.csv");
+		PrintStream out = tempFile.getValue();
+		FileInputStreamHandler fiin = tempFile.getKey();
+
+		out.println("Turkey 1;;;;Transponder 1");
+		out.println(";;;;Transponder 2;Transponder 3");
+		out.println(";Start;;;Transponder 4");
+		out.println("Turkey 4;;;;Transponder 5");
+
+		Map<String, TurkeyInfo> turkeys = CSVHandler.readTurkeyCSV(fiin, Arguments.empty(), new ArrayList<ZoneInfo>());
+		assertFalse("The parsed turkeys contained a transponder from a line without a turkey id.",
+				turkeys.containsKey("Transponder 2"));
+		assertFalse("The parsed turkeys contained a transponder from a line without a turkey id.",
+				turkeys.containsKey("Transponder 3"));
+		assertFalse("The parsed turkeys contained a transponder from a line without a turkey id.",
+				turkeys.containsKey("Transponder 4"));
+
+		Map<String, TurkeyInfo> refMap = new HashMap<String, TurkeyInfo>();
+		refMap.put("Transponder 1", new TurkeyInfo("Turkey 1", Arrays.asList("Transponder 1"), null, null, null, null,
+				null, Arguments.empty()));
+		refMap.put("Transponder 5", new TurkeyInfo("Turkey 4", Arrays.asList("Transponder 5"), null, null, null, null,
+				null, Arguments.empty()));
+
+		assertEquals("The parsed turkeys with an empty key didn't match.", refMap, turkeys);
+
+		errorLog.checkLine("Found empty turkey id in line \";;;;Transponder 2;Transponder 3\". Skipping line.", 0);
+		errorLog.checkLine("Found empty turkey id in line \";Start;;;Transponder 4\". Skipping line.");
+	}
+
+	/**
 	 * Tests reading an input line containing an empty value.
 	 * 
 	 * @throws IOException If reading/writing/creating the temporary file fails.
@@ -577,7 +617,7 @@ public class ReadTurkeyCSVTest {
 
 		assertEquals("The parsed turkeys with an empty value didn't match.", refMap, turkeys);
 
-		errorLog.checkLine("Found empty value in line \"Turkey 2;;;;;Transponder 2\". Skipping.", 0);
+		errorLog.checkLine("Found empty transponder id in line \"Turkey 2;;;;;Transponder 2\". Skipping.", 0);
 	}
 
 	/**
@@ -596,6 +636,7 @@ public class ReadTurkeyCSVTest {
 		out.println("Turkey 3;;;;Transponder 3;Transponder 4");
 
 		Map<String, TurkeyInfo> turkeys = CSVHandler.readTurkeyCSV(fiin, Arguments.empty(), new ArrayList<ZoneInfo>());
+		assertFalse("The parsed turkeys contained a value from the invalid key.", turkeys.containsKey("Transponder 2"));
 
 		Map<String, TurkeyInfo> refMap = new HashMap<String, TurkeyInfo>();
 		refMap.put("Transponder 1", new TurkeyInfo("Turkey 1", Arrays.asList("Transponder 1"), null, null, null, null,
@@ -604,7 +645,6 @@ public class ReadTurkeyCSVTest {
 				null, null, null, null, Arguments.empty()));
 		refMap.put("Transponder 4", refMap.get("Transponder 3"));
 
-		assertFalse("The parsed turkeys contained a value from the invalid key.", turkeys.containsKey("Transponder 2"));
 		assertEquals("The parsed turkeys didn't match.", refMap, turkeys);
 
 		errorLog.checkLine("Found invalid turkey id \"Turkey #2\". Skipping line.", 0);
@@ -845,7 +885,7 @@ public class ReadTurkeyCSVTest {
 		assertFalse("The parsed turkeys contained the invalid value.", turkeys.containsKey("Transponder #2"));
 		assertEquals("The parsed turkeys didn't match.", refMap, turkeys);
 
-		errorLog.checkLine("Found invalid id \"Transponder #2\" for turkey \"Turkey 2\". Skipping.", 0);
+		errorLog.checkLine("Found invalid transponder id \"Transponder #2\" for turkey \"Turkey 2\". Skipping.", 0);
 	}
 
 	/**
@@ -875,7 +915,7 @@ public class ReadTurkeyCSVTest {
 		assertEquals("The size of the no valid value line map didn't match.", 3, turkeys.size());
 		assertEquals("The parsed turkeys didn't match.", refMap, turkeys);
 
-		errorLog.checkLine("Found invalid id \"Transponder #2\" for turkey \"Turkey 2\". Skipping.", 0);
+		errorLog.checkLine("Found invalid transponder id \"Transponder #2\" for turkey \"Turkey 2\". Skipping.", 0);
 		errorLog.checkLine(
 				"Input line \"Turkey 2;;;;Transponder #2\" did not contain at least one valid value. Skipping line.");
 	}
