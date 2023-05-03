@@ -146,7 +146,7 @@ public class DataHandler {
 				for (Pair<Long, Long> downtime : downtimes) {
 					if (recordMs > downtime.getValue()) {
 						// Last record was before or during the downtime, current one is after.
-						if (lastDate != null && lastTimes.get(lastDate).getTimeInMillis() < downtime.getValue()) {
+						if (lastDate != null && lastTimes.get(lastDate).getTimeInMillis() <= downtime.getValue()) {
 							if (downtimeStart == null) {
 								downtimeStart = new GregorianCalendar();
 								downtimeStart.setTimeInMillis(downtime.getKey());
@@ -378,7 +378,8 @@ public class DataHandler {
 						if (turkey.tryUpdate(record.cal)) {
 							turkey.endDay(turkey.getCurrentCal(), false);
 							turkey.printCurrentStay(false);
-						} else if (args.fillDays && !TimeUtils.isSameDay(turkey.getCurrentCal(), turkey.getEndCal())) {
+						} else if (args.fillDays && turkey.getCurrentCal() != null
+								&& !TimeUtils.isSameDay(turkey.getCurrentCal(), turkey.getEndCal())) {
 							turkey.printCurrentStay(false);
 						}
 						continue;

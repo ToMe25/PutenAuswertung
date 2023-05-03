@@ -492,13 +492,13 @@ public class OutputDataTest {
 				hasItems(parsed.zoneTimes.keySet().toArray(new String[0])));
 
 		assertThat("A turkey is missing from the parsed zone changes.", parsed.zoneChanges.keySet(),
-				hasItems(generated.zoneTimes.keySet().toArray(new String[0])));
+				hasItems(generated.zoneChanges.keySet().toArray(new String[0])));
 		assertThat("A turkey is missing from the generated zone changes.", generated.zoneChanges.keySet(),
-				hasItems(generated.zoneTimes.keySet().toArray(new String[0])));
+				hasItems(parsed.zoneChanges.keySet().toArray(new String[0])));
 		assertThat("A turkey is missing from the parsed zone stays.", parsed.zoneStays.keySet(),
-				hasItems(generated.zoneTimes.keySet().toArray(new String[0])));
+				hasItems(generated.zoneStays.keySet().toArray(new String[0])));
 		assertThat("A turkey is missing from the generates zone stays.", generated.zoneStays.keySet(),
-				hasItems(generated.zoneTimes.keySet().toArray(new String[0])));
+				hasItems(parsed.zoneStays.keySet().toArray(new String[0])));
 
 		Map<String, TurkeyInfo> turkeys = new HashMap<String, TurkeyInfo>();
 		for (TurkeyInfo ti : parsed.turkeys) {
@@ -601,39 +601,44 @@ public class OutputDataTest {
 			}
 
 			// Compare output stays with calculated stays
-			assertThat("A parsed zone stay did not match a generated one.", generated.zoneStays.get(turkey),
-					hasItems(parsed.zoneStays.get(turkey).toArray(new ZoneStay[0])));
-			assertThat("A generated zone stay did not match a parsed one.", parsed.zoneStays.get(turkey),
-					hasItems(generated.zoneStays.get(turkey).toArray(new ZoneStay[0])));
-			assertEquals("The number of zone stays for turkey \"" + turkey + "\" didn't match.",
-					generated.zoneStays.get(turkey).size(), parsed.zoneStays.get(turkey).size());
+			if (generated.zoneStays.containsKey(turkey)) {
+				assertThat("A parsed zone stay did not match a generated one.", generated.zoneStays.get(turkey),
+						hasItems(parsed.zoneStays.get(turkey).toArray(new ZoneStay[0])));
+				assertThat("A generated zone stay did not match a parsed one.", parsed.zoneStays.get(turkey),
+						hasItems(generated.zoneStays.get(turkey).toArray(new ZoneStay[0])));
+				assertEquals("The number of zone stays for turkey \"" + turkey + "\" didn't match.",
+						generated.zoneStays.get(turkey).size(), parsed.zoneStays.get(turkey).size());
+			}
 
 			// Compare zone stay time sum with output total
-			Map<String, Long> stayTotals = new HashMap<String, Long>();
-			for (ZoneStay stay : parsed.zoneStays.get(turkey)) {
-				if (stayTotals.containsKey(stay.getZone().getId())) {
-					stayTotals.put(stay.getZone().getId(), stayTotals.get(stay.getZone().getId()) + stay.getStayTime());
-				} else {
-					stayTotals.put(stay.getZone().getId(), stay.getStayTime());
+			if (generated.zoneStays.containsKey(turkey)) {
+				Map<String, Long> stayTotals = new HashMap<String, Long>();
+				for (ZoneStay stay : parsed.zoneStays.get(turkey)) {
+					if (stayTotals.containsKey(stay.getZone().getId())) {
+						stayTotals.put(stay.getZone().getId(),
+								stayTotals.get(stay.getZone().getId()) + stay.getStayTime());
+					} else {
+						stayTotals.put(stay.getZone().getId(), stay.getStayTime());
+					}
 				}
-			}
 
-			for (String zone : stayTotals.keySet()) {
-				assertEquals(
-						"The sum of turkey \"" + turkey + "\" zone \"" + zone
-								+ "\" stay times doesn't match the total.",
-						stayTotals.get(zone), turkeyOutputTimes.get("total").get(zone));
-			}
+				for (String zone : stayTotals.keySet()) {
+					assertEquals(
+							"The sum of turkey \"" + turkey + "\" zone \"" + zone
+									+ "\" stay times doesn't match the total.",
+							stayTotals.get(zone), turkeyOutputTimes.get("total").get(zone));
+				}
 
-			if (turkeys.get(turkey).getEndCal() != null) {
-				assertFalse("The last zone stay for turkey \"" + turkey + "\" ends after its end time.",
-						parsed.zoneStays.get(turkey).get(parsed.zoneStays.get(turkey).size() - 1).getExitCal()
-								.after(turkeys.get(turkey).getEndCal()));
-			}
+				if (turkeys.get(turkey).getEndCal() != null) {
+					assertFalse("The last zone stay for turkey \"" + turkey + "\" ends after its end time.",
+							parsed.zoneStays.get(turkey).get(parsed.zoneStays.get(turkey).size() - 1).getExitCal()
+									.after(turkeys.get(turkey).getEndCal()));
+				}
 
-			Set<ZoneStay> uniqueStays = new HashSet<ZoneStay>();
-			for (ZoneStay stay : parsed.zoneStays.get(turkey)) {
-				assertTrue("The parsed stays contained a duplicate ZoneStay.", uniqueStays.add(stay));
+				Set<ZoneStay> uniqueStays = new HashSet<ZoneStay>();
+				for (ZoneStay stay : parsed.zoneStays.get(turkey)) {
+					assertTrue("The parsed stays contained a duplicate ZoneStay.", uniqueStays.add(stay));
+				}
 			}
 		}
 	}
