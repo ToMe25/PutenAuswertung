@@ -14,6 +14,11 @@ import java.util.TimeZone;
 public class TimeUtils {
 
 	/**
+	 * The number of milliseconds in a day.
+	 */
+	public static final int DAY_MS = 24 * 60 * 60 * 1000;
+
+	/**
 	 * The minimum number of digits a year number should have.<br/>
 	 * A year is prefixed with zeros until its long enough.
 	 */
@@ -28,7 +33,7 @@ public class TimeUtils {
 	/**
 	 * Converts the given time in the format "HH:MM:SS.2" to time of day in
 	 * milliseconds.<br/>
-	 * Hours do not have to be two digits, they can be 1+.<br/>
+	 * Hours do not have to be two digits, they can be one or more.<br/>
 	 * Minutes and seconds can be 1 or 2 digits.<br/>
 	 * Seconds can have 0 to 2 decimal digits.
 	 * 
@@ -144,7 +149,7 @@ public class TimeUtils {
 			c.set(Calendar.DATE, day);
 		}
 
-		c.add(Calendar.DATE, time / (24 * 3600000));
+		c.add(Calendar.DATE, time / DAY_MS);
 
 		return c;
 	}
@@ -165,7 +170,7 @@ public class TimeUtils {
 	 */
 	public static Calendar parseTime(String date, String time) throws NullPointerException, IllegalArgumentException {
 		long ms = parseTime(time);
-		if (ms > 24 * 3600000) {
+		if (ms > DAY_MS) {
 			throw new IllegalArgumentException("The time of day to parse has to be less than a full day.");
 		}
 		return parseTime(date, (int) ms);

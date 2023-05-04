@@ -1224,7 +1224,7 @@ public class CSVHandler {
 	 */
 	public static String staysCsvHeader() {
 		return StringUtils.join(DEFAULT_SEPARATOR, "Tier", "Bereich", "Startdatum", "Startzeit", "Enddatum", "Endzeit",
-				"Aufenthaltszeit");
+				"Aufenthaltszeit", "Unzuverlaessig");
 	}
 
 	/**
@@ -1244,7 +1244,7 @@ public class CSVHandler {
 
 		return StringUtils.join(DEFAULT_SEPARATOR, stay.getTurkey(), stay.getZone().getId(), stay.getEntryDate(),
 				TimeUtils.encodeTime(stay.getEntryTime()), stay.getExitDate(), TimeUtils.encodeTime(stay.getExitTime()),
-				TimeUtils.encodeTime(stay.getStayTime()));
+				TimeUtils.encodeTime(stay.getStayTime()), stay.isUnreliable() ? "X" : "");
 	}
 
 	/**
@@ -1281,7 +1281,7 @@ public class CSVHandler {
 
 		String headers[] = SEPARATOR_REGEX.split(headerLine);
 
-		if (headers.length != 7) {
+		if (headers.length != 8) {
 			LogHandler.err_println("Header line \"" + headerLine + "\" did not contain exactly seven headers.");
 			LogHandler.print_debug_info("Separator Chars: %s, Tokens: [%s], Line: \"%s\", Input Stream Handler: %s",
 					SEPARATOR_REGEX.toString(), StringUtils.join(", ", headers), headerLine, input.toString());
@@ -1316,9 +1316,9 @@ public class CSVHandler {
 							line, input.toString());
 				}
 
-				if (tokens.length != 7) {
+				if (tokens.length < 7 || tokens.length > 8) {
 					LogHandler.err_println(
-							"Input line \"" + line + "\" did not contain exactly seven tokens. Skipping line.");
+							"Input line \"" + line + "\" did not contain seven or eight tokens. Skipping line.");
 					LogHandler.print_debug_info(
 							"Separator Chars: %s, Tokens: [%s], Line: \"%s\", Input Stream Handler: %s",
 							SEPARATOR_REGEX.toString(), StringUtils.join(", ", tokens), line, input.toString());
@@ -1343,19 +1343,45 @@ public class CSVHandler {
 				Calendar entryCal = TimeUtils.parseTime(tokens[2], tokens[3]);
 				Calendar exitCal = TimeUtils.parseTime(tokens[4], tokens[5]);
 				long fileStayTime = TimeUtils.parseTime(tokens[6]);
-				long calcStayTime = exitCal.getTimeInMillis() - entryCal.getTimeInMillis();
 
-				if (fileStayTime != calcStayTime) {
+				ZoneStay stay = new ZoneStay(turkey, idToZone.get(tokens[1]), entryCal, exitCal);
+				if (fileStayTime != stay.getStayTime()) {
 					LogHandler.err_println("Input line \"" + line
 							+ "\" + stay time did not match match entry and exit time. Skipping line.");
 					LogHandler.print_debug_info(
 							"File Stay Time: %s, Calculated Stay Time: %s, Separator Chars: %s, Tokens: [%s], Line: \"%s\", Input Stream Handler: %s",
-							TimeUtils.encodeTime(fileStayTime), TimeUtils.encodeTime(calcStayTime),
+							TimeUtils.encodeTime(fileStayTime), TimeUtils.encodeTime(stay.getStayTime()),
 							SEPARATOR_REGEX.toString(), StringUtils.join(", ", tokens), line, input.toString());
 					continue;
 				}
 
-				stays.get(turkey).add(new ZoneStay(turkey, idToZone.get(tokens[1]), entryCal, exitCal));
+				boolean unreliable = false;
+				if (tokens.length == 8) {
+					tokens[7] = tokens[7].trim();
+					if (!tokens[7].isEmpty() && tokens[7].length() == 1
+							&& Character.toLowerCase(tokens[7].charAt(0)) == 'x') {
+						unreliable = true;
+					} else if (!tokens[1].isEmpty()) {
+						LogHandler.err_println("Found invalid unreliable data value \"" + tokens[7]
+								+ "\". Treating it like a reliable stay.");
+						LogHandler.err_println(
+								"Expected an 'X' to mark the stay as unreliable, or nothing if it is reliable.");
+						LogHandler.print_debug_info(
+								"Separator Chars: %s, Tokens: [%s], Line: \"%s\", Input Stream Handler: %s",
+								SEPARATOR_REGEX.toString(), StringUtils.join(", ", tokens), line, input.toString());
+					}
+				}
+
+				if (unreliable != stay.isUnreliable()) {
+					LogHandler.err_println(
+							"Input line \"" + line + "\" unreliable data flag did not match. Skipping line.");
+					LogHandler.print_debug_info(
+							"Separator Chars: %s, Tokens: [%s], Line: \"%s\", Input Stream Handler: %s",
+							SEPARATOR_REGEX.toString(), StringUtils.join(", ", tokens), line, input.toString());
+					continue;
+				}
+
+				stays.get(turkey).add(stay);
 			} catch (IOException e) {
 				if (last_failed) {
 					LogHandler.err_println("Reading an input line failed. Returning output data set.");

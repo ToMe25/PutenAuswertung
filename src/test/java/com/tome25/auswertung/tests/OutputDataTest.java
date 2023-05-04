@@ -1,11 +1,14 @@
 package com.tome25.auswertung.tests;
 
 import static org.hamcrest.CoreMatchers.*;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+
+import static com.tome25.auswertung.utils.TimeUtils.DAY_MS;
 
 import java.io.IOException;
 import java.io.PrintStream;
@@ -321,7 +324,7 @@ public class OutputDataTest {
 					(int) outputChanges.get("0").get(dateStr));
 			assertEquals("Zone 1 time for turkey \"0\" on date " + dateStr + " didn't match.", 0,
 					(long) outputTimes.get("0").get(dateStr).get("Zone 1"));
-			assertEquals("Zone 2 time for turkey \"0\" on date " + dateStr + " didn't match.", 24 * 3600000,
+			assertEquals("Zone 2 time for turkey \"0\" on date " + dateStr + " didn't match.", DAY_MS,
 					(long) outputTimes.get("0").get(dateStr).get("Zone 2"));
 		}
 
@@ -336,7 +339,7 @@ public class OutputDataTest {
 			String dateStr = String.format("%d.05.2023", date);
 			assertEquals("Zone changes for turkey \"0\" on date " + dateStr + " didn't match.", 0,
 					(int) outputChanges.get("0").get(dateStr));
-			assertEquals("Zone 1 time for turkey \"0\" on date " + dateStr + " didn't match.", 24 * 3600000,
+			assertEquals("Zone 1 time for turkey \"0\" on date " + dateStr + " didn't match.", DAY_MS,
 					(long) outputTimes.get("0").get(dateStr).get("Zone 1"));
 			assertEquals("Zone 2 time for turkey \"0\" on date " + dateStr + " didn't match.", 0,
 					(long) outputTimes.get("0").get(dateStr).get("Zone 2"));
@@ -355,7 +358,7 @@ public class OutputDataTest {
 					(int) outputChanges.get("0").get(dateStr));
 			assertEquals("Zone 1 time for turkey \"0\" on date " + dateStr + " didn't match.", 0,
 					(long) outputTimes.get("0").get(dateStr).get("Zone 1"));
-			assertEquals("Zone 2 time for turkey \"0\" on date " + dateStr + " didn't match.", 24 * 3600000,
+			assertEquals("Zone 2 time for turkey \"0\" on date " + dateStr + " didn't match.", DAY_MS,
 					(long) outputTimes.get("0").get(dateStr).get("Zone 2"));
 		}
 
@@ -372,7 +375,7 @@ public class OutputDataTest {
 					(int) outputChanges.get("1").get(dateStr));
 			assertEquals("Zone 1 time for turkey \"1\" on date " + dateStr + " didn't match.", 0,
 					(long) outputTimes.get("1").get(dateStr).get("Zone 1"));
-			assertEquals("Zone 2 time for turkey \"1\" on date " + dateStr + " didn't match.", 24 * 3600000,
+			assertEquals("Zone 2 time for turkey \"1\" on date " + dateStr + " didn't match.", DAY_MS,
 					(long) outputTimes.get("1").get(dateStr).get("Zone 2"));
 		}
 
@@ -380,7 +383,7 @@ public class OutputDataTest {
 			String dateStr = String.format("%02d.06.2023", date);
 			assertEquals("Zone changes for turkey \"0\" on date " + dateStr + " didn't match.", 0,
 					(int) outputChanges.get("0").get(dateStr));
-			assertEquals("Zone 1 time for turkey \"0\" on date " + dateStr + " didn't match.", 24 * 3600000,
+			assertEquals("Zone 1 time for turkey \"0\" on date " + dateStr + " didn't match.", DAY_MS,
 					(long) outputTimes.get("0").get(dateStr).get("Zone 1"));
 			assertEquals("Zone 2 time for turkey \"0\" on date " + dateStr + " didn't match.", 0,
 					(long) outputTimes.get("0").get(dateStr).get("Zone 2"));
@@ -392,7 +395,7 @@ public class OutputDataTest {
 					(int) outputChanges.get("1").get(dateStr));
 			assertEquals("Zone 1 time for turkey \"1\" on date " + dateStr + " didn't match.", 0,
 					(long) outputTimes.get("1").get(dateStr).get("Zone 1"));
-			assertEquals("Zone 2 time for turkey \"1\" on date " + dateStr + " didn't match.", 24 * 3600000,
+			assertEquals("Zone 2 time for turkey \"1\" on date " + dateStr + " didn't match.", DAY_MS,
 					(long) outputTimes.get("1").get(dateStr).get("Zone 2"));
 		}
 
@@ -563,7 +566,7 @@ public class OutputDataTest {
 					long dtTime = 0;
 					if (parsed.downtimes != null) {
 						final long dayStart = TimeUtils.parseDate(date).getTimeInMillis();
-						final long dayEnd = dayStart + 24 * 3600000;
+						final long dayEnd = dayStart + DAY_MS;
 						for (Pair<Long, Long> dt : parsed.downtimes) {
 							if (dt.getKey() >= dayStart && dt.getValue() <= dayEnd) {
 								dtTime += dt.getValue() - dt.getKey();
@@ -585,10 +588,10 @@ public class OutputDataTest {
 								TimeUtils.getMsOfDay(turkeys.get(turkey).getEndCal()) - dtTime, dayTotal);
 					} else if (args.fillDays && parsed.downtimes == null) {
 						assertEquals("The sum of all zone totals of turkey \"" + turkey + "\" for day \"" + date
-								+ "\" wasn't a full day.", 24 * 3600000 - dtTime, dayTotal);
+								+ "\" wasn't a full day.", DAY_MS - dtTime, dayTotal);
 					} else {
 						assertFalse("The sum of all zone totals of turkey \"" + turkey + "\" and downtimes for day \""
-								+ date + "\" was more than 24 hours.", dayTotal + dtTime > 24 * 3600000);
+								+ date + "\" was more than 24 hours.", dayTotal + dtTime > DAY_MS);
 					}
 				}
 			}

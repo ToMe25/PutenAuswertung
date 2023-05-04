@@ -13,6 +13,8 @@ OUTPUT_FILE = path.join(GeneratorHelper.find_project_root(), 'src', 'test', 'jav
 # The header to be written before the actual tests.
 FILE_HEADER = """package com.tome25.auswertung.tests.generated;
 
+import static com.tome25.auswertung.utils.TimeUtils.DAY_MS;
+
 import java.io.IOException;
 
 import org.junit.After;
@@ -217,7 +219,7 @@ def main():
                                 elif min_time == '30Min':
                                     output.write("\t\targs.minTime = 1800;" + os.linesep)
                                 
-                                output.write(("\t\tfinal TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, %s, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);" % ("true" if advTurkeys else "false")) + os.linesep)
+                                output.write(("\t\tfinal TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, %s, START_TIME, START_TIME + DAY_MS * 10, tempFolder);" % ("true" if advTurkeys else "false")) + os.linesep)
                                 output.write(("\t\tfinal TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, %s, %s, tempFolder, antennaPair.getValue(), %s);" % ("true" if cont else "false", "true" if complete else "false", "downtimesPair.getValue()" if downtimes else "null")) + os.linesep)
                                 output.write(("\t\tfinal TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), %s);" % ("downtimesPair.getKey()" if downtimes else "null")) + os.linesep)
                                 

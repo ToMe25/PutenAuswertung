@@ -32,7 +32,7 @@ public class TurkeyInfo implements Comparable<TurkeyInfo> {
 	 * 1000 milliseconds per second.<br/>
 	 * Minus one, since 24:00:00.00 isn't a valid time.
 	 */
-	public static final int DAY_END = 24 * 60 * 60 * 1000 - 1;
+	public static final int DAY_END = TimeUtils.DAY_MS - 1;
 
 	/**
 	 * The string id of the turkey represented by this info object.

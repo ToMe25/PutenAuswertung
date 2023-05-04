@@ -1,5 +1,7 @@
 package com.tome25.auswertung.tests.generated;
 
+import static com.tome25.auswertung.utils.TimeUtils.DAY_MS;
+
 import java.io.IOException;
 
 import org.junit.After;
@@ -138,7 +140,7 @@ public class GeneratedOutputDataTest {
 	 */
 	@Test
 	public void defaultDefaultMinTime() throws IOException {
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, true, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -156,7 +158,7 @@ public class GeneratedOutputDataTest {
 	 */
 	@Test
 	public void defaultDefaultMinTimeAdvancedTurkeys() throws IOException {
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, true, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -174,7 +176,7 @@ public class GeneratedOutputDataTest {
 	 */
 	@Test
 	public void defaultDefaultMinTimeNonCont() throws IOException {
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, true, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -192,7 +194,7 @@ public class GeneratedOutputDataTest {
 	 */
 	@Test
 	public void defaultDefaultMinTimeNonContAdvancedTurkeys() throws IOException {
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, true, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -210,7 +212,7 @@ public class GeneratedOutputDataTest {
 	 */
 	@Test
 	public void defaultDefaultMinTimeIncomplete() throws IOException {
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, false, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -228,7 +230,7 @@ public class GeneratedOutputDataTest {
 	 */
 	@Test
 	public void defaultDefaultMinTimeIncompleteAdvancedTurkeys() throws IOException {
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, false, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -246,7 +248,7 @@ public class GeneratedOutputDataTest {
 	 */
 	@Test
 	public void defaultDefaultMinTimeIncompleteNonCont() throws IOException {
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, false, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -264,7 +266,7 @@ public class GeneratedOutputDataTest {
 	 */
 	@Test
 	public void defaultDefaultMinTimeIncompleteNonContAdvancedTurkeys() throws IOException {
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, false, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -283,7 +285,7 @@ public class GeneratedOutputDataTest {
 	@Test
 	public void defaultNoMinTime() throws IOException {
 		args.minTime = 0;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, true, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -302,7 +304,7 @@ public class GeneratedOutputDataTest {
 	@Test
 	public void defaultNoMinTimeAdvancedTurkeys() throws IOException {
 		args.minTime = 0;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, true, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -321,7 +323,7 @@ public class GeneratedOutputDataTest {
 	@Test
 	public void defaultNoMinTimeNonCont() throws IOException {
 		args.minTime = 0;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, true, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -340,7 +342,7 @@ public class GeneratedOutputDataTest {
 	@Test
 	public void defaultNoMinTimeNonContAdvancedTurkeys() throws IOException {
 		args.minTime = 0;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, true, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -359,7 +361,7 @@ public class GeneratedOutputDataTest {
 	@Test
 	public void defaultNoMinTimeIncomplete() throws IOException {
 		args.minTime = 0;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, false, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -378,7 +380,7 @@ public class GeneratedOutputDataTest {
 	@Test
 	public void defaultNoMinTimeIncompleteAdvancedTurkeys() throws IOException {
 		args.minTime = 0;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, false, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -397,7 +399,7 @@ public class GeneratedOutputDataTest {
 	@Test
 	public void defaultNoMinTimeIncompleteNonCont() throws IOException {
 		args.minTime = 0;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, false, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -416,7 +418,7 @@ public class GeneratedOutputDataTest {
 	@Test
 	public void defaultNoMinTimeIncompleteNonContAdvancedTurkeys() throws IOException {
 		args.minTime = 0;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, false, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -435,7 +437,7 @@ public class GeneratedOutputDataTest {
 	@Test
 	public void default30MinMinTime() throws IOException {
 		args.minTime = 1800;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, true, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -454,7 +456,7 @@ public class GeneratedOutputDataTest {
 	@Test
 	public void default30MinMinTimeAdvancedTurkeys() throws IOException {
 		args.minTime = 1800;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, true, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -473,7 +475,7 @@ public class GeneratedOutputDataTest {
 	@Test
 	public void default30MinMinTimeNonCont() throws IOException {
 		args.minTime = 1800;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, true, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -492,7 +494,7 @@ public class GeneratedOutputDataTest {
 	@Test
 	public void default30MinMinTimeNonContAdvancedTurkeys() throws IOException {
 		args.minTime = 1800;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, true, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -511,7 +513,7 @@ public class GeneratedOutputDataTest {
 	@Test
 	public void default30MinMinTimeIncomplete() throws IOException {
 		args.minTime = 1800;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, false, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -530,7 +532,7 @@ public class GeneratedOutputDataTest {
 	@Test
 	public void default30MinMinTimeIncompleteAdvancedTurkeys() throws IOException {
 		args.minTime = 1800;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, false, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -549,7 +551,7 @@ public class GeneratedOutputDataTest {
 	@Test
 	public void default30MinMinTimeIncompleteNonCont() throws IOException {
 		args.minTime = 1800;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, false, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -568,7 +570,7 @@ public class GeneratedOutputDataTest {
 	@Test
 	public void default30MinMinTimeIncompleteNonContAdvancedTurkeys() throws IOException {
 		args.minTime = 1800;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, false, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -586,7 +588,7 @@ public class GeneratedOutputDataTest {
 	 */
 	@Test
 	public void defaultDowntimesDefaultMinTime() throws IOException {
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -604,7 +606,7 @@ public class GeneratedOutputDataTest {
 	 */
 	@Test
 	public void defaultDowntimesDefaultMinTimeAdvancedTurkeys() throws IOException {
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -622,7 +624,7 @@ public class GeneratedOutputDataTest {
 	 */
 	@Test
 	public void defaultDowntimesDefaultMinTimeNonCont() throws IOException {
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -640,7 +642,7 @@ public class GeneratedOutputDataTest {
 	 */
 	@Test
 	public void defaultDowntimesDefaultMinTimeNonContAdvancedTurkeys() throws IOException {
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -658,7 +660,7 @@ public class GeneratedOutputDataTest {
 	 */
 	@Test
 	public void defaultDowntimesDefaultMinTimeIncomplete() throws IOException {
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -676,7 +678,7 @@ public class GeneratedOutputDataTest {
 	 */
 	@Test
 	public void defaultDowntimesDefaultMinTimeIncompleteAdvancedTurkeys() throws IOException {
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -694,7 +696,7 @@ public class GeneratedOutputDataTest {
 	 */
 	@Test
 	public void defaultDowntimesDefaultMinTimeIncompleteNonCont() throws IOException {
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -712,7 +714,7 @@ public class GeneratedOutputDataTest {
 	 */
 	@Test
 	public void defaultDowntimesDefaultMinTimeIncompleteNonContAdvancedTurkeys() throws IOException {
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -731,7 +733,7 @@ public class GeneratedOutputDataTest {
 	@Test
 	public void defaultDowntimesNoMinTime() throws IOException {
 		args.minTime = 0;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -750,7 +752,7 @@ public class GeneratedOutputDataTest {
 	@Test
 	public void defaultDowntimesNoMinTimeAdvancedTurkeys() throws IOException {
 		args.minTime = 0;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -769,7 +771,7 @@ public class GeneratedOutputDataTest {
 	@Test
 	public void defaultDowntimesNoMinTimeNonCont() throws IOException {
 		args.minTime = 0;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -788,7 +790,7 @@ public class GeneratedOutputDataTest {
 	@Test
 	public void defaultDowntimesNoMinTimeNonContAdvancedTurkeys() throws IOException {
 		args.minTime = 0;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -807,7 +809,7 @@ public class GeneratedOutputDataTest {
 	@Test
 	public void defaultDowntimesNoMinTimeIncomplete() throws IOException {
 		args.minTime = 0;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -826,7 +828,7 @@ public class GeneratedOutputDataTest {
 	@Test
 	public void defaultDowntimesNoMinTimeIncompleteAdvancedTurkeys() throws IOException {
 		args.minTime = 0;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -845,7 +847,7 @@ public class GeneratedOutputDataTest {
 	@Test
 	public void defaultDowntimesNoMinTimeIncompleteNonCont() throws IOException {
 		args.minTime = 0;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -864,7 +866,7 @@ public class GeneratedOutputDataTest {
 	@Test
 	public void defaultDowntimesNoMinTimeIncompleteNonContAdvancedTurkeys() throws IOException {
 		args.minTime = 0;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -883,7 +885,7 @@ public class GeneratedOutputDataTest {
 	@Test
 	public void defaultDowntimes30MinMinTime() throws IOException {
 		args.minTime = 1800;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -902,7 +904,7 @@ public class GeneratedOutputDataTest {
 	@Test
 	public void defaultDowntimes30MinMinTimeAdvancedTurkeys() throws IOException {
 		args.minTime = 1800;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -921,7 +923,7 @@ public class GeneratedOutputDataTest {
 	@Test
 	public void defaultDowntimes30MinMinTimeNonCont() throws IOException {
 		args.minTime = 1800;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -940,7 +942,7 @@ public class GeneratedOutputDataTest {
 	@Test
 	public void defaultDowntimes30MinMinTimeNonContAdvancedTurkeys() throws IOException {
 		args.minTime = 1800;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -959,7 +961,7 @@ public class GeneratedOutputDataTest {
 	@Test
 	public void defaultDowntimes30MinMinTimeIncomplete() throws IOException {
 		args.minTime = 1800;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -978,7 +980,7 @@ public class GeneratedOutputDataTest {
 	@Test
 	public void defaultDowntimes30MinMinTimeIncompleteAdvancedTurkeys() throws IOException {
 		args.minTime = 1800;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -997,7 +999,7 @@ public class GeneratedOutputDataTest {
 	@Test
 	public void defaultDowntimes30MinMinTimeIncompleteNonCont() throws IOException {
 		args.minTime = 1800;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -1016,7 +1018,7 @@ public class GeneratedOutputDataTest {
 	@Test
 	public void defaultDowntimes30MinMinTimeIncompleteNonContAdvancedTurkeys() throws IOException {
 		args.minTime = 1800;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -1035,7 +1037,7 @@ public class GeneratedOutputDataTest {
 	@Test
 	public void fillDaysDefaultMinTime() throws IOException {
 		args.fillDays = true;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, true, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -1054,7 +1056,7 @@ public class GeneratedOutputDataTest {
 	@Test
 	public void fillDaysDefaultMinTimeAdvancedTurkeys() throws IOException {
 		args.fillDays = true;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, true, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -1073,7 +1075,7 @@ public class GeneratedOutputDataTest {
 	@Test
 	public void fillDaysDefaultMinTimeNonCont() throws IOException {
 		args.fillDays = true;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, true, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -1092,7 +1094,7 @@ public class GeneratedOutputDataTest {
 	@Test
 	public void fillDaysDefaultMinTimeNonContAdvancedTurkeys() throws IOException {
 		args.fillDays = true;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, true, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -1111,7 +1113,7 @@ public class GeneratedOutputDataTest {
 	@Test
 	public void fillDaysDefaultMinTimeIncomplete() throws IOException {
 		args.fillDays = true;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, false, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -1130,7 +1132,7 @@ public class GeneratedOutputDataTest {
 	@Test
 	public void fillDaysDefaultMinTimeIncompleteAdvancedTurkeys() throws IOException {
 		args.fillDays = true;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, false, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -1149,7 +1151,7 @@ public class GeneratedOutputDataTest {
 	@Test
 	public void fillDaysDefaultMinTimeIncompleteNonCont() throws IOException {
 		args.fillDays = true;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, false, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -1168,7 +1170,7 @@ public class GeneratedOutputDataTest {
 	@Test
 	public void fillDaysDefaultMinTimeIncompleteNonContAdvancedTurkeys() throws IOException {
 		args.fillDays = true;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, false, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -1188,7 +1190,7 @@ public class GeneratedOutputDataTest {
 	public void fillDaysNoMinTime() throws IOException {
 		args.fillDays = true;
 		args.minTime = 0;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, true, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -1208,7 +1210,7 @@ public class GeneratedOutputDataTest {
 	public void fillDaysNoMinTimeAdvancedTurkeys() throws IOException {
 		args.fillDays = true;
 		args.minTime = 0;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, true, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -1228,7 +1230,7 @@ public class GeneratedOutputDataTest {
 	public void fillDaysNoMinTimeNonCont() throws IOException {
 		args.fillDays = true;
 		args.minTime = 0;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, true, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -1248,7 +1250,7 @@ public class GeneratedOutputDataTest {
 	public void fillDaysNoMinTimeNonContAdvancedTurkeys() throws IOException {
 		args.fillDays = true;
 		args.minTime = 0;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, true, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -1268,7 +1270,7 @@ public class GeneratedOutputDataTest {
 	public void fillDaysNoMinTimeIncomplete() throws IOException {
 		args.fillDays = true;
 		args.minTime = 0;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, false, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -1288,7 +1290,7 @@ public class GeneratedOutputDataTest {
 	public void fillDaysNoMinTimeIncompleteAdvancedTurkeys() throws IOException {
 		args.fillDays = true;
 		args.minTime = 0;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, false, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -1308,7 +1310,7 @@ public class GeneratedOutputDataTest {
 	public void fillDaysNoMinTimeIncompleteNonCont() throws IOException {
 		args.fillDays = true;
 		args.minTime = 0;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, false, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -1328,7 +1330,7 @@ public class GeneratedOutputDataTest {
 	public void fillDaysNoMinTimeIncompleteNonContAdvancedTurkeys() throws IOException {
 		args.fillDays = true;
 		args.minTime = 0;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, false, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -1348,7 +1350,7 @@ public class GeneratedOutputDataTest {
 	public void fillDays30MinMinTime() throws IOException {
 		args.fillDays = true;
 		args.minTime = 1800;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, true, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -1368,7 +1370,7 @@ public class GeneratedOutputDataTest {
 	public void fillDays30MinMinTimeAdvancedTurkeys() throws IOException {
 		args.fillDays = true;
 		args.minTime = 1800;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, true, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -1388,7 +1390,7 @@ public class GeneratedOutputDataTest {
 	public void fillDays30MinMinTimeNonCont() throws IOException {
 		args.fillDays = true;
 		args.minTime = 1800;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, true, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -1408,7 +1410,7 @@ public class GeneratedOutputDataTest {
 	public void fillDays30MinMinTimeNonContAdvancedTurkeys() throws IOException {
 		args.fillDays = true;
 		args.minTime = 1800;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, true, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -1428,7 +1430,7 @@ public class GeneratedOutputDataTest {
 	public void fillDays30MinMinTimeIncomplete() throws IOException {
 		args.fillDays = true;
 		args.minTime = 1800;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, false, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -1448,7 +1450,7 @@ public class GeneratedOutputDataTest {
 	public void fillDays30MinMinTimeIncompleteAdvancedTurkeys() throws IOException {
 		args.fillDays = true;
 		args.minTime = 1800;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, false, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -1468,7 +1470,7 @@ public class GeneratedOutputDataTest {
 	public void fillDays30MinMinTimeIncompleteNonCont() throws IOException {
 		args.fillDays = true;
 		args.minTime = 1800;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, false, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -1488,7 +1490,7 @@ public class GeneratedOutputDataTest {
 	public void fillDays30MinMinTimeIncompleteNonContAdvancedTurkeys() throws IOException {
 		args.fillDays = true;
 		args.minTime = 1800;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, false, tempFolder, antennaPair.getValue(), null);
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), null);
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -1507,7 +1509,7 @@ public class GeneratedOutputDataTest {
 	@Test
 	public void fillDaysDowntimesDefaultMinTime() throws IOException {
 		args.fillDays = true;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -1526,7 +1528,7 @@ public class GeneratedOutputDataTest {
 	@Test
 	public void fillDaysDowntimesDefaultMinTimeAdvancedTurkeys() throws IOException {
 		args.fillDays = true;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -1545,7 +1547,7 @@ public class GeneratedOutputDataTest {
 	@Test
 	public void fillDaysDowntimesDefaultMinTimeNonCont() throws IOException {
 		args.fillDays = true;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -1564,7 +1566,7 @@ public class GeneratedOutputDataTest {
 	@Test
 	public void fillDaysDowntimesDefaultMinTimeNonContAdvancedTurkeys() throws IOException {
 		args.fillDays = true;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -1583,7 +1585,7 @@ public class GeneratedOutputDataTest {
 	@Test
 	public void fillDaysDowntimesDefaultMinTimeIncomplete() throws IOException {
 		args.fillDays = true;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -1602,7 +1604,7 @@ public class GeneratedOutputDataTest {
 	@Test
 	public void fillDaysDowntimesDefaultMinTimeIncompleteAdvancedTurkeys() throws IOException {
 		args.fillDays = true;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -1621,7 +1623,7 @@ public class GeneratedOutputDataTest {
 	@Test
 	public void fillDaysDowntimesDefaultMinTimeIncompleteNonCont() throws IOException {
 		args.fillDays = true;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -1640,7 +1642,7 @@ public class GeneratedOutputDataTest {
 	@Test
 	public void fillDaysDowntimesDefaultMinTimeIncompleteNonContAdvancedTurkeys() throws IOException {
 		args.fillDays = true;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -1660,7 +1662,7 @@ public class GeneratedOutputDataTest {
 	public void fillDaysDowntimesNoMinTime() throws IOException {
 		args.fillDays = true;
 		args.minTime = 0;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -1680,7 +1682,7 @@ public class GeneratedOutputDataTest {
 	public void fillDaysDowntimesNoMinTimeAdvancedTurkeys() throws IOException {
 		args.fillDays = true;
 		args.minTime = 0;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -1700,7 +1702,7 @@ public class GeneratedOutputDataTest {
 	public void fillDaysDowntimesNoMinTimeNonCont() throws IOException {
 		args.fillDays = true;
 		args.minTime = 0;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -1720,7 +1722,7 @@ public class GeneratedOutputDataTest {
 	public void fillDaysDowntimesNoMinTimeNonContAdvancedTurkeys() throws IOException {
 		args.fillDays = true;
 		args.minTime = 0;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -1740,7 +1742,7 @@ public class GeneratedOutputDataTest {
 	public void fillDaysDowntimesNoMinTimeIncomplete() throws IOException {
 		args.fillDays = true;
 		args.minTime = 0;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -1760,7 +1762,7 @@ public class GeneratedOutputDataTest {
 	public void fillDaysDowntimesNoMinTimeIncompleteAdvancedTurkeys() throws IOException {
 		args.fillDays = true;
 		args.minTime = 0;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -1780,7 +1782,7 @@ public class GeneratedOutputDataTest {
 	public void fillDaysDowntimesNoMinTimeIncompleteNonCont() throws IOException {
 		args.fillDays = true;
 		args.minTime = 0;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -1800,7 +1802,7 @@ public class GeneratedOutputDataTest {
 	public void fillDaysDowntimesNoMinTimeIncompleteNonContAdvancedTurkeys() throws IOException {
 		args.fillDays = true;
 		args.minTime = 0;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -1820,7 +1822,7 @@ public class GeneratedOutputDataTest {
 	public void fillDaysDowntimes30MinMinTime() throws IOException {
 		args.fillDays = true;
 		args.minTime = 1800;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -1840,7 +1842,7 @@ public class GeneratedOutputDataTest {
 	public void fillDaysDowntimes30MinMinTimeAdvancedTurkeys() throws IOException {
 		args.fillDays = true;
 		args.minTime = 1800;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -1860,7 +1862,7 @@ public class GeneratedOutputDataTest {
 	public void fillDaysDowntimes30MinMinTimeNonCont() throws IOException {
 		args.fillDays = true;
 		args.minTime = 1800;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -1880,7 +1882,7 @@ public class GeneratedOutputDataTest {
 	public void fillDaysDowntimes30MinMinTimeNonContAdvancedTurkeys() throws IOException {
 		args.fillDays = true;
 		args.minTime = 1800;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, true, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -1900,7 +1902,7 @@ public class GeneratedOutputDataTest {
 	public void fillDaysDowntimes30MinMinTimeIncomplete() throws IOException {
 		args.fillDays = true;
 		args.minTime = 1800;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -1920,7 +1922,7 @@ public class GeneratedOutputDataTest {
 	public void fillDaysDowntimes30MinMinTimeIncompleteAdvancedTurkeys() throws IOException {
 		args.fillDays = true;
 		args.minTime = 1800;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, true, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -1940,7 +1942,7 @@ public class GeneratedOutputDataTest {
 	public void fillDaysDowntimes30MinMinTimeIncompleteNonCont() throws IOException {
 		args.fillDays = true;
 		args.minTime = 1800;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, false, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);
@@ -1960,7 +1962,7 @@ public class GeneratedOutputDataTest {
 	public void fillDaysDowntimes30MinMinTimeIncompleteNonContAdvancedTurkeys() throws IOException {
 		args.fillDays = true;
 		args.minTime = 1800;
-		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + 24 * 3600000 * 10, tempFolder);
+		final TestMappings mappings = OutputDataTest.generateTestMappings(100, 5, 5, true, START_TIME, START_TIME + DAY_MS * 10, tempFolder);
 		final TestData generated = OutputDataTest.generateTestValues(mappings, START_DATE, 10, args, false, false, tempFolder, antennaPair.getValue(), downtimesPair.getValue());
 		final TestData parsed = OutputDataTest.generateParsedData(mappings, args, tempFolder, antennaPair.getKey(), downtimesPair.getKey());
 		OutputDataTest.validateResults(generated, parsed, args);

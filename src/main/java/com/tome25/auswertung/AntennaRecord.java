@@ -111,7 +111,7 @@ public class AntennaRecord {
 		if (tod < 0) {
 			throw new IllegalArgumentException("The time \"" + time + "\" represents the negative time of day " + tod
 					+ ". Time of Day cannot be negative.");
-		} else if (tod >= 24 * 3600000) {
+		} else if (tod > TurkeyInfo.DAY_END) {
 			throw new IllegalArgumentException(
 					"The time \"" + time + "\" is more than 23:59:59.99, which is not allowed.");
 		}

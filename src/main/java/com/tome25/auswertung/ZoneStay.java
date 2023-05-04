@@ -13,6 +13,12 @@ import com.tome25.auswertung.utils.TimeUtils;
 public class ZoneStay {
 
 	/**
+	 * The minimum length required for a stay in a zone without food to be
+	 * recognized as unreliable.
+	 */
+	public static final int UNRELIABLE_TIME = 12 * 60 * 60 * 1000;
+
+	/**
 	 * The id of the turkey which spent the time record by this object in the given
 	 * zone.
 	 */
@@ -183,17 +189,17 @@ public class ZoneStay {
 	}
 
 	/**
-	 * Gets the time in milliseconds that the turkey spent in the zone.<br/>
-	 * -1 if the exit time has not been set yet.
+	 * Gets the time in milliseconds that the turkey spent in the zone.
 	 * 
 	 * @return The zone time in ms.
+	 * @throws IllegalStateException If the stay has no end time yet.
 	 */
-	public long getStayTime() {
-		if (exit == null) {
-			return -1;
-		} else {
-			return exit.getTimeInMillis() - entry.getTimeInMillis();
+	public long getStayTime() throws IllegalStateException {
+		if (!hasLeft()) {
+			throw new IllegalStateException("ZoneStay has no exit time.");
 		}
+
+		return exit.getTimeInMillis() - entry.getTimeInMillis();
 	}
 
 	/**
@@ -203,6 +209,26 @@ public class ZoneStay {
 	 */
 	public boolean hasLeft() {
 		return exit != null;
+	}
+
+	/**
+	 * Checks whether this stay is considered unreliable.<br/>
+	 * A stay is considered unreliable if
+	 * <ol>
+	 * <li>The zone it is in has no food, and</li>
+	 * <li>The duration of the stay is more than 12 hours.</li>
+	 * </ol>
+	 * 
+	 * @return Whether this stay is considered unreliable.
+	 * @throws IllegalStateException If the stay has no end time yet.
+	 */
+	public boolean isUnreliable() throws IllegalStateException {
+		if (!hasLeft()) {
+			throw new IllegalStateException("ZoneStay has no exit time.");
+		}
+
+		// TODO this warning should be time since the last record in that zone.
+		return !zone.hasFood() && getStayTime() > UNRELIABLE_TIME;
 	}
 
 	@Override
@@ -225,10 +251,12 @@ public class ZoneStay {
 
 	@Override
 	public String toString() {
-		return String.format("ZoneStay[turkey=%s, zone=%s, entry date=%s, entry time=%s, exit date=%s, exit time=%s]",
-				turkey, zone.getId(), TimeUtils.encodeDate(entry), TimeUtils.encodeTime(TimeUtils.getMsOfDay(entry)),
-				exit == null ? "null" : TimeUtils.encodeDate(exit),
-				exit == null ? "null" : TimeUtils.encodeTime(TimeUtils.getMsOfDay(exit)));
+		return String.format(
+				"ZoneStay[turkey=%s, zone=%s, zone has food=%s, entry date=%s, entry time=%s, exit date=%s, exit time=%s, is unreliable=%s]",
+				turkey, zone.getId(), zone.hasFood() ? "true" : "false", getEntryDate(),
+				TimeUtils.encodeTime(getEntryTime()), exit == null ? "null" : getExitDate(),
+				exit == null ? "null" : TimeUtils.encodeTime(getExitTime()),
+				exit == null ? "false" : (isUnreliable() ? "true" : "false"));
 	}
 
 }
