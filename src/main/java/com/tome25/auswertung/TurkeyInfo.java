@@ -4,9 +4,11 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import com.tome25.auswertung.args.Arguments;
 import com.tome25.auswertung.stream.IOutputStreamHandler;
@@ -73,18 +75,28 @@ public class TurkeyInfo implements Comparable<TurkeyInfo> {
 	 * A map containing a map containing the time this turkey spent in each recorded
 	 * zone for each day.
 	 */
-	private Map<String, Map<String, Integer>> dayZoneTimes = new HashMap<>();
+	private Map<String, Map<String, Integer>> dayZoneTimes = new HashMap<String, Map<String, Integer>>();
 
 	/**
 	 * A map containing the time this turkey spent in each recorded zone in all the
 	 * evaluated data.
 	 */
-	private Map<String, Long> totalZoneTimes = new HashMap<>();
+	private Map<String, Long> totalZoneTimes = new HashMap<String, Long>();
+
+	/**
+	 * A set containing all the dates at which this turkeys data was unreliable.
+	 */
+	private Set<String> unreliableDays = new HashSet<String>();
 
 	/**
 	 * The string name of the zone the turkey is currently in.
 	 */
 	private ZoneInfo currentZone;
+
+	/**
+	 * Whether the last zone change should be recorded to the current zone stay.
+	 */
+	private boolean updateStay;
 
 	/**
 	 * A {@link ZoneStay} representing where the turkey is currently counted as
@@ -250,6 +262,30 @@ public class TurkeyInfo implements Comparable<TurkeyInfo> {
 	 */
 	public void changeZone(final ZoneInfo newZone, final Calendar time)
 			throws NullPointerException, IllegalArgumentException {
+		changeZone(newZone, time, true);
+	}
+
+	/**
+	 * Handles the turkey represented by this object being detected by an
+	 * antenna.<br/>
+	 * Adds time since the last zone change to zone time counters.<br/>
+	 * Increments zone changes counters if the new zone doesn't match the old
+	 * zone.<br/>
+	 * Updates the current time and the current zone.
+	 * 
+	 * @param newZone    The zone by which this turkey was detected.
+	 * @param time       The time at which the antenna record was created.
+	 * @param updateStay Whether the last record time of the current stay should be
+	 *                   updated.
+	 * @throws NullPointerException     If {@code newZone} or {@code date} is
+	 *                                  {@code null}.
+	 * @throws IllegalArgumentException If {@code time} is before
+	 *                                  {@link #getCurrentCal() current time},
+	 *                                  before {@link #getStartCal() start time}, or
+	 *                                  after {@link #getEndCal() end time}.
+	 */
+	private void changeZone(final ZoneInfo newZone, final Calendar time, boolean updateStay)
+			throws NullPointerException, IllegalArgumentException {
 		Objects.requireNonNull(newZone, "The zone the turkey moved into cannot be null.");
 		Objects.requireNonNull(time, "The time at which the change occurred cannot be null.");
 
@@ -284,6 +320,10 @@ public class TurkeyInfo implements Comparable<TurkeyInfo> {
 		if (currentZone != null && !newRec) {
 			long recordTime = timeMs - currentTime.getTimeInMillis();
 			addTime(time, currentZone, recordTime);
+
+			if (this.updateStay && !newRec && lastStay != null && lastStay.getZone().equals(currentZone)) {
+				lastStay.setLastRecord(currentTime);
+			}
 		} else if (currentTime == null && currentZone != null) {
 			Calendar startCal = startTime == null ? null : (Calendar) startTime.clone();
 			if (args.fillDays && (startTime == null || !TimeUtils.isSameDay(startTime, time))) {
@@ -315,13 +355,11 @@ public class TurkeyInfo implements Comparable<TurkeyInfo> {
 				cal.set(Calendar.MILLISECOND, 999);
 
 				if (!currentZone.equals(lastStay.getZone()) && lastZoneChange < cal.getTimeInMillis()) {
-					lastStay.setExitTime(lastCal);
-					stayOut.println(CSVHandler.stayToCsvLine(lastStay));
+					printCurrentStay(lastCal, false);
 					lastStay = new ZoneStay(id, currentZone, lastCal, cal);
-					stayOut.println(CSVHandler.stayToCsvLine(lastStay));
+					printCurrentStay(null, false);
 				} else if (currentTime.after(lastStay.getEntryCal())) {
-					lastStay.setExitTime(cal);
-					stayOut.println(CSVHandler.stayToCsvLine(lastStay));
+					printCurrentStay(cal, false);
 				}
 			}
 
@@ -340,14 +378,12 @@ public class TurkeyInfo implements Comparable<TurkeyInfo> {
 					Calendar lastCal = new GregorianCalendar();
 					lastCal.setTimeInMillis(lastZoneChange);
 					if (!lastCal.equals(lastStay.getEntryCal())) {
-						lastStay.setExitTime(lastCal);
-						stayOut.println(CSVHandler.stayToCsvLine(lastStay));
+						printCurrentStay(lastCal, false);
 					}
 					lastStay = new ZoneStay(id, currentZone, lastCal, currentTime);
-					stayOut.println(CSVHandler.stayToCsvLine(lastStay));
+					printCurrentStay(null, false);
 				} else if (currentTime.after(lastStay.getEntryCal())) {
-					lastStay.setExitTime(currentTime);
-					stayOut.println(CSVHandler.stayToCsvLine(lastStay));
+					printCurrentStay(currentTime, false);
 				}
 			}
 
@@ -356,6 +392,7 @@ public class TurkeyInfo implements Comparable<TurkeyInfo> {
 			lastStay = new ZoneStay(id, newZone, (Calendar) startTime.clone());
 		}
 
+		Calendar lastTime = currentTime;
 		currentTime = time;
 
 		long zoneTime = timeMs - lastZoneChange;
@@ -388,27 +425,32 @@ public class TurkeyInfo implements Comparable<TurkeyInfo> {
 				totalZoneChanges++;
 
 				if (lastStay == null || !lastStay.getZone().equals(currentZone)) {
-					Calendar lastChangeCal = new GregorianCalendar();
-					lastChangeCal.setTimeInMillis(lastZoneChange);
+					Calendar lastCal = new GregorianCalendar();
+					lastCal.setTimeInMillis(lastZoneChange);
 					if (lastStay != null && stayOut != null) {
-						lastStay.setExitTime(lastChangeCal);
-						stayOut.println(CSVHandler.stayToCsvLine(lastStay));
+						printCurrentStay(lastCal, false);
 					}
-					lastStay = new ZoneStay(id, currentZone, lastChangeCal);
+					lastStay = new ZoneStay(id, currentZone, lastCal);
+					if (this.updateStay && lastTime != null) {
+						lastStay.setLastRecord(lastTime);
+					}
 				}
 			}
 
 			lastZoneChange = timeMs;
 		} else if ((args.minTime <= 0 || zoneTime >= args.minTime * 1000) && !lastStay.getZone().equals(currentZone)) {
-			Calendar lastChangeCal = new GregorianCalendar();
-			lastChangeCal.setTimeInMillis(lastZoneChange);
+			Calendar lastCal = new GregorianCalendar();
+			lastCal.setTimeInMillis(lastZoneChange);
 			if (stayOut != null) {
-				lastStay.setExitTime(lastChangeCal);
-				stayOut.println(CSVHandler.stayToCsvLine(lastStay));
+				printCurrentStay(lastCal, false);
 			}
-			lastStay = new ZoneStay(id, currentZone, lastChangeCal);
+			lastStay = new ZoneStay(id, currentZone, lastCal);
+			if (this.updateStay && lastTime != null) {
+				lastStay.setLastRecord(lastTime);
+			}
 		}
 
+		this.updateStay = updateStay;
 		currentZone = newZone;
 	}
 
@@ -567,7 +609,7 @@ public class TurkeyInfo implements Comparable<TurkeyInfo> {
 			cal.set(Calendar.SECOND, 59);
 			cal.set(Calendar.MILLISECOND, 999);
 			if (cal.after(currentTime)) {
-				changeZone(currentZone, cal);
+				changeZone(currentZone, cal, false);
 			}
 		}
 
@@ -588,30 +630,68 @@ public class TurkeyInfo implements Comparable<TurkeyInfo> {
 	}
 
 	/**
-	 * Sets the exit time of the current {@link ZoneStay} and prints it to the
+	 * Sets the exit time of the {@link #lastStay current stay} and prints it to the
 	 * output file.
 	 * 
 	 * @param temporary Whether the stay should be printed as temporary output.
+	 * @throws NullPointerException If the {@link #lastStay current stay} is
+	 *                              {@code null}.
 	 */
-	public void printCurrentStay(boolean temporary) {
+	public void printCurrentStay(boolean temporary) throws NullPointerException {
 		if (stayOut == null) {
 			return;
 		}
 
+		Objects.requireNonNull(lastStay, "The current stay cannot be null.");
 		if (!currentZone.equals(lastStay.getZone()) && lastZoneChange < currentTime.getTimeInMillis()) {
 			Calendar lastCal = new GregorianCalendar();
 			lastCal.setTimeInMillis(lastZoneChange);
-			lastStay.setExitTime(lastCal);
-			stayOut.println(CSVHandler.stayToCsvLine(lastStay), temporary);
+			printCurrentStay(lastCal, temporary);
 			lastStay = new ZoneStay(id, currentZone, lastCal, currentTime);
-			stayOut.println(CSVHandler.stayToCsvLine(lastStay), temporary);
+			printCurrentStay(null, temporary);
 		} else if (currentTime.after(lastStay.getEntryCal())) {
 			Calendar oldExit = lastStay.getExitCal();
 			lastStay.setExitTime(currentTime);
 			if (!args.fillDays || oldExit == null) {
-				stayOut.println(CSVHandler.stayToCsvLine(lastStay), temporary);
+				printCurrentStay(null, temporary);
 			}
 		}
+	}
+
+	/**
+	 * Prints the current {@link #lastStay} to the {@link #stayOut stays output
+	 * stream}.<br/>
+	 * Also sets the stay exit time if {@code exitCal} isn't {@code null}.<br/>
+	 * Does nothing if {@link #stayOut} is {@code null}.
+	 * 
+	 * @param exitCal   The exit time for the stay to print. Optional if it already
+	 *                  has one.
+	 * @param temporary Whether the stay should be printed as temporary output.
+	 * @throws IllegalArgumentException If {@code exitCal} is before the
+	 *                                  {@link ZoneStay#getEntryCal() entry time} of
+	 *                                  the {@link #lastStay current stay}.
+	 * @throws NullPointerException     If the {@link #lastStay current stay} is
+	 *                                  {@code null}, or {@code exitCal} is
+	 *                                  {@code null} and the {@link #lastStay
+	 *                                  current stay} doesn't have an exit time yet.
+	 */
+	private void printCurrentStay(Calendar exitCal, boolean temporary)
+			throws IllegalArgumentException, NullPointerException {
+		if (stayOut == null) {
+			return;
+		}
+
+		Objects.requireNonNull(lastStay, "The current stay cannot be null.");
+		if (!lastStay.hasLeft()) {
+			Objects.requireNonNull(exitCal,
+					"The exit calendar cannot be null if the current stay does not have one yet.");
+		}
+
+		if (exitCal != null) {
+			lastStay.setExitTime(exitCal);
+		}
+
+		stayOut.println(CSVHandler.stayToCsvLine(lastStay), temporary);
 	}
 
 	/**
@@ -663,7 +743,7 @@ public class TurkeyInfo implements Comparable<TurkeyInfo> {
 			time = endTime;
 		}
 
-		changeZone(currentZone, time);
+		changeZone(currentZone, time, false);
 		return true;
 	}
 
@@ -795,12 +875,35 @@ public class TurkeyInfo implements Comparable<TurkeyInfo> {
 	 * 
 	 * @param date The day for which to check.
 	 * @return {@code true} if this object holds data for the given day.
-	 * @throws NullPointerException If {@code date} is {@code null}.
+	 * @throws NullPointerException     If {@code date} is {@code null}.
+	 * @throws IllegalArgumentException If {@code date} is empty.
 	 */
-	public boolean hasDay(String date) throws NullPointerException {
+	public boolean hasDay(String date) throws NullPointerException, IllegalArgumentException {
 		Objects.requireNonNull(date, "The date to check for can't be null.");
 
+		if (date.trim().isEmpty()) {
+			throw new IllegalArgumentException("The date to check for can't be empty.");
+		}
+
 		return dayZoneTimes.containsKey(date);
+	}
+
+	/**
+	 * Checks whether the data for a given day is considered unreliable.
+	 * 
+	 * @param date The day for which to check.
+	 * @return {@code true} if the data for the given day is considered unreliable.
+	 * @throws NullPointerException     If {@code date} is {@code null}.
+	 * @throws IllegalArgumentException If {@code date} is empty.
+	 */
+	public boolean isDayUnreliable(String date) throws NullPointerException, IllegalArgumentException {
+		Objects.requireNonNull(date, "The date to check can't be null.");
+
+		if (date.trim().isEmpty()) {
+			throw new IllegalArgumentException("The date to check can't be empty.");
+		}
+
+		return unreliableDays.contains(date);
 	}
 
 	/**
@@ -889,12 +992,14 @@ public class TurkeyInfo implements Comparable<TurkeyInfo> {
 		builder.append(todayZoneChanges);
 		builder.append(", totalZoneChanges=");
 		builder.append(totalZoneChanges);
-		builder.append(", dayZoneChanges=");
-		builder.append(dayZoneChanges);
 		builder.append(", dayZoneTimes=");
 		builder.append(dayZoneTimes);
 		builder.append(", totalZoneTimes=");
 		builder.append(totalZoneTimes);
+		builder.append(", dayZoneChanges=");
+		builder.append(dayZoneChanges);
+		builder.append(", unreliableDays=");
+		builder.append(unreliableDays);
 		builder.append("]");
 		return builder.toString();
 	}

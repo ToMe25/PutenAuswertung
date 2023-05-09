@@ -35,9 +35,20 @@ public class ZoneStay {
 	private final Calendar entry;
 
 	/**
+	 * The last time at which a record for this stays turkey in this stays zone was
+	 * received.
+	 */
+	private Calendar lastRecord;
+
+	/**
 	 * The time and date at which the zone was left.
 	 */
 	private Calendar exit;
+
+	/**
+	 * Whether this stay was already marked as unreliable.
+	 */
+	private boolean isUnreliable = false;
 
 	/**
 	 * Creates a new ZoneStay with the given values, without an exit time.
@@ -78,8 +89,56 @@ public class ZoneStay {
 
 		this.turkey = turkey;
 		this.zone = zone;
-		this.entry = entry;
+		this.entry = this.lastRecord = entry;
 		this.exit = exit;
+	}
+
+	/**
+	 * Updates the last received record in this stays zone for this stays
+	 * turkey.<br/>
+	 * Also marks this stay as unreliable if the zone doesn't have food and the new
+	 * time is more than 12 hours after the old time.
+	 * 
+	 * @param recordTime The time of the new record of this stays turkey in this
+	 *                   stays zone.
+	 * @throws NullPointerException     If {@code recordTime} is {@code null}.
+	 * @throws IllegalArgumentException If {@code recordTime} is before the previous
+	 *                                  record.
+	 * 
+	 * @see #markUnreliable()
+	 * @see #isUnreliable()
+	 */
+	public void setLastRecord(Calendar recordTime) throws NullPointerException, IllegalArgumentException {
+		setLastRecord(recordTime, !zone.hasFood());
+	}
+
+	/**
+	 * Updates the last received record in this stays zone for this stays
+	 * turkey.<br/>
+	 * Also marks this stay as unreliable if {@code checkTime} is {@code true} and
+	 * the new time is more than 12 hours after the old time.
+	 * 
+	 * @param recordTime The time of the new record of this stays turkey in this
+	 *                   stays zone.
+	 * @param checkTime  Whether the time since the last record should be checked.
+	 * @throws NullPointerException     If {@code recordTime} is {@code null}.
+	 * @throws IllegalArgumentException If {@code recordTime} is before the previous
+	 *                                  record.
+	 * 
+	 * @see #markUnreliable()
+	 * @see #isUnreliable()
+	 */
+	public void setLastRecord(Calendar recordTime, boolean checkTime)
+			throws NullPointerException, IllegalArgumentException {
+		Objects.requireNonNull(recordTime, "The new last record time cannot be null.");
+		if (recordTime.before(lastRecord)) {
+			throw new IllegalStateException("The new last record cannot be before the old last record.");
+		} else if (!recordTime.equals(lastRecord)) {
+			if (checkTime && recordTime.getTimeInMillis() - lastRecord.getTimeInMillis() > UNRELIABLE_TIME) {
+				markUnreliable();
+			}
+			lastRecord = recordTime;
+		}
 	}
 
 	/**
@@ -88,6 +147,8 @@ public class ZoneStay {
 	 * @param exit The new exit time.
 	 * @throws IllegalArgumentException If the new exit time is before the entry
 	 *                                  time.
+	 * 
+	 * @see #getExitCal()
 	 */
 	public void setExitTime(Calendar exit) throws IllegalArgumentException {
 		if (exit == null) {
@@ -97,6 +158,17 @@ public class ZoneStay {
 		} else {
 			this.exit = exit;
 		}
+	}
+
+	/**
+	 * Manually marks this stay as unreliable.<br/>
+	 * A stay will automatically be marked as unreliable if it is in a zone without
+	 * food and doesn't have a valid record in over 12 hours.
+	 * 
+	 * @see #isUnreliable()
+	 */
+	public void markUnreliable() {
+		isUnreliable = true;
 	}
 
 	/**
@@ -147,10 +219,22 @@ public class ZoneStay {
 	}
 
 	/**
+	 * Gets a {@link Calendar} representing the time of the last record of this
+	 * stay.
+	 * 
+	 * @return The last record time.
+	 */
+	public Calendar getLastRecordCal() {
+		return (Calendar) lastRecord.clone();
+	}
+
+	/**
 	 * Gets a {@link Calendar} representing the time at which the turkey left this
 	 * zone.
 	 * 
 	 * @return The zone exit time.
+	 * 
+	 * @see #setExitTime(Calendar)
 	 */
 	public Calendar getExitCal() {
 		if (exit == null) {
@@ -212,28 +296,55 @@ public class ZoneStay {
 	}
 
 	/**
-	 * Checks whether this stay is considered unreliable.<br/>
-	 * A stay is considered unreliable if
-	 * <ol>
-	 * <li>The zone it is in has no food, and</li>
-	 * <li>The duration of the stay is more than 12 hours.</li>
-	 * </ol>
+	 * Checks if this stay is unreliable.<br/>
+	 * A stay is either unreliable if it was previously marked as such, or<br/>
+	 * when the time from its last record to its exit time is more than 12 hours and
+	 * it has no food.
 	 * 
 	 * @return Whether this stay is considered unreliable.
 	 * @throws IllegalStateException If the stay has no end time yet.
+	 * 
+	 * @see #markUnreliable()
+	 * @see #setLastRecord(Calendar)
 	 */
 	public boolean isUnreliable() throws IllegalStateException {
+		if (isUnreliable) {
+			return true;
+		}
+
 		if (!hasLeft()) {
 			throw new IllegalStateException("ZoneStay has no exit time.");
 		}
 
-		// TODO this warning should be time since the last record in that zone.
-		return !zone.hasFood() && getStayTime() > UNRELIABLE_TIME;
+		if (lastRecord.after(exit)) {
+			throw new IllegalStateException("Last record time was after exit time.");
+		}
+
+		return !zone.hasFood() && exit.getTimeInMillis() - lastRecord.getTimeInMillis() > UNRELIABLE_TIME;
+	}
+
+	/**
+	 * Checks whether this zone stay is valid.<br/>
+	 * A stay is valid if it has an exit time, and its last record isn't after that
+	 * exit time.
+	 * 
+	 * @return {@code true} if this stay is valid.
+	 */
+	public boolean isValid() {
+		if (!hasLeft()) {
+			return false;
+		}
+
+		if (lastRecord.after(exit)) {
+			return false;
+		}
+
+		return true;
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(entry, exit, turkey, zone);
+		return Objects.hash(entry, exit, turkey, zone, isValid() ? isUnreliable() : false);
 	}
 
 	@Override
@@ -244,19 +355,28 @@ public class ZoneStay {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
+
 		ZoneStay other = (ZoneStay) obj;
+		if (isValid() != other.isValid()) {
+			return false;
+		} else if (isValid() && isUnreliable() != other.isUnreliable()) {
+			return false;
+		}
+
 		return Objects.equals(entry, other.entry) && Objects.equals(exit, other.exit)
 				&& Objects.equals(turkey, other.turkey) && Objects.equals(zone, other.zone);
+
 	}
 
 	@Override
 	public String toString() {
 		return String.format(
-				"ZoneStay[turkey=%s, zone=%s, zone has food=%s, entry date=%s, entry time=%s, exit date=%s, exit time=%s, is unreliable=%s]",
+				"ZoneStay[turkey=%s, zone=%s, zone has food=%s, entry date=%s, entry time=%s, exit date=%s, exit time=%s, last record date=%s, last record time=%s, is valid=%s, is unreliable=%s]",
 				turkey, zone.getId(), zone.hasFood() ? "true" : "false", getEntryDate(),
 				TimeUtils.encodeTime(getEntryTime()), exit == null ? "null" : getExitDate(),
-				exit == null ? "null" : TimeUtils.encodeTime(getExitTime()),
-				exit == null ? "false" : (isUnreliable() ? "true" : "false"));
+				exit == null ? "null" : TimeUtils.encodeTime(getExitTime()), TimeUtils.encodeDate(lastRecord),
+				TimeUtils.encodeTime(TimeUtils.getMsOfDay(lastRecord)), isValid() ? "true" : "false",
+				isValid() ? (isUnreliable() ? "true" : "false") : (isUnreliable ? "true" : "unknown"));
 	}
 
 }

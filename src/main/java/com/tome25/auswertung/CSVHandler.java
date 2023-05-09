@@ -1372,13 +1372,10 @@ public class CSVHandler {
 					}
 				}
 
-				if (unreliable != stay.isUnreliable()) {
-					LogHandler.err_println(
-							"Input line \"" + line + "\" unreliable data flag did not match. Skipping line.");
-					LogHandler.print_debug_info(
-							"Separator Chars: %s, Tokens: [%s], Line: \"%s\", Input Stream Handler: %s",
-							SEPARATOR_REGEX.toString(), StringUtils.join(", ", tokens), line, input.toString());
-					continue;
+				// The actual last record is not known at this point.
+				stay.setLastRecord(exitCal, false);
+				if (unreliable) {
+					stay.markUnreliable();
 				}
 
 				stays.get(turkey).add(stay);
