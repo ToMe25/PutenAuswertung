@@ -60,6 +60,8 @@ Mit der Ausnahme das die [Aufenthalts-Zeiten](output.md#putenauswertungaufenthal
 Danach wird die Pute Vorläufig als in dem Bereich der neuesten Aufzeichnung befindlich markiert.  
 Dann wird die Anzahl der Bereichswechsel aktualisiert.
 
+**Info:** Wenn diese Aufzeichnung die letzte Aufzeichnung in der Datei ist, wird diese als Bereichswechsel gewertet, erzeugt allerdings keinen 0 Sekunden Aufenthalt.
+
 **Falls die Pute noch nicht aufgezeichnet wurde**, wird diese so behandelt, als ob sie sich seit dem Anfang der Aufzeichnungen in ihrem Start-Bereich aufgehalten.  
 Falls diese Pute keinen Start-Bereich in der [Puten.csv-Datei](input.md#puten-csv) hat, wird der erste Bereich in dem sie Aufgezeichnet wurde verwendet.  
 Egal ob der Anfang der Aufzeichnungen mehr als die Mindest-Aufenthaltsdauer her ist.  

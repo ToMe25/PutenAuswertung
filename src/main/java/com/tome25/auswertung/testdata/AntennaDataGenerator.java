@@ -112,6 +112,8 @@ public class AntennaDataGenerator {
 		Map<String, Map<String, Map<String, Long>>> times = new LinkedHashMap<String, Map<String, Map<String, Long>>>();
 		// turkey -> date -> zone changes
 		Map<String, Map<String, Integer>> changes = new LinkedHashMap<String, Map<String, Integer>>();
+		// turkey -> [date]
+		Map<String, Set<String>> unreliableDays = new LinkedHashMap<String, Set<String>>();
 		// turkey -> [zone stay]
 		Map<String, List<ZoneStay>> stays = new LinkedHashMap<String, List<ZoneStay>>();
 		// [start -> end]
@@ -846,9 +848,25 @@ public class AntennaDataGenerator {
 			if (stays.containsKey(tId) && stays.get(tId).isEmpty()) {
 				stays.remove(tId);
 			}
+
+			unreliableDays.put(tId, new HashSet<String>());
+			if (stays.containsKey(tId)) {
+				for (final ZoneStay stay : stays.get(tId)) {
+					if (stay.isUnreliable()) {
+						Calendar day = TimeUtils.parseDate(stay.getEntryDate());
+						while (day.before(stay.getExitCal())) {
+							unreliableDays.get(tId).add(TimeUtils.encodeDate(day));
+							day.add(Calendar.DATE, 1);
+						}
+					}
+				}
+				if (!unreliableDays.get(tId).isEmpty()) {
+					unreliableDays.get(tId).add("total");
+				}
+			}
 		}
 
-		return new TestData(times, changes, stays, downtimes, turkeys, zones);
+		return new TestData(times, changes, unreliableDays, stays, downtimes, turkeys, zones);
 	}
 
 	/**
@@ -1728,6 +1746,12 @@ public class AntennaDataGenerator {
 		public final Map<String, Map<String, Integer>> zoneChanges;
 
 		/**
+		 * A map containing a set of unreliable days for each turkey.<br/>
+		 * Format: {@code turkey -> [date]}
+		 */
+		public final Map<String, Set<String>> unreliableDays;
+
+		/**
 		 * A map containing the {@link ZoneStay ZoneStays} for each turkey for each
 		 * day.<br/>
 		 * Format: {@code turkey -> [stay]}
@@ -1756,31 +1780,53 @@ public class AntennaDataGenerator {
 		/**
 		 * Creates a new TestData object.
 		 * 
-		 * @param zoneTimes   The zone times map.
-		 * @param zoneChanges The zone changes map.
-		 * @param zoneStays   The zone stays map.
-		 * @param downtimes   The values of the downtimes file. Can be {@code null}.
-		 * @param turkeys     The turkeys used in the test.
-		 * @param zones       The zones used for this test.
+		 * @param zoneTimes      The zone times map.
+		 * @param zoneChanges    The zone changes map.
+		 * @param unreliableDays The unreliable days map.
+		 * @param zoneStays      The zone stays map.
+		 * @param downtimes      The values of the downtimes file. Can be {@code null}.
+		 * @param turkeys        The turkeys used in the test.
+		 * @param zones          The zones used for this test.
 		 * @throws NullPointerException If one of the inputs, except {@code downtimes},
 		 *                              is {@code null}.
 		 */
 		public TestData(final Map<String, Map<String, Map<String, Long>>> zoneTimes,
-				final Map<String, Map<String, Integer>> zoneChanges, final Map<String, List<ZoneStay>> zoneStays,
-				final List<Pair<Long, Long>> downtimes, final List<TurkeyInfo> turkeys, final List<ZoneInfo> zones)
-				throws NullPointerException {
-			Objects.requireNonNull(zoneTimes, "The zone times cannot be null.");
-			Objects.requireNonNull(zoneChanges, "The zone changes cannot be null.");
-			Objects.requireNonNull(zoneStays, "The zone stays cannot be null.");
-			Objects.requireNonNull(turkeys, "The turkeys cannot be null.");
-			Objects.requireNonNull(zones, "The zones cannot be null.");
-
-			this.zoneTimes = zoneTimes;
-			this.zoneChanges = zoneChanges;
-			this.zoneStays = zoneStays;
+				final Map<String, Map<String, Integer>> zoneChanges, final Map<String, Set<String>> unreliableDays,
+				final Map<String, List<ZoneStay>> zoneStays, final List<Pair<Long, Long>> downtimes,
+				final List<TurkeyInfo> turkeys, final List<ZoneInfo> zones) throws NullPointerException {
+			this.zoneTimes = Objects.requireNonNull(zoneTimes, "The zone times cannot be null.");
+			this.zoneChanges = Objects.requireNonNull(zoneChanges, "The zone changes cannot be null.");
+			this.unreliableDays = Objects.requireNonNull(unreliableDays, "The unreliable days cannot be null.");
+			this.zoneStays = Objects.requireNonNull(zoneStays, "The zone stays cannot be null.");
 			this.downtimes = downtimes;
-			this.turkeys = turkeys;
-			this.zones = zones;
+			this.turkeys = Objects.requireNonNull(turkeys, "The turkeys cannot be null.");
+			this.zones = Objects.requireNonNull(zones, "The zones cannot be null.");
+		}
+
+		/**
+		 * Creates a new TestData object.<br/>
+		 * Utility constructor for
+		 * {@link com.tome25.auswertung.CSVHandler#readTotalsCSV(com.tome25.auswertung.stream.IInputStreamHandler)
+		 * CSVHandler.readTotalsCSV}.
+		 * 
+		 * @param totals    The {@link Pair} returned by
+		 *                  {@link com.tome25.auswertung.CSVHandler#readTotalsCSV(com.tome25.auswertung.stream.IInputStreamHandler)
+		 *                  CSVHandler.readTotalsCSV}.
+		 * @param zoneStays The zone stays map.
+		 * @param downtimes The values of the downtimes file. Can be {@code null}.
+		 * @param turkeys   The turkeys used in the test.
+		 * @param zones     The zones used for this test.
+		 * @throws NullPointerException If one of the inputs, except {@code downtimes},
+		 *                              is {@code null}.
+		 */
+		public TestData(
+				final Pair<Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>>, Map<String, Set<String>>> totals,
+				final Map<String, List<ZoneStay>> zoneStays, final List<Pair<Long, Long>> downtimes,
+				final List<TurkeyInfo> turkeys, final List<ZoneInfo> zones) throws NullPointerException {
+			this(Objects.requireNonNull(totals, "The totals pair cannot be null.").getKey().getKey(),
+					Objects.requireNonNull(totals, "The totals pair cannot be null.").getKey().getValue(),
+					Objects.requireNonNull(totals, "The totals pair cannot be null.").getValue(), zoneStays, downtimes,
+					turkeys, zones);
 		}
 	}
 }

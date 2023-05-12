@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -124,7 +125,7 @@ public class DataHandlerTest {
 	 */
 	@Test
 	public void readEmptyDowntimes() throws IOException {
-		TestMappings mappings = OutputDataTest.generateTestMappings(5, 2, 5, false, 0, 0, tempFolder);
+		TestMappings mappings = OutputDataTest.generateTestMappings(5, 2, 5, false, true, 0, 0, tempFolder);
 
 		Pair<FileInputStreamHandler, FileOutputStreamHandler> dataCSV = tempFolder
 				.newTempIOFile("empty_downtimes_antennadata.csv");
@@ -146,11 +147,11 @@ public class DataHandlerTest {
 		DataHandler.handleStreams(dataCSV.getKey(), mappings.turkeysIn, mappings.zonesIn, downtimesCSV.getKey(),
 				totalsCSV.getValue(), staysCSV.getValue(), args);
 
-		final Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>> outputTotals = CSVHandler
+		final Pair<Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>>, Map<String, Set<String>>> outputTotals = CSVHandler
 				.readTotalsCSV(totalsCSV.getKey());
 		final Map<String, List<ZoneStay>> outputStays = CSVHandler.readStaysCSV(staysCSV.getKey(), mappings.zones);
-		final TestData parsed = new TestData(outputTotals.getKey(), outputTotals.getValue(), outputStays,
-				generated.downtimes, mappings.turkeys, mappings.zones);
+		final TestData parsed = new TestData(outputTotals, outputStays, generated.downtimes, mappings.turkeys,
+				mappings.zones);
 
 		OutputDataTest.validateResults(generated, parsed, args);
 
@@ -165,7 +166,7 @@ public class DataHandlerTest {
 	 */
 	@Test
 	public void readEmptyLastRecord() throws IOException {
-		TestMappings mappings = OutputDataTest.generateTestMappings(5, 2, 5, false, 0, 0, tempFolder);
+		TestMappings mappings = OutputDataTest.generateTestMappings(5, 2, 5, false, true, 0, 0, tempFolder);
 
 		Pair<FileInputStreamHandler, FileOutputStreamHandler> dataCSV = tempFolder
 				.newTempIOFile("empty_last_record_antennadata.csv");
@@ -183,11 +184,11 @@ public class DataHandlerTest {
 		DataHandler.handleStreams(dataCSV.getKey(), mappings.turkeysIn, mappings.zonesIn, null, totalsCSV.getValue(),
 				staysCSV.getValue(), args);
 
-		final Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>> outputTotals = CSVHandler
+		final Pair<Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>>, Map<String, Set<String>>> outputTotals = CSVHandler
 				.readTotalsCSV(totalsCSV.getKey());
 		final Map<String, List<ZoneStay>> outputStays = CSVHandler.readStaysCSV(staysCSV.getKey(), mappings.zones);
-		final TestData parsed = new TestData(outputTotals.getKey(), outputTotals.getValue(), outputStays,
-				generated.downtimes, mappings.turkeys, mappings.zones);
+		final TestData parsed = new TestData(outputTotals, outputStays, generated.downtimes, mappings.turkeys,
+				mappings.zones);
 
 		OutputDataTest.validateResults(generated, parsed, args);
 
@@ -201,7 +202,7 @@ public class DataHandlerTest {
 	 */
 	@Test
 	public void readInvalidLastRecord() throws IOException {
-		TestMappings mappings = OutputDataTest.generateTestMappings(5, 2, 5, false, 0, 0, tempFolder);
+		TestMappings mappings = OutputDataTest.generateTestMappings(5, 2, 5, false, true, 0, 0, tempFolder);
 
 		Pair<FileInputStreamHandler, FileOutputStreamHandler> dataCSV = tempFolder
 				.newTempIOFile("invalid_last_record_antennadata.csv");
@@ -220,11 +221,11 @@ public class DataHandlerTest {
 		DataHandler.handleStreams(dataCSV.getKey(), mappings.turkeysIn, mappings.zonesIn, null, totalsCSV.getValue(),
 				staysCSV.getValue(), args);
 
-		final Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>> outputTotals = CSVHandler
+		final Pair<Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>>, Map<String, Set<String>>> outputTotals = CSVHandler
 				.readTotalsCSV(totalsCSV.getKey());
 		final Map<String, List<ZoneStay>> outputStays = CSVHandler.readStaysCSV(staysCSV.getKey(), mappings.zones);
-		final TestData parsed = new TestData(outputTotals.getKey(), outputTotals.getValue(), outputStays,
-				generated.downtimes, mappings.turkeys, mappings.zones);
+		final TestData parsed = new TestData(outputTotals, outputStays, generated.downtimes, mappings.turkeys,
+				mappings.zones);
 
 		OutputDataTest.validateResults(generated, parsed, args);
 

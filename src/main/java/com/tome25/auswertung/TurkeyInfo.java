@@ -322,6 +322,10 @@ public class TurkeyInfo implements Comparable<TurkeyInfo> {
 			addTime(time, currentZone, recordTime);
 
 			if (this.updateStay && !newRec && lastStay != null && lastStay.getZone().equals(currentZone)) {
+				if (!currentZone.hasFood() && currentTime.getTimeInMillis()
+						- lastStay.getLastRecordCal().getTimeInMillis() > ZoneStay.UNRELIABLE_TIME) {
+					markDaysUnreliable(lastStay.getLastRecordCal(), currentTime);
+				}
 				lastStay.setLastRecord(currentTime);
 			}
 		} else if (currentTime == null && currentZone != null) {
@@ -433,6 +437,10 @@ public class TurkeyInfo implements Comparable<TurkeyInfo> {
 					lastStay = new ZoneStay(id, currentZone, lastCal);
 					if (this.updateStay && lastTime != null) {
 						lastStay.setLastRecord(lastTime);
+						if (!currentZone.hasFood()
+								&& lastTime.getTimeInMillis() - lastCal.getTimeInMillis() > ZoneStay.UNRELIABLE_TIME) {
+							markDaysUnreliable(lastCal, lastTime);
+						}
 					}
 				}
 			}
@@ -447,6 +455,10 @@ public class TurkeyInfo implements Comparable<TurkeyInfo> {
 			lastStay = new ZoneStay(id, currentZone, lastCal);
 			if (this.updateStay && lastTime != null) {
 				lastStay.setLastRecord(lastTime);
+				if (!currentZone.hasFood()
+						&& lastTime.getTimeInMillis() - lastCal.getTimeInMillis() > ZoneStay.UNRELIABLE_TIME) {
+					markDaysUnreliable(lastCal, lastTime);
+				}
 			}
 		}
 
@@ -691,6 +703,11 @@ public class TurkeyInfo implements Comparable<TurkeyInfo> {
 			lastStay.setExitTime(exitCal);
 		}
 
+		if (!lastStay.getZone().hasFood() && lastStay.getExitCal().getTimeInMillis()
+				- lastStay.getLastRecordCal().getTimeInMillis() > ZoneStay.UNRELIABLE_TIME) {
+			markDaysUnreliable(lastStay.getLastRecordCal(), lastStay.getExitCal());
+		}
+
 		stayOut.println(CSVHandler.stayToCsvLine(lastStay), temporary);
 	}
 
@@ -889,12 +906,28 @@ public class TurkeyInfo implements Comparable<TurkeyInfo> {
 	}
 
 	/**
+	 * Checks whether this turkey has unreliable data.
+	 * 
+	 * @return {@code true} if this turkey has at least one day which is marked as
+	 *         unreliable.
+	 * 
+	 * @see #isDayUnreliable(String)
+	 * @see #markDaysUnreliable(Calendar, Calendar)
+	 */
+	public boolean hasUnreliableDay() {
+		return !unreliableDays.isEmpty();
+	}
+
+	/**
 	 * Checks whether the data for a given day is considered unreliable.
 	 * 
 	 * @param date The day for which to check.
 	 * @return {@code true} if the data for the given day is considered unreliable.
 	 * @throws NullPointerException     If {@code date} is {@code null}.
 	 * @throws IllegalArgumentException If {@code date} is empty.
+	 * 
+	 * @see #hasUnreliableDay()
+	 * @see #markDaysUnreliable(Calendar, Calendar)
 	 */
 	public boolean isDayUnreliable(String date) throws NullPointerException, IllegalArgumentException {
 		Objects.requireNonNull(date, "The date to check can't be null.");
@@ -904,6 +937,38 @@ public class TurkeyInfo implements Comparable<TurkeyInfo> {
 		}
 
 		return unreliableDays.contains(date);
+	}
+
+	/**
+	 * Marks all the days from the start time to the end time as unreliable.
+	 * 
+	 * @param start The {@link Calendar} representing the start of the unreliable
+	 *              segment.
+	 * @param end   The {@link Calendar} representing the end of the unreliable
+	 *              segment.
+	 * @throws NullPointerException     If one of the arguments is {@code null}.
+	 * @throws IllegalArgumentException If the end time is before the start time.
+	 * 
+	 * @see #hasUnreliableDay()
+	 * @see #isDayUnreliable(String)
+	 */
+	private void markDaysUnreliable(final Calendar start, final Calendar end)
+			throws NullPointerException, IllegalArgumentException {
+		Objects.requireNonNull(start, "The start time cannot be null.");
+		Objects.requireNonNull(end, "The end time cannot be null.");
+		if (end.before(start)) {
+			throw new IllegalArgumentException("End time cannot be before start time.");
+		}
+
+		unreliableDays.add(TimeUtils.encodeDate(start));
+		if (!TimeUtils.isSameDay(start, end)) {
+			Calendar day = TimeUtils.parseDate(TimeUtils.encodeDate(start));
+			day.add(Calendar.DATE, 1);
+			while (day.before(end)) {
+				unreliableDays.add(TimeUtils.encodeDate(day));
+				day.add(Calendar.DATE, 1);
+			}
+		}
 	}
 
 	/**

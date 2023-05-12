@@ -38,7 +38,7 @@ The file containing the zone times per day(`PutenAuswertungZeiten.csv`) has thes
  * Tier: The entity that this line is about.
  * Datum: The date for which this line is.
  * Bereichswechsel: The number of times the specified turkey changed the zone it was in on the specified day.
- * One "Aufenthalt in Zone X" column per zone: The time the specified turkey spent in the specified zone that day.
+ * One "Zeit in Zone X" column per zone: The time the specified turkey spent in the specified zone that day.
 
 The file containing the individual stays(`PutenAuswertungAufenthalte.csv`) has the following columns:
  * Tier: The entity that stayed in the specified zone for the specified time.

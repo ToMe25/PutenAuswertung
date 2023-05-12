@@ -31,11 +31,11 @@ public class TurkeyCSVTest {
 	@Test
 	public void turkeyHeader() {
 		assertEquals("The turkey csv header did not match.",
-				"Tier;Datum;Bereichswechsel;Aufenthalt in Zone Zone 1;Aufenthalt in Zone Zone 2",
+				"Tier;Datum;Bereichswechsel;Zeit in Zone Zone 1;Zeit in Zone Zone 2;Unzuverlaessig",
 				CSVHandler.turkeyCsvHeader(Arrays.asList(new String[] { "Zone 1", "Zone 2" })));
 
 		assertEquals("The turkey csv header did not match.",
-				"Tier;Datum;Bereichswechsel;Aufenthalt in Zone Z1;Aufenthalt in Zone Zone 2;Aufenthalt in Zone Z-3",
+				"Tier;Datum;Bereichswechsel;Zeit in Zone Z1;Zeit in Zone Zone 2;Zeit in Zone Z-3;Unzuverlaessig",
 				CSVHandler.turkeyCsvHeader(Arrays.asList(new String[] { "Z1", "Zone 2", "Z-3" })));
 	}
 
@@ -48,7 +48,7 @@ public class TurkeyCSVTest {
 		String date = "01.01.2022";
 		TurkeyInfo info = getBasicInfo(date);
 		assertEquals("Getting single day info from a basic TurkeyInfo returned an invalid string.",
-				"0;01.01.2022;5;01:28:33.19;10:51:31.53;11:39:55.28",
+				"0;01.01.2022;5;01:28:33.19;10:51:31.53;11:39:55.28;",
 				CSVHandler.turkeyToCsvLine(info, date, Arrays.asList(new String[] { "Z1", "Zone 2", "Z-3" })));
 	}
 
@@ -71,7 +71,7 @@ public class TurkeyCSVTest {
 		String date = "01.01.2022";
 		TurkeyInfo info = getBasicInfo(date);
 		assertEquals("Getting single day info from a basic TurkeyInfo returned an invalid string.",
-				"0;total;5;01:28:33.19;10:51:31.53;11:39:55.28",
+				"0;total;5;01:28:33.19;10:51:31.53;11:39:55.28;",
 				CSVHandler.turkeyToCsvLine(info, null, Arrays.asList(new String[] { "Z1", "Zone 2", "Z-3" })));
 	}
 
@@ -83,7 +83,7 @@ public class TurkeyCSVTest {
 		String date = "01.01.2022";
 		TurkeyInfo info = getBasicInfo(date);
 		assertEquals("Getting single day info from a basic TurkeyInfo returned an invalid string.",
-				"0;01.01.2022;5;11:39:55.28;01:28:33.19;10:51:31.53", CSVHandler.turkeyToCsvLine(info, date, null));
+				"0;01.01.2022;5;11:39:55.28;01:28:33.19;10:51:31.53;", CSVHandler.turkeyToCsvLine(info, date, null));
 	}
 
 	/**
@@ -95,8 +95,8 @@ public class TurkeyCSVTest {
 		String date = "01.01.2022";
 		TurkeyInfo info = getBasicInfo(date);
 		assertEquals("Getting single day info from a basic TurkeyInfo returned an invalid string.",
-				"0;01.01.2022;5;01:28:33.19;10:51:31.53;11:39:55.28;00:00:00.00",
-				CSVHandler.turkeyToCsvLine(info, date, Arrays.asList(new String[] { "Z1", "Zone 2", "Z-3", "Zone 4" })));
+				"0;01.01.2022;5;01:28:33.19;10:51:31.53;11:39:55.28;00:00:00.00;", CSVHandler.turkeyToCsvLine(info, date,
+						Arrays.asList(new String[] { "Z1", "Zone 2", "Z-3", "Zone 4" })));
 	}
 
 	/**
@@ -107,7 +107,7 @@ public class TurkeyCSVTest {
 		String date = "01.01.2022";
 		TurkeyInfo info = getBasicInfo(date);
 		assertEquals("Getting single day info from a basic TurkeyInfo returned an invalid string.",
-				"0;01.01.2022;5;01:28:33.19;11:39:55.28",
+				"0;01.01.2022;5;01:28:33.19;11:39:55.28;",
 				CSVHandler.turkeyToCsvLine(info, date, Arrays.asList(new String[] { "Z1", "Z-3" })));
 	}
 
@@ -120,7 +120,7 @@ public class TurkeyCSVTest {
 		String date = "05.12.2021";
 		TurkeyInfo info = getTwoDayInfo(date);
 		assertEquals("Getting zone info for the first day of a TurkeyInfo returned an invalid string.",
-				"0;05.12.2021;5;11:39:55.28;01:28:33.19;10:51:31.53", CSVHandler.turkeyToCsvLine(info, date, null));
+				"0;05.12.2021;5;11:39:55.28;01:28:33.19;10:51:31.53;", CSVHandler.turkeyToCsvLine(info, date, null));
 	}
 
 	/**
@@ -131,7 +131,7 @@ public class TurkeyCSVTest {
 	public void convertSecondDay() {
 		TurkeyInfo info = getTwoDayInfo("21.09.2023");
 		assertEquals("Getting zone info for the first day of a TurkeyInfo returned an invalid string.",
-				"0;22.09.2023;5;08:37:29.52;02:50:52.58;12:12:37.92;00:18:59.98",
+				"0;22.09.2023;5;08:37:29.52;02:50:52.58;12:12:37.92;00:18:59.98;",
 				CSVHandler.turkeyToCsvLine(info, "22.09.2023", null));
 	}
 
@@ -142,7 +142,7 @@ public class TurkeyCSVTest {
 	public void convertMultiDayTotals() {
 		TurkeyInfo info = getTwoDayInfo("21.09.2023");
 		assertEquals("Getting zone info for the first day of a TurkeyInfo returned an invalid string.",
-				"0;total;10;20:17:24.80;04:19:25.77;12:12:37.92;11:10:31.51",
+				"0;total;10;20:17:24.80;04:19:25.77;12:12:37.92;11:10:31.51;",
 				CSVHandler.turkeyToCsvLine(info, null, null));
 	}
 
