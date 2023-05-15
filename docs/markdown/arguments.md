@@ -19,7 +19,7 @@ Die Konfiguration dieses Programms erfolgt über Argumente die bei der Ausführu
 Generell werden Argumente verwendet indem diese an den Befehl zum starten des Programms angehängt werden.  
 Wenn der Start-Befehl zum Beispiel `java -jar PutenAuswertung.jar` ist, und das `help` Argument verwendet werden soll, müsste dieser Befehl verwendet werden: `java -jar PutenAuswertung.jar --help`.
 
-Die Reihenfolge der Argumente ist irrelevant, es ist allerdings darauf zu achten das alle Argumente nach dem Dateinamen kommen müssen.  
+Die Reihenfolge der Argumente ist irrelevant, es ist allerdings darauf zu achten dass alle Argumente nach dem Dateinamen kommen müssen.  
 Das heißt zum Beispiel dieser Befehl würde nicht funktionieren: `java --help -jar PutenAuswertung.jar`  
 Dies ist der Fall da dieser Befehl das Argument `--help` an `java` übergeben würde, nicht an `PutenAuswertung.jar`.
 
@@ -34,7 +34,7 @@ Das heißt nach einem Bindestrich können mehrere Argumente folgen, ohne durch L
 Ein Beispiel mit den Argumenten `--debug`, `--docs` und `--help`: `java -jar PutenAuswertung.jar -dhD`.
 
 Wie viele [Unix](https://de.wikipedia.org/wiki/Unix) Programme unterscheidet dieses Programm ob eine Zeichenkette als ein Langes oder mehrere kurze Argumente verarbeitet werden soll daran, ob ein oder zwei Bindestriche am Anfang der Zeichenkette stehen.  
-Ein Bindestrich bedeutet das die Zeichenkette als eine Kette kurzer Argumente verarbeitet werden soll.  
+Ein Bindestrich bedeutet dass die Zeichenkette als eine Kette kurzer Argumente verarbeitet werden soll.  
 Zwei Bindestriche veranlassen das Programm die Zeichenkette als ein langes Argument zu behandeln.  
 Dies hat zur Folge dass das folgende Beispiel nicht funktioniert: `java -jar PutenAuswertung.jar -docs`.
 
@@ -188,8 +188,8 @@ Dies ist allerdings nicht immer Fehlerfrei möglich.
 Ein Teil dieses Problems ist dadurch verursacht wie Terminals Leerzeichen in Argumenten behandeln.  
 Dies ist sowohl auf Linux als auch modernem Windows der Fall.
 
-Das Problem ist das Terminals den Befehl bei jedem Leerzeichen trennen, und dann dem Programm alle nicht leeren Segmente als Argumente übergeben.  
-Dies bedeutet das aus Sicht des Programms 
+Das Problem ist dass Terminals den Befehl bei jedem Leerzeichen trennen, und dann dem Programm alle nicht leeren Segmente als Argumente übergeben.  
+Dies bedeutet dass aus Sicht des Programms 
 
 ```
 java -jar PutenAuswertung.jar -D Some Dir
@@ -203,7 +203,7 @@ java -jar PutenAuswertung.jar -D Some  Dir
 
 identisch sind.  
 In beiden fällen bekommt das Programm `-D`, `Some` und `Dir` als Argumente.  
-Das Programm nimmt dann an das `Some` und `Dir` ein Wert sind, und verwendet das Verzeichnis `Some Dir`.
+Das Programm nimmt dann an dass `Some` und `Dir` ein Wert sind, und verwendet das Verzeichnis `Some Dir`.
 
 Das Programm könnte auch, zum Beispiel, 10 Leerzeichen nicht von einem einzelnen unterscheiden.
 
@@ -213,7 +213,7 @@ Beispiel:
 ```
 java -jar PutenAuswertung.jar -D "Some  Dir"
 ```
-Dies teilt dem Terminal mit das diese Leerzeichen nicht zum trennen des Wertes verwendet werden sollen.
+Dies teilt dem Terminal mit dass diese Leerzeichen nicht zum trennen des Wertes verwendet werden sollen.
 
 Eine Alternative ist es vor die Leerzeichen je einen Backslash zu machen.  
 Auch diese teilt dem Terminal mit den Wert hier nicht zu trennen.  
@@ -230,10 +230,10 @@ Das heißt das folgende würde nicht funktionieren:
 java -jar PutenAuswertung.jar -D Some\ -Dir
 ```
 
-Da der Backslash vom Terminal entfernt wird, erkennt das Programm nicht das das `-Dir` noch Teil des Wertes ist, und versucht dies als separates Argument zu verarbeiten.
+Da der Backslash vom Terminal entfernt wird, erkennt das Programm nicht dass das `-Dir` noch Teil des Wertes ist, und versucht dies als separates Argument zu verarbeiten.
 
 Der einfachste Weg dies zu vermeiden ist zwei Backslashes vor entweder das Leerzeichen direkt vor dem Bindestrich, oder vor den Bindestrich zu setzen.  
-In diesem Fall entfernt das Terminal einen Backslash, und das Programm interpretiert den anderen als Markierung das hier keine Argument-Trennung vorliegt.  
+In diesem Fall entfernt das Terminal einen Backslash, und das Programm interpretiert den anderen als Markierung dass hier keine Argument-Trennung vorliegt.  
 Beispiel:
 
 ```
@@ -255,7 +255,7 @@ java -jar pfad\zu\PutenAuswertung.jar
 
 Wie auch bei manueller Ausführung können Argumente nach dem Dateinamen angehängt werden.
 
-Das `@echo off` in der ersten Zeile sorgt dafür das das Terminal nicht jeden Befehl schreibt bevor er ausgeführt wird.  
+Das `@echo off` in der ersten Zeile sorgt dafür dass das Terminal nicht jeden Befehl schreibt bevor er ausgeführt wird.  
 Bei einem Skript mit nur einer Zeile wie diesem ist das nicht wirklich so hilfreich.  
 Bei längeren Skripten ist es allerdings angenehm.  
 Zum Beispiel falls das Programm für jeden Unterordner in einem Order ausgeführt werden soll kann dies hilfreich sein.

@@ -58,10 +58,18 @@ Die erste Zeile wird als Spaltentitel-Zeile behandelt, falls sie mit `Tier` begi
 Da das Programm nicht in der Lage ist die Spalten nach Titel zu sortieren, wird diese dann ignoriert.
 
 ## Bereiche.csv
-Die Datei namens `Bereiche.csv` muss zuerst eine Spalte mit dem Namen des Bereiches, und dann eine oder mehr Spalten mit den Ids der Antennen die diesem Bereich zugeordnet sind, enthalten.  
+Die Datei namens `Bereiche.csv` muss mindestens drei(3) Spalten enthalten.  
+Die erste Spalte, hier `Bereich` genannt, enthält den Namen des Bereichs.  
+Die zweite Spalte, hier `Kein Essen` genannt, kann ein `X` enthalten um zu markieren dass ein Bereich kein Essen hat, oder leer sein um zu markieren dass der Bereich Essen hat.  
+Alle weiteren Spalten enthalten jeweils die Id einer Antenne die diesem Bereich zugeordnet ist.  
+Vor, zwischen oder nach den Antennen-Id-Spalten können sich beliebig viele leere Spalten befinden.
+
 Die Datei muss einen Bereich pro Zeile enthalten.  
 Sowohl die Bereichs-Namen als auch die Antennen-Ids können Groß-/Klein-Buchstaben, Ziffern, Leerzeichen und Bindestriche enthalten.  
-Verschiedene Bereiche können eine verschieden viele Antennen-Ids enthalten.
+Verschiedene Bereiche können eine verschieden viele Antennen-Ids, und verschieden viele Antennen-Id-Spalten, enthalten.
+
+Wenn die `Kein Essen` Spalte einen anderen Wert als `X` oder `x` enthält, wird dieser mit einer [Fehlermeldung] ignoriert.  
+Das heißt ein Bereich der, zum Beispiel, `No Food` statt einem `X` hat, wird so behandelt als hätte er Essen.
 
 Wenn das Programm mehrere Bereiche mit dem selben Namen findet, werden alle diese außer dem ersten ignoriert.  
 Wenn eine Antenne mehreren Bereichen zugeordnet ist, ignoriert das Programm alle Zuordnungen außer der ersten.  
@@ -79,7 +87,7 @@ Der einzige unterschied zwischen der Ausführung mit einer leeren Datei und ohne
 No downtimes file found. This program expects an optional file called "Ausfälle.csv" in the directory you are executing this command in.
 ```
 
-Alternativ kann dass `-o` [Argument](arguments.md) ohne Wert verwendet werden um die Verwendung einer Ausfälle-Datei zu deaktivieren.
+Alternativ kann das `-o` [Argument](arguments.md) ohne Wert verwendet werden um die Verwendung einer Ausfälle-Datei zu deaktivieren.
 
 Diese Datei muss vier Spalten enthalten: `Start Datum`, `Start Zeit`, `End Datum` und `End Zeit`.  
 Die vier Spalten müssen in dieser Reihenfolge verwendet werden.  

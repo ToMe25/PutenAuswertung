@@ -331,7 +331,8 @@ public class TurkeyInfo implements Comparable<TurkeyInfo> {
 		} else if (currentTime == null && currentZone != null) {
 			Calendar startCal = startTime == null ? null : (Calendar) startTime.clone();
 			if (args.fillDays && (startTime == null || !TimeUtils.isSameDay(startTime, time))) {
-				startCal = TimeUtils.parseDate(TimeUtils.encodeDate(time));
+				startCal = new GregorianCalendar(time.get(Calendar.YEAR), time.get(Calendar.MONTH),
+						time.get(Calendar.DATE));
 			}
 			if (time.equals(startCal)) {
 				currentZone = newZone;
@@ -962,7 +963,8 @@ public class TurkeyInfo implements Comparable<TurkeyInfo> {
 
 		unreliableDays.add(TimeUtils.encodeDate(start));
 		if (!TimeUtils.isSameDay(start, end)) {
-			Calendar day = TimeUtils.parseDate(TimeUtils.encodeDate(start));
+			Calendar day = new GregorianCalendar(start.get(Calendar.YEAR), start.get(Calendar.MONTH),
+					start.get(Calendar.DATE));
 			day.add(Calendar.DATE, 1);
 			while (day.before(end)) {
 				unreliableDays.add(TimeUtils.encodeDate(day));

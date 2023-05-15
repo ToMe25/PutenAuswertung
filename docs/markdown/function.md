@@ -39,26 +39,33 @@ Standardmäßig ist diese fünf Minuten.
 
 **Falls eine Aufzeichnung während eines Ausfalles ist**, wird diese mit einer [Fehlermeldung] ignoriert, und die nächste eingelesen.
 
-**Falls eine Aufzeichnung nach dem End-Zeitpunkt für diese Pute ist**, wird diese mit einer [Fehlermeldung] ignoriert, und die nächste Zeile eingelesen.
+**Falls eine Aufzeichnung nach dem End-Zeitpunkt für diese Pute ist**, wird diese Pute so behandelt als hätte sie sich bis zu ihrem End-Zeitpunkt in ihrem aktuellen Bereich aufgehalten.  
+Außerdem wird eine [Fehlermeldung] ausgegeben.
 
 **Falls eine Aufzeichnung die erste nach einem Ausfall ist**, werden alle Puten so behandelt als hätten sie sich bis zum Anfang des Ausfalles in ihrem aktuellen Bereich aufgehalten.  
 Danach wird alles so behandelt als hätten eine neue Aufzeichnung am Ende des Ausfalles begonnen.  
-Mit der Ausnahme das die [Aufenthalts-Zeiten](output.md#putenauswertungaufenthalte-csv) für beide Aufzeichnungen zusammen sind.
+Mit der Ausnahme dass die [Aufenthalts-Zeiten](output.md#putenauswertungaufenthalte-csv) für beide Aufzeichnungen zusammen sind.
 
-**Falls diese bereits existiert, und zuletzt im selben Bereich aufgezeichnet wurde**, wird nur deren letzter Aufzeichnungs-Zeitpunkt geändert.
+**Falls diese bereits existiert, und zuletzt im selben Bereich aufgezeichnet wurde**, wird nur der letzte Aufzeichnungs-Zeitpunkt der Pute geändert.  
+Außerdem wird, falls die letzte Aufzeichnung 12 Stunden oder mehr her ist, der aktuelle Aufenthalt als unzuverlässig markiert.  
+Zusätzlich wird die Pute für den aktuellen Tag und alle Tage seit der letzten Aufzeichnung für diese Pute als unzuverlässig markiert.
 
 **Falls sie bereits existiert, aber zuletzt in einem anderen Bereich aufgezeichnet wurde**, passiert eine von drei Sachen:
  1. Falls das `fill-days` [Argument](arguments.md#argument-erklaerung) verwendet wird und die letzte Aufzeichnung von einem vorherigen Tag ist:  
     In diesem Fall wird die Pute so behandelt was wäre ihre letzte Aufzeichnung um Mitternacht, mehr als die Mindest-Aufenthaltsdauer her und in dem Bereich in dem sie nun ist.
  2. Falls der letzte aufgezeichnete Bereichswechsel mehr als die Mindest-Aufenthaltsdauer her ist:  
-    In diesem Fall wird aufgezeichnet, das die Pute sich für den Zeitraum seit diesem Bereichswechsel, in dem Bereich in dem sie zuvor Aufgezeichnet wurde befand.  
+    In diesem Fall wird aufgezeichnet, dass die Pute sich für den Zeitraum seit diesem Bereichswechsel, in dem Bereich in dem sie zuvor Aufgezeichnet wurde befand.  
     Der vorläufige Endzeitpunkt dieses Aufenthalts ist der Zeitpunkt der neuen Aufzeichnung.  
     Außerdem wird der Aufenthalt vor dem nun beendeten in die Datei [PutenAuswertungAufenthalte.csv](output.md#putenauswertungaufenthalte-csv) geschrieben.
  3. Falls der letzte Aufenthalts-Zeitraum weniger als die Mindest-Aufenthaltsdauer lang war:  
-    In diesem Fall wird aufgezeichnet, das die Pute sich bis zu der neusten Aufzeichnung im letzten Bereich aufhielt, in dem sie sich mehr als die Mindest-Aufenthaltsdauer am Stück aufgehalten hat.
+    In diesem Fall wird aufgezeichnet, dass die Pute sich bis zu der neusten Aufzeichnung im letzten Bereich aufhielt, in dem sie sich mehr als die Mindest-Aufenthaltsdauer am Stück aufgehalten hat.
 
 Danach wird die Pute Vorläufig als in dem Bereich der neuesten Aufzeichnung befindlich markiert.  
 Dann wird die Anzahl der Bereichswechsel aktualisiert.
+
+Außerdem wird überprüft ob die Zeit zwischen der letzten Aufzeichnung, und der neuen 12 Stunden erreicht.  
+Falls ja wird der aktuelle Aufenthalt als unzuverlässig markiert.  
+Zusätzlich wird die Pute für den aktuellen Tag und alle Tage seit der letzten Aufzeichnung für diese Pute als unzuverlässig markiert.
 
 **Info:** Wenn diese Aufzeichnung die letzte Aufzeichnung in der Datei ist, wird diese als Bereichswechsel gewertet, erzeugt allerdings keinen 0 Sekunden Aufenthalt.
 
