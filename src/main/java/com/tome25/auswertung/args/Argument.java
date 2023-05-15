@@ -108,10 +108,13 @@ public enum Argument {
 				target = new File(new File(val), "PutenAuswertung-docs");
 			}
 
-			LogHandler.out_println("Extracting documentation to \"" + target.toString() + "\".", true);
+			LogHandler.out_println("Extracting documentation to \"" + target.toString() + "\".");
+			if (inst.arguments.contains(OVERRIDE)) {
+				LogHandler.out_println("Overriding existing files in target directory.");
+			}
 
 			try {
-				FileUtils.extract("/docs/", target);
+				FileUtils.extract("/docs/", target, inst.arguments.contains(OVERRIDE));
 			} catch (Exception e) {
 				LogHandler.err_println("Failed to extract documentation: " + e.getMessage());
 				LogHandler.print_exception(e, "extract documentation", "Target: %s", target.toString());

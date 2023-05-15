@@ -77,7 +77,8 @@ Die Tabelle in diesem Abschnitt beschreibt die Funktion aller Argumente.
 |               |                      | Extrahiert diese Dokumentation von der Jar-Datei dieses Programms.                                                  |  
 |               |                      | Diese wird dann in einen Ordner mit dem Namen `PutenAuswertung-docs` im aktuellen Verzeichnis geschrieben.          |  
 |               |                      | Falls ein Wert angegeben wurde wird der `PutenAuswertung-docs` Order stattdessen in diesem erstellt.                |  
-|               |                      | **Info:** Falls eine der Dateien in diesem Order bereits existiert wird diese nicht überschrieben.                  |  
+|               |                      | Dateien mit dem Namen einer zu extrahierenden Datei werden normalerweise nicht überschrieben.                       |  
+|               |                      | Die `--override` Option kann verwendet werden um solche Dateien zu überschreiben.                                   |  
 | -a            | `--antenna-data`,    | Erwartet als Wert eine existierende Datei.                                                                          |  
 |               | `--antennadata`      | Das Programm liest dann die [Antennen-Daten](input.md#antennendaten-csv) aus dieser Datei.                          |  
 |               |                      | Wenn dieses Argument nicht angegeben wurde, wird die Datei mit Namen `AntennenDaten.csv` verwendet.                 |  
@@ -117,6 +118,7 @@ Die Tabelle in diesem Abschnitt beschreibt die Funktion aller Argumente.
 |               | `--override-outputs` | Wenn diese Argument nicht übergeben wird fragt das Programm nach bevor es eine Ergebnissdatei überschreibt.         |  
 |               | `--overrideoutputs`  | **Achtung:** Wenn das Programm nicht in einem Terminal gestartet wird, werden die Dateien auch überschrieben.       |  
 |               |                      | Da in diesem Falle die Nachfrage nicht möglich ist, überschreibt das Programm sie ohne Nachfrage.                   |  
+|               |                      | Kann auch verwendet werden um bei der extraktion der Dokumentation Dateien zu überschreiben.                        |  
 | -c            | `--decimal-separator`| Erwartet einen Punkt oder ein Komma als Argument.                                                                   |  
 |               | `--decimalseparator` | Teilt dem Programm mit welches Zeichen in [Ergebnis-Dateien](output.md) und [Statusmeldungen] Hundertstel           |  
 |               | `--decimal-comma`    | von Sekunden getrennt werden sollen.                                                                                |  

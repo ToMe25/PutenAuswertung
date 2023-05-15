@@ -58,6 +58,42 @@ public class FileUtils {
 	 */
 	public static void extract(String resource, File directory) throws FileNotFoundException,
 			FileAlreadyExistsException, IOException, NullPointerException, IllegalArgumentException {
+		extract(resource, directory, false);
+	}
+
+	/**
+	 * Extracts the given resource into the given directory.<br/>
+	 * Can extract either a single file, or a directory including all its contents.
+	 * 
+	 * If this is run inside a jar it will extract the files from said jar.<br/>
+	 * Otherwise it will just copy the files from the classpath.
+	 * 
+	 * Existing files will not be overridden.<br/>
+	 * Any file except the target directory existing will not cause an exception,
+	 * but just write a log message and skip said file or directory.<br/>
+	 * The target directory existing only causes an exception if it is not a
+	 * directory.
+	 * 
+	 * If the resource is a file it will be extracted into the target
+	 * directory.<br/>
+	 * If it is a directory all its contents will be extracted into the target
+	 * directory.
+	 * 
+	 * @param resource  The file or directory to extract.
+	 * @param directory The target directory to extract to.
+	 * @param replace   Whether to replace files if they already exist.<br/>
+	 *                  Does not replace directories with files.
+	 * @throws FileNotFoundException      If the target directory doesn't exist and
+	 *                                    cannot be created.<br/>
+	 *                                    Also if this is run outside of a jar, and
+	 *                                    the resource to extract doesn't exist.
+	 * @throws FileAlreadyExistsException If the target file exists, but isn't a
+	 *                                    directory.
+	 * @throws IOException                If getting real/canonical paths fails.
+	 * @throws NullPointerException       If one of the arguments is {@code null}.
+	 */
+	public static void extract(String resource, File directory, boolean replace) throws FileNotFoundException,
+			FileAlreadyExistsException, IOException, NullPointerException, IllegalArgumentException {
 		Objects.requireNonNull(resource, "The resource to extract can't be null.");
 		URL res = FileUtils.class.getResource(resource);
 		if (res == null) {
@@ -72,7 +108,7 @@ public class FileUtils {
 			}
 		}
 
-		extract(res, directory);
+		extract(res, directory, replace);
 	}
 
 	/**
@@ -105,6 +141,42 @@ public class FileUtils {
 	 * @throws NullPointerException       If one of the arguments is {@code null}.
 	 */
 	public static void extract(URL resource, File directory)
+			throws FileNotFoundException, FileAlreadyExistsException, IOException, NullPointerException {
+		extract(resource, directory, false);
+	}
+
+	/**
+	 * Extracts the given resource into the given directory.<br/>
+	 * Can extract either a single file, or a directory including all its contents.
+	 * 
+	 * If this is run inside a jar it will extract the files from said jar.<br/>
+	 * Otherwise it will just copy the files from the classpath.
+	 * 
+	 * Existing files will not be overridden.<br/>
+	 * Any file except the target directory existing will not cause an exception,
+	 * but just write a log message and skip said file or directory.<br/>
+	 * The target directory existing only causes an exception if it is not a
+	 * directory.
+	 * 
+	 * If the resource is a file it will be extracted into the target
+	 * directory.<br/>
+	 * If it is a directory all its contents will be extracted into the target
+	 * directory.
+	 * 
+	 * @param resource  The file or directory to extract.
+	 * @param directory The target directory to extract to.
+	 * @param replace   Whether to replace files if they already exist.<br/>
+	 *                  Does not replace directories with files.
+	 * @throws FileNotFoundException      If the target directory doesn't exist and
+	 *                                    cannot be created.<br/>
+	 *                                    Also if this is run outside of a jar, and
+	 *                                    the resource to extract doesn't exist.
+	 * @throws FileAlreadyExistsException If the target file exists, but isn't a
+	 *                                    directory.
+	 * @throws IOException                If getting real/canonical paths fails.
+	 * @throws NullPointerException       If one of the arguments is {@code null}.
+	 */
+	public static void extract(URL resource, File directory, boolean replace)
 			throws FileNotFoundException, FileAlreadyExistsException, IOException, NullPointerException {
 		Objects.requireNonNull(resource, "The resource to extract can't be null.");
 		Objects.requireNonNull(directory, "The directory to extract the resource into can't be null.");
@@ -145,18 +217,65 @@ public class FileUtils {
 							target = new File(directory, new File(entry.getName()).getName());
 						}
 
-						if (entry.isDirectory()) {
-							target.mkdir();
-						} else {
-							try {
-								Files.copy(jar.getInputStream(entry), target.toPath());
-							} catch (FileAlreadyExistsException e) {
-								LogHandler.err_println(
-										"Couldn't extract file \"" + entry.getName() + "\" because it already exists.");
-								LogHandler.print_exception(e, "extract a file from jar",
-										"Jar path: %s, Resource path: %s, Entry path: %s", jarPath, resPath,
-										entry.getName());
+						if (replace && target.exists() && !target.isDirectory()) {
+							if (!target.delete()) {
+								LogHandler.err_println("Failed to delete file \"" + target.toString()
+										+ "\". Cannot extract file \"" + entry.getName() + "\".");
+								LogHandler.print_debug_info(
+										"Jar path: %s, Resource path: %s, Entry path: %s, Target path: %s", jarPath,
+										resPath, entry.getName(), target.getAbsolutePath().toString());
+								continue;
 							}
+						} else if (replace && target.exists() && target.isDirectory() && !entry.isDirectory()) {
+							LogHandler.err_println("Couldn't extract file \"" + entry.getName()
+									+ "\" because a directory with its name exists.");
+							LogHandler.print_debug_info(
+									"Jar path: %s, Resource path: %s, Entry path: %s, Target path: %s", jarPath,
+									resPath, entry.getName(), target.getAbsolutePath().toString());
+							continue;
+						} else if (!replace && target.exists() && !(target.isDirectory() && entry.isDirectory())) {
+							LogHandler.err_println("Couldn't extract file \"" + entry.getName()
+									+ "\" because a file or directory with that name already exists. Use -O to override.");
+							LogHandler.print_debug_info(
+									"Jar path: %s, Resource path: %s, Entry path: %s, Target path: %s", jarPath,
+									resPath, entry.getName(), target.getAbsolutePath().toString());
+							continue;
+						}
+
+						if (entry.isDirectory() && !target.exists()) {
+							if (!target.mkdir()) {
+								LogHandler.err_println("Failed to create directory \"" + target.toString() + "\".");
+								LogHandler.print_debug_info(
+										"Jar path: %s, Resource path: %s, Entry path: %s, Target path: %s", jarPath,
+										resPath, entry.getName(), target.getAbsolutePath().toString());
+							}
+							continue;
+						} else if (entry.isDirectory()) {
+							continue;
+						}
+
+						if (!target.getParentFile().exists()) {
+							LogHandler.err_println("Couldn't extract file \"" + entry.getName()
+									+ "\" because its parent directory doesn't exist.");
+							LogHandler.print_debug_info(
+									"Jar path: %s, Resource path: %s, Entry path: %s, Target path: %s", jarPath,
+									resPath, entry.getName(), target.getAbsolutePath().toString());
+							continue;
+						} else if (!target.getParentFile().isDirectory()) {
+							LogHandler.err_println("Couldn't extract file \"" + entry.getName()
+									+ "\" because its parent directory is a file.");
+							LogHandler.print_debug_info(
+									"Jar path: %s, Resource path: %s, Entry path: %s, Target path: %s", jarPath,
+									resPath, entry.getName(), target.getAbsolutePath().toString());
+							continue;
+						}
+
+						LogHandler.out_println(
+								"Extracting file \"" + entry.getName() + "\" to \"" + target.toString() + "\".", true);
+						if (replace) {
+							Files.copy(jar.getInputStream(entry), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
+						} else {
+							Files.copy(jar.getInputStream(entry), target.toPath());
 						}
 					}
 				}
@@ -215,7 +334,8 @@ public class FileUtils {
 	 * 
 	 * @param source  The directory to copy.
 	 * @param target  The directory to copy the files and directories into.
-	 * @param replace Whether to replace files if they already exist.
+	 * @param replace Whether to replace files if they already exist.<br/>
+	 *                Does not replace directories with files.
 	 * @throws FileNotFoundException      If the source directory doesn't exist, or
 	 *                                    isn't a directory.<br/>
 	 *                                    Also if the target directory doesn't exist
@@ -289,6 +409,9 @@ public class FileUtils {
 				} else {
 					Path contentTgt = targetPath.resolve(sourcePath.relativize(content.toPath()));
 					try {
+						LogHandler.out_println(
+								"Copying file \"" + content.toString() + "\" to \"" + contentTgt.toString() + "\".",
+								true);
 						if (replace) {
 							Files.copy(content.toPath(), contentTgt, StandardCopyOption.REPLACE_EXISTING);
 						} else {
@@ -297,7 +420,7 @@ public class FileUtils {
 					} catch (IOException e) {
 						if (e instanceof FileAlreadyExistsException) {
 							LogHandler.err_println("Couldn't copy file \"" + content.toString()
-									+ "\" because its target already exists.");
+									+ "\" because its target already exists. Use -O to override.");
 						} else if (e instanceof DirectoryNotEmptyException) {
 							LogHandler.err_println("Couldn't copy file \"" + content.toString()
 									+ "\" because its target is a non-empty directory.");
