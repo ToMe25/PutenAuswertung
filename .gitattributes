@@ -1,0 +1,4 @@
+*   text=auto eol=lf
+src/**  text eol=lf
+*.java  diff=java text eol=lf
+docs/** text eol=lf

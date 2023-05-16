@@ -12,6 +12,22 @@
     <fileSet>
       <directory>${project.build.outputDirectory}/docs</directory>
       <outputDirectory></outputDirectory>
+      <lineEnding>crlf</lineEnding>
+      <excludes>
+        <exclude>html/fonts/**</exclude>
+        <exclude>html/images/**</exclude>
+        <exclude>html/img/**</exclude>
+      </excludes>
+    </fileSet>
+    <fileSet>
+      <directory>${project.build.outputDirectory}/docs/html</directory>
+      <outputDirectory>html</outputDirectory>
+      <lineEnding>keep</lineEnding>
+      <includes>
+        <include>fonts/**</include>
+        <include>images/**</include>
+        <include>img/**</include>
+      </includes>
     </fileSet>
   </fileSets>
 </assembly>

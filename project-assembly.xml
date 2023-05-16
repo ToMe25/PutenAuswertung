@@ -10,10 +10,11 @@
       <directory>${project.basedir}</directory>
       <outputDirectory></outputDirectory>
       <useDefaultExcludes>false</useDefaultExcludes>
+      <lineEnding>crlf</lineEnding>
       <includes>
-        <include>.git/**</include>
         <include>docs/**</include>
         <include>src/**</include>
+        <include>.gitattributes</include>
         <include>.gitignore</include>
         <include>README*</include>
         <include>pom.xml</include>
@@ -23,6 +24,11 @@
         <exclude>**/__pycache__/**</exclude>
         <exclude>**/*.log</exclude>
       </excludes>
+    </fileSet>
+    <fileSet>
+      <directory>${project.basedir}/.git</directory>
+      <outputDirectory>.git</outputDirectory>
+      <useDefaultExcludes>false</useDefaultExcludes>
     </fileSet>
   </fileSets>
 </assembly>
