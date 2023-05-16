@@ -88,7 +88,8 @@
           <version>3.4.2</version>
           <configuration>
             <descriptors>
-              <descriptor>docs/assembly.xml</descriptor>
+              <descriptor>docs/docs-assembly.xml</descriptor>
+              <descriptor>project-assembly.xml</descriptor>
             </descriptors>
           </configuration>
           <executions>
