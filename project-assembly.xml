@@ -29,6 +29,10 @@
       <directory>${project.basedir}/.git</directory>
       <outputDirectory>.git</outputDirectory>
       <useDefaultExcludes>false</useDefaultExcludes>
+      <excludes>
+        <exclude>logs/**</exclude>
+        <exclude>config</exclude>
+      </excludes>
     </fileSet>
   </fileSets>
 </assembly>

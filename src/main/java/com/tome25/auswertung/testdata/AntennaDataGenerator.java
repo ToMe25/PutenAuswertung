@@ -851,11 +851,15 @@ public class AntennaDataGenerator {
 
 			unreliableDays.put(tId, new HashSet<String>());
 			if (stays.containsKey(tId)) {
+				Set<String> tUD = unreliableDays.get(tId);
 				for (final ZoneStay stay : stays.get(tId)) {
 					if (stay.isUnreliable()) {
-						Calendar day = TimeUtils.parseDate(stay.getEntryDate());
-						while (day.before(stay.getExitCal())) {
-							unreliableDays.get(tId).add(TimeUtils.encodeDate(day));
+						final Calendar entry = stay.getEntryCal();
+						final Calendar exit = stay.getExitCal();
+						Calendar day = new GregorianCalendar(entry.get(Calendar.YEAR), entry.get(Calendar.MONTH),
+								entry.get(Calendar.DATE));
+						while (day.before(exit)) {
+							tUD.add(TimeUtils.encodeDate(day));
 							day.add(Calendar.DATE, 1);
 						}
 					}

@@ -229,9 +229,8 @@ public class TurkeyInfo implements Comparable<TurkeyInfo> {
 		this.lastZoneChange = time == null ? 0 : time.getTimeInMillis();
 
 		if (time != null) {
-			Calendar dayStart = new GregorianCalendar();
-			dayStart.setTimeInMillis(0);
-			dayStart.set(time.get(Calendar.YEAR), time.get(Calendar.MONTH), time.get(Calendar.DAY_OF_MONTH));
+			Calendar dayStart = new GregorianCalendar(time.get(Calendar.YEAR), time.get(Calendar.MONTH),
+					time.get(Calendar.DATE));
 			lastStay = new ZoneStay(id, currentZone, args.fillDays ? dayStart : startTime);
 
 			dayZoneTimes.put(TimeUtils.encodeDate(time), new HashMap<String, Integer>());
@@ -369,9 +368,8 @@ public class TurkeyInfo implements Comparable<TurkeyInfo> {
 			}
 
 			currentZone = newZone;
-			Calendar dayStart = new GregorianCalendar();
-			dayStart.setTimeInMillis(0);
-			dayStart.set(time.get(Calendar.YEAR), time.get(Calendar.MONTH), time.get(Calendar.DAY_OF_MONTH));
+			Calendar dayStart = new GregorianCalendar(time.get(Calendar.YEAR), time.get(Calendar.MONTH),
+					time.get(Calendar.DATE));
 			lastZoneChange = dayStart.getTimeInMillis();
 			lastStay = new ZoneStay(id, newZone, dayStart);
 		} else {
