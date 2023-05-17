@@ -47,6 +47,8 @@ Wenn die Aufzeichnung aus anderen Gründen früher endet wird diese ignoriert.
 **Achtung:** In dieser Datei ist die Zeit vor dem Datum, in allen anderen Dateien steht die Uhrzeit nach dem Datum.  
 Dies ist aus technischen Gründen nötig, und wird sich voraussichtlich nicht ändern.
 
+Wenn eine Pute einen Start-Bereich hat, welcher nicht in der [Bereiche.csv-Datei](#bereiche-csv) ist, wird dieser mit einer [Fehlermeldung] ignoriert.
+
 Wenn eine Zeile eine End-Uhrzeit, aber kein End-Datum enthält, wird diese End-Uhrzeit mit einer [Fehlermeldung] ignoriert.  
 Wenn eine Zeile ein End-Datum, aber keine End-Uhrzeit enthält, wird eine [Fehlermeldung] ausgegeben, und die Pute am Anfang des Tages entfernt.
 
