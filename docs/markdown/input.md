@@ -139,5 +139,18 @@ Andernfalls werden sie mit einer [Fehlermeldung] wie dieser übersprungen:
 New antenna record at 00.02.2022 04:29:36.09 for turkey "Turkey" is before the last one for the same turkey. Skipping line.
 ```
 
-Transponder die nicht in der [Puten.csv](#puten-csv) Datei einer Pute zugeordnet sind, werden als separate Pute mit der Id des Transponders behandelt.  
+Transponder die nicht in der [Puten.csv-Datei](#puten-csv) einer Pute zugeordnet sind, werden als separate Pute mit der Id des Transponders behandelt.  
 Auch dies verursacht eine [Fehlermeldung].
+
+Auch Antennen die nicht in der [Bereiche.csv-Datei](#bereiche-csv) einem Bereich zugeordnet sind verursachen eine [Fehlermeldung].  
+Anders als die anderen hier beschriebenen Probleme muss im interaktiven Modus in diesem Fall der Nutzer das überspringen der Zeile bestätigen.  
+Im nicht-interaktiven Modus werden diese Zeilen immer übersprungen.  
+So sieht diese Nachfrage aus:
+
+```
+Received antenna record from unknown antenna id "16401811b" on day 08.02.2022 at 11:59:05.16.
+Skip [O]nce, Skip [A]ll with same antenna, or [E]xit?
+```
+
+Es gibt hier die Option diese Zeile zu überspringen, alle Zeilen von dieser Antenne zu überspringen oder das Programm zu beenden.  
+Es gibt keine Option um Zeilen von allen unbekannten Antennen zu überspringen.

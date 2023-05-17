@@ -114,7 +114,7 @@ Die Tabelle in diesem Abschnitt beschreibt die Funktion aller Argumente.
 |               |                      | Kürzere Aufenthalte werden dem letzten längeren Aufenthalt angerechnet.                                             |  
 |               |                      | Ein Wert von 0 kann verwendet werden um die Mindestdauer zu deaktivieren.                                           |  
 |               |                      | Wenn dieses Argument nicht verwendet wird, ist die Mindest-Aufenthaltsdauer 5 Minuten(300 Sekunden).                |  
-| -O            | `--override`,        | Teilt dem Programm mit es soll alle Ergebnissdateien ohne Nachfrage überschreiben.                                  |  
+| -O            | `--override`,        | Teilt dem Programm mit es soll alle Ergebnisdateien ohne Nachfrage überschreiben.                                   |  
 |               | `--override-outputs` | Wenn diese Argument nicht übergeben wird fragt das Programm nach bevor es eine Ergebnissdatei überschreibt.         |  
 |               | `--overrideoutputs`  | **Achtung:** Wenn das Programm nicht in einem Terminal gestartet wird, werden die Dateien auch überschrieben.       |  
 |               |                      | Da in diesem Falle die Nachfrage nicht möglich ist, überschreibt das Programm sie ohne Nachfrage.                   |  
@@ -124,6 +124,18 @@ Die Tabelle in diesem Abschnitt beschreibt die Funktion aller Argumente.
 |               | `--decimal-comma`    | von Sekunden getrennt werden sollen.                                                                                |  
 |               | `--decimalcomma`     | Wenn dieses Argument nicht verwendet wird, nutzt das Programm Punkte um Sekunden und Hundertstel zu trennen.        |  
 |               | `--comma`            |                                                                                                                     |  
+| -i            | `--interactive`      | Dieses Argument aktiviert den interaktiven Modus des Programms.                                                     |  
+|               |                      | Im interaktiven Modus fragt das Programm bevor es Ergebnisdateien überschreibt,                                     |  
+|               |                      | und bevor es unbekannte Antennen-Ids ignoriert.                                                                     |  
+|               |                      | Der interaktive Modus kann mit dem `--batch` Argument deaktiviert werden.                                           |  
+|               |                      | Wenn keines der beiden Argumente übergeben wurde versucht das Programm automatisch zu erkennen                      |  
+|               |                      | Ob es in einer interaktiven Umgebung ausgeführt wird.                                                               |  
+| -b            | `--batch`            | Dieses Argument deaktiviert den interaktiven Modus des Programms.                                                   |  
+|               |                      | Im interaktiven Modus fragt das Programm bevor es Ergebnisdateien überschreibt,                                     |  
+|               |                      | und bevor es unbekannte Antennen-Ids ignoriert.                                                                     |  
+|               |                      | Der interaktive Modus kann mit dem `--interactive` Argument aktiviert werden.                                       |  
+|               |                      | Wenn keines der beiden Argumente übergeben wurde versucht das Programm automatisch zu erkennen                      |  
+|               |                      | Ob es in einer interaktiven Umgebung ausgeführt wird.                                                               |  
 
 Hier das Ergebnis von `--help`:
 
@@ -180,6 +192,14 @@ Options:
      --decimal-comma, <SEPARATOR>      Can only be either a dot or a comma.
      --decimalcomma, <SEPARATOR>
      --comma <SEPARATOR>
+ -i, --interactive                     Enables the interactive mode of this program.
+                                       In interactive mode the program will ask before ignoring unknown antennas or overriding output files.
+                                       Interactive mode can be enabled using --batch.
+                                       If neither is specified, the program will attempt to detect whether its being run in an interactive environment.
+ -b, --batch                           Disables the interactive mode of this program.
+                                       In interactive mode the program will ask before ignoring unknown antennas or overriding output files.
+                                       Interactive mode can be enabled using --interactive.
+                                       If neither is specified, the program will attempt to detect whether its being run in an interactive environment.
 ```
 
 #### Leerzeichen

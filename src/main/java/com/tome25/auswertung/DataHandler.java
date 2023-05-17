@@ -117,6 +117,7 @@ public class DataHandler {
 		Calendar startTime = null;
 		Calendar prevStartTime = null;
 		Calendar lastDts = null;
+		Set<String> skippedUnknownAntennaIds = new HashSet<String>();
 
 		read_loop: while (!antennaStream.done()) {
 			AntennaRecord record = CSVHandler.readAntennaRecord(antennaStream, tokenOrder);
@@ -130,9 +131,9 @@ public class DataHandler {
 			if (turkeys.containsKey(record.transponder)) {
 				turkey = turkeys.get(record.transponder);
 			} else {
-				LogHandler.err_println(String.format(
-						"Received antenna record for unknown transponder id \"%s\" on day %s at %s. Considering it a separate turkey.",
-						record.transponder, record.date, record.getTime()));
+				LogHandler.err_println(
+						"Received antenna record for unknown transponder id \"" + record.transponder + "\" on day "
+								+ record.date + " at " + record.getTime() + ". Considering it a separate turkey.");
 				LogHandler.print_debug_info("Antenna Record: %s, Arguments: %s", record, args);
 			}
 
@@ -142,9 +143,14 @@ public class DataHandler {
 								+ record.date + " at " + record.getTime() + (interactive ? "." : ". Skipping line."));
 				LogHandler.print_debug_info("Antenna Record: %s, Arguments: %s", record, args);
 				if (interactive) {
+					if (skippedUnknownAntennaIds.contains(record.antenna)) {
+						LogHandler.out_println("Skipping record due to previous confirmation.");
+						continue;
+					}
+
 					try {
 						BufferedWriter out = ConsoleHelper.getConsoleWriter();
-						out.write("Skip record and [C]ontinue or [E]xit?");
+						out.write("Skip [O]nce, Skip [A]ll with same antenna, or [E]xit?");
 						out.newLine();
 						out.flush();
 
@@ -170,8 +176,12 @@ public class DataHandler {
 						}
 
 						char c = response.charAt(0);
-						if (c == 'c' || c == 'C') {
-							LogHandler.out_println("Skipping line and continuing.");
+						if (c == 'o' || c == 'O') {
+							LogHandler.out_println("Skipping this line and continuing.");
+							continue;
+						} else if (c == 'a' || c == 'A') {
+							LogHandler.out_println("Skipping this line and all future occurrences of this id.");
+							skippedUnknownAntennaIds.add(record.antenna);
 							continue;
 						} else if (c == 'e' || c == 'E') {
 							LogHandler.out_println("Exiting.");
