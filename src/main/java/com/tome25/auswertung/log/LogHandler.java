@@ -609,6 +609,7 @@ public class LogHandler {
 	 * 
 	 * @see #overrideSysErr()
 	 * @see #resetSysOut()
+	 * @see #getInitialSysOut()
 	 */
 	public static void overrideSysOut() {
 		if (output == null) {
@@ -630,6 +631,7 @@ public class LogHandler {
 	 * 
 	 * @see #overrideSysOut()
 	 * @see #resetSysErr()
+	 * @see #getInitialSysErr()
 	 */
 	public static void overrideSysErr() {
 		if (error == null) {
@@ -654,6 +656,7 @@ public class LogHandler {
 	 * 
 	 * @see #overrideSysOut()
 	 * @see #resetSysErr()
+	 * @see #getInitialSysOut()
 	 */
 	public static void resetSysOut() {
 		if (oldOut != null) {
@@ -674,12 +677,51 @@ public class LogHandler {
 	 * 
 	 * @see #overrideSysErr()
 	 * @see #resetSysOut()
+	 * @see #getInitialSysErr()
 	 */
 	public static void resetSysErr() {
 		if (oldErr != null) {
 			System.setErr(oldErr);
 
 			oldErr = null;
+		}
+	}
+
+	/**
+	 * Gets the initial system output stream, from before the handler overrode
+	 * it.<br/>
+	 * Or {@link System#out} if the LogHandler didn't override it.
+	 * 
+	 * @return The default system output stream.
+	 * 
+	 * @see #overrideSysOut()
+	 * @see #resetSysOut()
+	 * @see #getInitialSysErr()
+	 */
+	public static PrintStream getInitialSysOut() {
+		if (oldOut == null) {
+			return System.out;
+		} else {
+			return oldOut;
+		}
+	}
+
+	/**
+	 * Gets the initial system error stream, from before the handler overrode
+	 * it.<br/>
+	 * Or {@link System#err} if the LogHandler didn't override it.
+	 * 
+	 * @return The default system error stream.
+	 * 
+	 * @see #overrideSysErr()
+	 * @see #resetSysErr()
+	 * @see #getInitialSysOut()
+	 */
+	public static PrintStream getInitialSysErr() {
+		if (oldErr == null) {
+			return System.err;
+		} else {
+			return oldErr;
 		}
 	}
 }

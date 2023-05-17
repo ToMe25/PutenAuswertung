@@ -325,6 +325,50 @@ public enum Argument {
 					"Can only be either a dot or a comma." };
 		}
 
+	},
+	INTERACTIVE('i', (short) 5, "interactive") {
+		@Override
+		public void onReceived(Arguments inst, String val) throws IllegalArgumentException {
+			if (inst.arguments.contains(BATCH)) {
+				LogHandler.err_println("Interactive and Batch arguments detected. Please use only one of the two.");
+				LogHandler.print_debug_info("Arguments: %s", inst);
+				System.exit(5);
+			}
+
+			inst.interactive = true;
+			LogHandler.out_println("Interactive mode enabled.");
+		}
+
+		@Override
+		public String[] getDescription() {
+			return new String[] { "Enables the interactive mode of this program.",
+					"In interactive mode the program will ask before ignoring unknown antennas or overriding output files.",
+					"Interactive mode can be enabled using --batch.",
+					"If neither is specified, the program will attempt to detect whether its being run in an interactive environment." };
+		}
+
+	},
+	BATCH('b', (short) 5, "batch") {
+		@Override
+		public void onReceived(Arguments inst, String val) throws IllegalArgumentException {
+			if (inst.arguments.contains(INTERACTIVE)) {
+				LogHandler.err_println("Interactive and Batch arguments detected. Please use only one of the two.");
+				LogHandler.print_debug_info("Arguments: %s", inst);
+				System.exit(5);
+			}
+
+			inst.interactive = false;
+			LogHandler.out_println("Interactive mode disabled.");
+		}
+
+		@Override
+		public String[] getDescription() {
+			return new String[] { "Disables the interactive mode of this program.",
+					"In interactive mode the program will ask before ignoring unknown antennas or overriding output files.",
+					"Interactive mode can be enabled using --interactive.",
+					"If neither is specified, the program will attempt to detect whether its being run in an interactive environment." };
+		}
+
 	};
 
 	/**

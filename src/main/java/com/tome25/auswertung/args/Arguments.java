@@ -120,6 +120,12 @@ public class Arguments {
 	public char decimalSeparator = TimeUtils.getDecimalSeparator();
 
 	/**
+	 * Whether or not to run in interactive mode.<br/>
+	 * {@code null} if not specified by arguments, meaning it should auto-detected.
+	 */
+	public Boolean interactive = null;
+
+	/**
 	 * A set containing all the specified arguments, in case one argument needs to
 	 * check whether another argument was specified.<br/>
 	 * This is populated before the arguments {@link Argument#onReceived onReceived}

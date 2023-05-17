@@ -98,8 +98,8 @@ public class PutenAuswertung {
 
 		LogHandler.removeLogCache(argHandler.logFile, argHandler.logFile);
 
-		if (System.console() != null) {
-			LogHandler.out_println("Interactive mode detected.", true);
+		if (argHandler.interactive == null && System.console() != null) {
+			LogHandler.out_println("Interactive mode detected.");
 		}
 
 		File antennaFile = null;

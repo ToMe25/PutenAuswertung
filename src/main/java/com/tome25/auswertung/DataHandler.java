@@ -1,5 +1,7 @@
 package com.tome25.auswertung;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -19,6 +21,7 @@ import com.tome25.auswertung.log.LogHandler;
 import com.tome25.auswertung.stream.FileInputStreamHandler;
 import com.tome25.auswertung.stream.IInputStreamHandler;
 import com.tome25.auswertung.stream.IOutputStreamHandler;
+import com.tome25.auswertung.utils.ConsoleHelper;
 import com.tome25.auswertung.utils.MapUtils;
 import com.tome25.auswertung.utils.Pair;
 import com.tome25.auswertung.utils.TimeUtils;
@@ -105,6 +108,8 @@ public class DataHandler {
 			}
 		}
 
+		boolean interactive = args.interactive == null ? System.console() != null : args.interactive;
+
 		String lastDate = null;
 		Map<String, Calendar> lastTimes = new HashMap<String, Calendar>();
 		List<String> dates = new ArrayList<String>();
@@ -132,10 +137,56 @@ public class DataHandler {
 			}
 
 			if (!zones.containsKey(record.antenna)) {
-				LogHandler.err_println(String.format(
-						"Received antenna record from unknown antenna id \"%s\" on day %s at %s. Skipping line.",
-						record.antenna, record.date, record.getTime()));
+				LogHandler.err_println(
+						"Received antenna record from unknown antenna id \"" + record.antenna + "\" on day "
+								+ record.date + " at " + record.getTime() + (interactive ? "." : ". Skipping line."));
 				LogHandler.print_debug_info("Antenna Record: %s, Arguments: %s", record, args);
+				if (interactive) {
+					try {
+						BufferedWriter out = ConsoleHelper.getConsoleWriter();
+						out.write("Skip record and [C]ontinue or [E]xit?");
+						out.newLine();
+						out.flush();
+
+						BufferedReader in = ConsoleHelper.getConsoleReader();
+						String response = in.readLine();
+						if (response == null) {
+							LogHandler.err_println("Failed to read response. Exiting");
+							return;
+						}
+						response = response.trim();
+						while (response.length() == 0) {
+							response = in.readLine();
+							if (response == null) {
+								LogHandler.err_println("Failed to read response. Exiting");
+								return;
+							}
+							response = response.trim();
+						}
+
+						if (response.length() > 1) {
+							LogHandler.err_println("Received invalid input \"" + response + "\". Exiting");
+							return;
+						}
+
+						char c = response.charAt(0);
+						if (c == 'c' || c == 'C') {
+							LogHandler.out_println("Skipping line and continuing.");
+							continue;
+						} else if (c == 'e' || c == 'E') {
+							LogHandler.out_println("Exiting.");
+							return;
+						} else {
+							LogHandler.err_println("Received invalid input " + c + ". Exiting.");
+							return;
+						}
+					} catch (IOException e) {
+						LogHandler.err_println("Getting user confirmation to skip record failed. Exiting.");
+						LogHandler.print_exception(e, "get confirmation to skip record",
+								"Antenna Record: %s, Arguments: %s", record, args);
+						return;
+					}
+				}
 				continue;
 			}
 

@@ -1,10 +1,10 @@
 package com.tome25.auswertung.utils;
 
-import java.io.Console;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.Writer;
 import java.net.URL;
 import java.nio.file.DirectoryNotEmptyException;
 import java.nio.file.FileAlreadyExistsException;
@@ -475,15 +475,14 @@ public class FileUtils {
 			allowOverride = false;
 		}
 
-		Console cons = System.console();
-		if (cons == null) {
+		boolean interactive = args.interactive == null ? System.console() != null : args.interactive;
+		if (!interactive) {
 			if (allowOverride) {
 				return defaultFile;
 			} else {
 				LogHandler.err_println(
 						"Cannot override file \"" + defaultFile + "\" because it isn't a file or can't be written.");
-				LogHandler.print_debug_info("File: %s, Interactive: %s, Arguments: %s", defaultFile,
-						cons == null ? "false" : "true", args);
+				LogHandler.print_debug_info("File: %s, Interactive: %s, Arguments: %s", defaultFile, interactive, args);
 				return null;
 			}
 		}
@@ -494,25 +493,36 @@ public class FileUtils {
 			} else {
 				LogHandler.err_println(
 						"Cannot override file \"" + defaultFile + "\" because it isn't a file or can't be written.");
-				LogHandler.print_debug_info("File: %s, Interactive: %s, Arguments: %s", defaultFile,
-						cons == null ? "false" : "true", args);
+				LogHandler.print_debug_info("File: %s, Interactive: %s, Arguments: %s", defaultFile, interactive, args);
 				return null;
 			}
 		}
 
-		Writer out = cons.writer();
-		out.write("Output file \"" + defaultFile + "\" already exists." + System.lineSeparator());
+		BufferedWriter out = ConsoleHelper.getConsoleWriter();
+		out.write("Output file \"" + defaultFile + "\" already exists.");
+		out.newLine();
 		out.write("Do you want to ");
 		if (allowOverride) {
 			out.write("[O]verride, ");
 		}
-		out.write("[R]ename, or [C]ancel?" + System.lineSeparator());
+		out.write("[R]ename, or [C]ancel?");
+		out.newLine();
 		out.flush();
-		out.close();
 
-		String response = cons.readLine().trim();
+		BufferedReader in = ConsoleHelper.getConsoleReader();
+		String response = in.readLine();
+		if (response == null) {
+			LogHandler.err_println("Failed to read response.");
+			return null;
+		}
+		response = response.trim();
 		while (response.length() == 0) {
-			response = cons.readLine().trim();
+			response = in.readLine();
+			if (response == null) {
+				LogHandler.err_println("Failed to read response.");
+				return null;
+			}
+			response = response.trim();
 		}
 
 		if (response.length() > 1) {
@@ -524,11 +534,25 @@ public class FileUtils {
 		File file = null;
 		if (c == 'o' || c == 'O') {
 			file = defaultFile;
+			LogHandler.out_println("Overriding file.");
 		} else if (c == 'r' || c == 'R') {
-			String newName = cons.readLine("Enter new file name: ").trim();
-			while (newName.length() == 0) {
-				newName = cons.readLine().trim();
+			out.write("Enter new file name: ");
+			out.flush();
+			String newName = in.readLine().trim();
+			if (newName == null) {
+				LogHandler.err_println("Failed to read new file name.");
+				return null;
 			}
+			newName = newName.trim();
+			while (newName.length() == 0) {
+				newName = in.readLine();
+				if (newName == null) {
+					LogHandler.err_println("Failed to read new file name.");
+					return null;
+				}
+				newName = newName.trim();
+			}
+			LogHandler.out_println("Writing to \"" + newName + "\" instead.");
 			file = getOutputFile(new File(newName), args);
 		} else if (c == 'c' || c == 'C') {
 			LogHandler.out_println("Execution canceled.");

@@ -12,9 +12,9 @@
       <outputDirectory>html</outputDirectory>
       <lineEnding>crlf</lineEnding>
       <excludes>
-        <exclude>html/fonts/**</exclude>
-        <exclude>html/images/**</exclude>
-        <exclude>html/img/**</exclude>
+        <exclude>fonts/**</exclude>
+        <exclude>images/**</exclude>
+        <exclude>img/**</exclude>
       </excludes>
     </fileSet>
     <fileSet>
