@@ -10,7 +10,7 @@
       <directory>${project.basedir}</directory>
       <outputDirectory></outputDirectory>
       <useDefaultExcludes>false</useDefaultExcludes>
-      <lineEnding>crlf</lineEnding>
+      <lineEnding>lf</lineEnding>
       <includes>
         <include>docs/**</include>
         <include>src/**</include>

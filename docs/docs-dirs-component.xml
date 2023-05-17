@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component xmlns="http://maven.apache.org/ASSEMBLY-COMPONENT/2.2.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/ASSEMBLY-COMPONENT/2.2.0 https://maven.apache.org/xsd/assembly-component-2.2.0.xsd">
+  <fileSets>
+    <fileSet>
+      <directory>${project.basedir}/docs/markdown</directory>
+      <outputDirectory>markdown</outputDirectory>
+      <lineEnding>crlf</lineEnding>
+    </fileSet>
+    <fileSet>
+      <directory>${project.build.directory}/site</directory>
+      <outputDirectory>html</outputDirectory>
+      <lineEnding>crlf</lineEnding>
+      <excludes>
+        <exclude>html/fonts/**</exclude>
+        <exclude>html/images/**</exclude>
+        <exclude>html/img/**</exclude>
+      </excludes>
+    </fileSet>
+    <fileSet>
+      <directory>${project.build.directory}/site</directory>
+      <outputDirectory>html</outputDirectory>
+      <lineEnding>keep</lineEnding>
+      <includes>
+        <include>fonts/**</include>
+        <include>images/**</include>
+        <include>img/**</include>
+      </includes>
+    </fileSet>
+  </fileSets>
+</component>
