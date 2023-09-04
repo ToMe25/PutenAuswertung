@@ -5,6 +5,22 @@ It also tracks individual stays for each entity.
 
 While it is specifically developed for a single use case with turkeys it should be usable for way more general use-cases.
 
+## Usage
+As this project is a java program, it is executed using `java -jar /path/to/PutenAuswertung.jar [OPTIONS]`.  
+Its configuration is done using command-line arguments, for more info see `java -jar PutenAuswertung.jar --help`.  
+This program is designed to be java 7+ compatible, but only tested with java 8, 11, and 16.  
+It was tested on Ubuntu and Windows.
+
+The data to be analyzed is found in various input files, the location of which can be configured using command-line arguments.  
+The resulting data is written to output files, which again can be configured using command-line arguments.  
+The default location for those input and output files is in the directory in which the program is being executed.  
+More details about those input/output files can be found in the sections [Inputs](#inputs) and [Outputs](#outputs) of this file.
+
+## Docs
+Because this was program made for a german project, the docs are only available in german.  
+It is unlikely, but not impossible, that I will ever write english docs for this program.  
+The program itself however writes english log messages.
+
 ## Inputs
 This program uses three input files.  
 One mapping transponder ids to turkey(entity) ids,  
