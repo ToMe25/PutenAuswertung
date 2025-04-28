@@ -446,6 +446,7 @@ public class DataHandler {
 						continue;
 					} else {
 						turkey.changeZone(zones.get(record.antenna), record.cal);
+						turkey.registerAntenna(record.antenna);
 					}
 				} catch (IllegalArgumentException e) {
 					LogHandler.err_println(

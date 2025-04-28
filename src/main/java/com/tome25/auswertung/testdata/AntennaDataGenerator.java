@@ -1,6 +1,6 @@
 package com.tome25.auswertung.testdata;
 
-import static com.tome25.auswertung.CSVHandler.DEFAULT_SEPARATOR;
+import static com.tome25.auswertung.CSVHandler.DEFAULT_FIELD_SEPARATOR;
 import static com.tome25.auswertung.TurkeyInfo.DAY_END;
 import static com.tome25.auswertung.utils.TimeUtils.DAY_MS;
 
@@ -114,6 +114,8 @@ public class AntennaDataGenerator {
 		Map<String, Map<String, Integer>> changes = new LinkedHashMap<String, Map<String, Integer>>();
 		// turkey -> [date]
 		Map<String, Set<String>> unreliableDays = new LinkedHashMap<String, Set<String>>();
+		// turkey -> date -> [antenna id]
+		Map<String, Map<String, Set<String>>> seenAntennas = new HashMap<String, Map<String, Set<String>>>();
 		// turkey -> [zone stay]
 		Map<String, List<ZoneStay>> stays = new LinkedHashMap<String, List<ZoneStay>>();
 		// [start -> end]
@@ -137,29 +139,31 @@ public class AntennaDataGenerator {
 			if (turkey.getEndCal() != null) {
 				endTime.put(turkey.getId(), turkey.getEndCal());
 			}
+			seenAntennas.put(turkey.getId(), new HashMap<String, Set<String>>());
 		}
 
 		Calendar cal = TimeUtils.parseDate(startDate);
 		long startTime = -1;
 		for (int day = 0; day < days; day++) {
 			String date = TimeUtils.encodeDate(cal);
-			Pair<Pair<Map<String, Map<String, Integer>>, Map<String, Integer>>, Pair<Map<String, List<ZoneStay>>, Pair<Long, Long>>> dayData = generateDayAntennaData(
+			Pair<Pair<Pair<Map<String, Map<String, Integer>>, Map<String, Integer>>, Pair<Map<String, List<ZoneStay>>, Map<String, Set<String>>>>, Pair<Long, Long>> dayData = generateDayAntennaData(
 					turkeys, zones, date, antennaOutput, lastZoneChange, currentZone, lastZone, lastRecord, args,
 					startTime, complete, downtimesOutput != null);
-			Map<String, Map<String, Integer>> dayTimes = dayData.getKey().getKey();
-			Map<String, Integer> dayChanges = dayData.getKey().getValue();
-			Map<String, List<ZoneStay>> dayStays = dayData.getValue().getKey();
-			Pair<Long, Long> downtime = dayData.getValue().getValue();
+			Map<String, Map<String, Integer>> dayTimes = dayData.getKey().getKey().getKey();
+			Map<String, Integer> dayChanges = dayData.getKey().getKey().getValue();
+			Map<String, List<ZoneStay>> dayStays = dayData.getKey().getValue().getKey();
+			Map<String, Set<String>> daySeenAntennas = dayData.getKey().getValue().getValue();
+			Pair<Long, Long> downtime = dayData.getValue();
 
 			if (downtime != null) {
 				downtimes.add(downtime);
 				StringBuilder line = new StringBuilder();
 				line.append(date);
-				line.append(DEFAULT_SEPARATOR);
+				line.append(DEFAULT_FIELD_SEPARATOR);
 				line.append(TimeUtils.encodeTime(downtime.getKey() - cal.getTimeInMillis()));
-				line.append(DEFAULT_SEPARATOR);
+				line.append(DEFAULT_FIELD_SEPARATOR);
 				line.append(date);
-				line.append(DEFAULT_SEPARATOR);
+				line.append(DEFAULT_FIELD_SEPARATOR);
 				line.append(TimeUtils.encodeTime(downtime.getValue() - cal.getTimeInMillis()));
 				downtimesOutput.println(line.toString());
 			}
@@ -763,6 +767,18 @@ public class AntennaDataGenerator {
 						stays.get(turkey).remove(stays.get(turkey).size() - 1);
 					}
 				}
+
+				// Seen Antennas handling below
+				if (!seenAntennas.containsKey(turkey)) {
+					seenAntennas.put(turkey, new HashMap<String, Set<String>>());
+				}
+				if (daySeenAntennas.containsKey(turkey)) {
+					if (!seenAntennas.get(turkey).containsKey("total")) {
+						seenAntennas.get(turkey).put("total", new HashSet<String>());
+					}
+					seenAntennas.get(turkey).put(date, daySeenAntennas.get(turkey));
+					seenAntennas.get(turkey).get("total").addAll(daySeenAntennas.get(turkey));
+				}
 			}
 
 			startTime = -1;
@@ -781,11 +797,11 @@ public class AntennaDataGenerator {
 					downtimes.add(new Pair<Long, Long>(downtimeStart, startTime - 1));
 					StringBuilder line = new StringBuilder();
 					line.append(date);
-					line.append(DEFAULT_SEPARATOR);
+					line.append(DEFAULT_FIELD_SEPARATOR);
 					line.append(TimeUtils.encodeTime(TimeUtils.getMsOfDay(dtsCal)));
-					line.append(DEFAULT_SEPARATOR);
+					line.append(DEFAULT_FIELD_SEPARATOR);
 					line.append(TimeUtils.encodeDate(cal));
-					line.append(DEFAULT_SEPARATOR);
+					line.append(DEFAULT_FIELD_SEPARATOR);
 					line.append(TimeUtils.encodeTime(TimeUtils.getMsOfDay(dteCal)));
 					downtimesOutput.println(line.toString());
 				}
@@ -870,7 +886,7 @@ public class AntennaDataGenerator {
 			}
 		}
 
-		return new TestData(times, changes, unreliableDays, stays, downtimes, turkeys, zones);
+		return new TestData(times, changes, unreliableDays, seenAntennas, stays, downtimes, turkeys, zones);
 	}
 
 	/**
@@ -885,6 +901,8 @@ public class AntennaDataGenerator {
 	 * {@code turkey -> zoneChanges}.</li>
 	 * <li>The {@link ZoneStay ZoneStays} for each turkey. Its format is
 	 * {@code turkey -> [zoneStay]}.</li>
+	 * <li>The seen antennas for each turkey. The format is
+	 * {@code turkey -> [antennaId]}.</li>
 	 * <li>A downtime, if one was added for this day. Format:
 	 * {@code start -> end}.</li>
 	 * </ol>
@@ -934,7 +952,7 @@ public class AntennaDataGenerator {
 	 *         </ol>
 	 * @throws NullPointerException If one of the parameters is {@code null}.
 	 */
-	public static Pair<Pair<Map<String, Map<String, Integer>>, Map<String, Integer>>, Pair<Map<String, List<ZoneStay>>, Pair<Long, Long>>> generateDayAntennaData(
+	public static Pair<Pair<Pair<Map<String, Map<String, Integer>>, Map<String, Integer>>, Pair<Map<String, List<ZoneStay>>, Map<String, Set<String>>>>, Pair<Long, Long>> generateDayAntennaData(
 			final List<TurkeyInfo> turkeys, final List<ZoneInfo> zones, final String date, IOutputStreamHandler output,
 			Map<String, Long> lastZoneChange, Map<String, ZoneInfo> currentZone, Map<String, ZoneInfo> lastZone,
 			Map<String, Long> lastRecord, final Arguments args, long startTime, final boolean complete,
@@ -968,6 +986,8 @@ public class AntennaDataGenerator {
 		Map<String, Map<String, Integer>> zoneTimes = new HashMap<String, Map<String, Integer>>();
 		// Turkey -> Zone Changes
 		Map<String, Integer> zoneChanges = new HashMap<String, Integer>();
+		// Turkey -> [Antenna ID]
+		Map<String, Set<String>> seenAntennas = new HashMap<String, Set<String>>();
 
 		// Turkey -> zone stays
 		Map<String, List<ZoneStay>> stays = new HashMap<String, List<ZoneStay>>();
@@ -1069,11 +1089,11 @@ public class AntennaDataGenerator {
 
 			StringBuilder line = new StringBuilder();
 			line.append(transponder);
-			line.append(DEFAULT_SEPARATOR);
+			line.append(DEFAULT_FIELD_SEPARATOR);
 			line.append(date);
-			line.append(DEFAULT_SEPARATOR);
+			line.append(DEFAULT_FIELD_SEPARATOR);
 			line.append(TimeUtils.encodeTime(TimeUtils.getMsOfDay(changeCal)));
-			line.append(DEFAULT_SEPARATOR);
+			line.append(DEFAULT_FIELD_SEPARATOR);
 			line.append(antenna);
 			output.println(line.toString());
 
@@ -1259,6 +1279,11 @@ public class AntennaDataGenerator {
 				lastTime = changeTime;
 				continue;
 			}
+
+			if (!seenAntennas.containsKey(turkeyName)) {
+				seenAntennas.put(turkeyName, new HashSet<String>());
+			}
+			seenAntennas.get(turkeyName).add(antenna);
 
 			if (dt != null && changeTime > dt.getValue() && !recordAfter.contains(turkeyName)) {
 				recordAfter.add(turkeyName);
@@ -1648,11 +1673,11 @@ public class AntennaDataGenerator {
 
 		Pair<Map<String, Map<String, Integer>>, Map<String, Integer>> totals = new Pair<Map<String, Map<String, Integer>>, Map<String, Integer>>(
 				zoneTimes, zoneChanges);
-		Pair<Map<String, List<ZoneStay>>, Pair<Long, Long>> other = new Pair<Map<String, List<ZoneStay>>, Pair<Long, Long>>(
-				stays, dt);
+		Pair<Map<String, List<ZoneStay>>, Map<String, Set<String>>> other = new Pair<Map<String, List<ZoneStay>>, Map<String, Set<String>>>(
+				stays, seenAntennas);
 
-		return new Pair<Pair<Map<String, Map<String, Integer>>, Map<String, Integer>>, Pair<Map<String, List<ZoneStay>>, Pair<Long, Long>>>(
-				totals, other);
+		return new Pair<Pair<Pair<Map<String, Map<String, Integer>>, Map<String, Integer>>, Pair<Map<String, List<ZoneStay>>, Map<String, Set<String>>>>, Pair<Long, Long>>(
+				new Pair<>(totals, other), dt);
 	}
 
 	/**
@@ -1756,6 +1781,12 @@ public class AntennaDataGenerator {
 		public final Map<String, Set<String>> unreliableDays;
 
 		/**
+		 * A map containing a set of seen antennas for each turkey each day.<br/>
+		 * Format: {@code turkey -> date -> [antennaId]}
+		 */
+		public final Map<String, Map<String, Set<String>>> seenAntennas;
+
+		/**
 		 * A map containing the {@link ZoneStay ZoneStays} for each turkey for each
 		 * day.<br/>
 		 * Format: {@code turkey -> [stay]}
@@ -1787,6 +1818,7 @@ public class AntennaDataGenerator {
 		 * @param zoneTimes      The zone times map.
 		 * @param zoneChanges    The zone changes map.
 		 * @param unreliableDays The unreliable days map.
+		 * @param seenAntennas   The antennas that recorded a turkey each day.
 		 * @param zoneStays      The zone stays map.
 		 * @param downtimes      The values of the downtimes file. Can be {@code null}.
 		 * @param turkeys        The turkeys used in the test.
@@ -1796,11 +1828,13 @@ public class AntennaDataGenerator {
 		 */
 		public TestData(final Map<String, Map<String, Map<String, Long>>> zoneTimes,
 				final Map<String, Map<String, Integer>> zoneChanges, final Map<String, Set<String>> unreliableDays,
-				final Map<String, List<ZoneStay>> zoneStays, final List<Pair<Long, Long>> downtimes,
-				final List<TurkeyInfo> turkeys, final List<ZoneInfo> zones) throws NullPointerException {
+				final Map<String, Map<String, Set<String>>> seenAntennas, final Map<String, List<ZoneStay>> zoneStays,
+				final List<Pair<Long, Long>> downtimes, final List<TurkeyInfo> turkeys, final List<ZoneInfo> zones)
+				throws NullPointerException {
 			this.zoneTimes = Objects.requireNonNull(zoneTimes, "The zone times cannot be null.");
 			this.zoneChanges = Objects.requireNonNull(zoneChanges, "The zone changes cannot be null.");
 			this.unreliableDays = Objects.requireNonNull(unreliableDays, "The unreliable days cannot be null.");
+			this.seenAntennas = Objects.requireNonNull(seenAntennas, "The seens antennas cannot be null.");
 			this.zoneStays = Objects.requireNonNull(zoneStays, "The zone stays cannot be null.");
 			this.downtimes = downtimes;
 			this.turkeys = Objects.requireNonNull(turkeys, "The turkeys cannot be null.");
@@ -1809,12 +1843,11 @@ public class AntennaDataGenerator {
 
 		/**
 		 * Creates a new TestData object.<br/>
-		 * Utility constructor for
-		 * {@link com.tome25.auswertung.CSVHandler#readTotalsCSV(com.tome25.auswertung.stream.IInputStreamHandler)
+		 * Utility constructor for {@link com.tome25.auswertung.CSVHandler#readTotalsCSV
 		 * CSVHandler.readTotalsCSV}.
 		 * 
 		 * @param totals    The {@link Pair} returned by
-		 *                  {@link com.tome25.auswertung.CSVHandler#readTotalsCSV(com.tome25.auswertung.stream.IInputStreamHandler)
+		 *                  {@link com.tome25.auswertung.CSVHandler#readTotalsCSV
 		 *                  CSVHandler.readTotalsCSV}.
 		 * @param zoneStays The zone stays map.
 		 * @param downtimes The values of the downtimes file. Can be {@code null}.
@@ -1824,13 +1857,14 @@ public class AntennaDataGenerator {
 		 *                              is {@code null}.
 		 */
 		public TestData(
-				final Pair<Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>>, Map<String, Set<String>>> totals,
+				final Pair<Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>>, Pair<Map<String, Set<String>>, Map<String, Map<String, Set<String>>>>> totals,
 				final Map<String, List<ZoneStay>> zoneStays, final List<Pair<Long, Long>> downtimes,
 				final List<TurkeyInfo> turkeys, final List<ZoneInfo> zones) throws NullPointerException {
 			this(Objects.requireNonNull(totals, "The totals pair cannot be null.").getKey().getKey(),
 					Objects.requireNonNull(totals, "The totals pair cannot be null.").getKey().getValue(),
-					Objects.requireNonNull(totals, "The totals pair cannot be null.").getValue(), zoneStays, downtimes,
-					turkeys, zones);
+					Objects.requireNonNull(totals, "The totals pair cannot be null.").getValue().getKey(),
+					Objects.requireNonNull(totals, "The totals pair cannot be null.").getValue().getValue(), zoneStays,
+					downtimes, turkeys, zones);
 		}
 	}
 }

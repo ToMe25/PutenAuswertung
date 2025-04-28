@@ -31,11 +31,11 @@ public class TurkeyCSVTest {
 	@Test
 	public void turkeyHeader() {
 		assertEquals("The turkey csv header did not match.",
-				"Tier;Datum;Bereichswechsel;Zeit in Zone Zone 1;Zeit in Zone Zone 2;Unzuverlaessig",
+				"Tier;Datum;Bereichswechsel;Zeit in Zone Zone 1;Zeit in Zone Zone 2;Unzuverlaessig;Empfangen von",
 				CSVHandler.turkeyCsvHeader(Arrays.asList(new String[] { "Zone 1", "Zone 2" })));
 
 		assertEquals("The turkey csv header did not match.",
-				"Tier;Datum;Bereichswechsel;Zeit in Zone Z1;Zeit in Zone Zone 2;Zeit in Zone Z-3;Unzuverlaessig",
+				"Tier;Datum;Bereichswechsel;Zeit in Zone Z1;Zeit in Zone Zone 2;Zeit in Zone Z-3;Unzuverlaessig;Empfangen von",
 				CSVHandler.turkeyCsvHeader(Arrays.asList(new String[] { "Z1", "Zone 2", "Z-3" })));
 	}
 
@@ -48,7 +48,7 @@ public class TurkeyCSVTest {
 		String date = "01.01.2022";
 		TurkeyInfo info = getBasicInfo(date);
 		assertEquals("Getting single day info from a basic TurkeyInfo returned an invalid string.",
-				"0;01.01.2022;5;01:28:33.19;10:51:31.53;11:39:55.28;",
+				"0;01.01.2022;5;01:28:33.19;10:51:31.53;11:39:55.28;;Antenna 2,Antenna 3,Antenna Z1,Antenna-3",
 				CSVHandler.turkeyToCsvLine(info, date, Arrays.asList(new String[] { "Z1", "Zone 2", "Z-3" })));
 	}
 
@@ -71,7 +71,7 @@ public class TurkeyCSVTest {
 		String date = "01.01.2022";
 		TurkeyInfo info = getBasicInfo(date);
 		assertEquals("Getting single day info from a basic TurkeyInfo returned an invalid string.",
-				"0;total;5;01:28:33.19;10:51:31.53;11:39:55.28;",
+				"0;total;5;01:28:33.19;10:51:31.53;11:39:55.28;;Antenna 2,Antenna 3,Antenna Z1,Antenna-3",
 				CSVHandler.turkeyToCsvLine(info, null, Arrays.asList(new String[] { "Z1", "Zone 2", "Z-3" })));
 	}
 
@@ -83,7 +83,8 @@ public class TurkeyCSVTest {
 		String date = "01.01.2022";
 		TurkeyInfo info = getBasicInfo(date);
 		assertEquals("Getting single day info from a basic TurkeyInfo returned an invalid string.",
-				"0;01.01.2022;5;11:39:55.28;01:28:33.19;10:51:31.53;", CSVHandler.turkeyToCsvLine(info, date, null));
+				"0;01.01.2022;5;11:39:55.28;01:28:33.19;10:51:31.53;;Antenna 2,Antenna 3,Antenna Z1,Antenna-3",
+				CSVHandler.turkeyToCsvLine(info, date, null));
 	}
 
 	/**
@@ -95,7 +96,8 @@ public class TurkeyCSVTest {
 		String date = "01.01.2022";
 		TurkeyInfo info = getBasicInfo(date);
 		assertEquals("Getting single day info from a basic TurkeyInfo returned an invalid string.",
-				"0;01.01.2022;5;01:28:33.19;10:51:31.53;11:39:55.28;00:00:00.00;", CSVHandler.turkeyToCsvLine(info, date,
+				"0;01.01.2022;5;01:28:33.19;10:51:31.53;11:39:55.28;00:00:00.00;;Antenna 2,Antenna 3,Antenna Z1,Antenna-3",
+				CSVHandler.turkeyToCsvLine(info, date,
 						Arrays.asList(new String[] { "Z1", "Zone 2", "Z-3", "Zone 4" })));
 	}
 
@@ -107,7 +109,7 @@ public class TurkeyCSVTest {
 		String date = "01.01.2022";
 		TurkeyInfo info = getBasicInfo(date);
 		assertEquals("Getting single day info from a basic TurkeyInfo returned an invalid string.",
-				"0;01.01.2022;5;01:28:33.19;11:39:55.28;",
+				"0;01.01.2022;5;01:28:33.19;11:39:55.28;;Antenna 2,Antenna 3,Antenna Z1,Antenna-3",
 				CSVHandler.turkeyToCsvLine(info, date, Arrays.asList(new String[] { "Z1", "Z-3" })));
 	}
 
@@ -120,7 +122,8 @@ public class TurkeyCSVTest {
 		String date = "05.12.2021";
 		TurkeyInfo info = getTwoDayInfo(date);
 		assertEquals("Getting zone info for the first day of a TurkeyInfo returned an invalid string.",
-				"0;05.12.2021;5;11:39:55.28;01:28:33.19;10:51:31.53;", CSVHandler.turkeyToCsvLine(info, date, null));
+				"0;05.12.2021;5;11:39:55.28;01:28:33.19;10:51:31.53;;Antenna 2,Antenna 3,Antenna Z1,Antenna-3",
+				CSVHandler.turkeyToCsvLine(info, date, null));
 	}
 
 	/**
@@ -131,7 +134,7 @@ public class TurkeyCSVTest {
 	public void convertSecondDay() {
 		TurkeyInfo info = getTwoDayInfo("21.09.2023");
 		assertEquals("Getting zone info for the first day of a TurkeyInfo returned an invalid string.",
-				"0;22.09.2023;5;08:37:29.52;02:50:52.58;12:12:37.92;00:18:59.98;",
+				"0;22.09.2023;5;08:37:29.52;02:50:52.58;12:12:37.92;00:18:59.98;;Antenna 3,Antenna Z1,Antenna Z4,Antenna-3",
 				CSVHandler.turkeyToCsvLine(info, "22.09.2023", null));
 	}
 
@@ -142,7 +145,7 @@ public class TurkeyCSVTest {
 	public void convertMultiDayTotals() {
 		TurkeyInfo info = getTwoDayInfo("21.09.2023");
 		assertEquals("Getting zone info for the first day of a TurkeyInfo returned an invalid string.",
-				"0;total;10;20:17:24.80;04:19:25.77;12:12:37.92;11:10:31.51;",
+				"0;total;10;20:17:24.80;04:19:25.77;12:12:37.92;11:10:31.51;;Antenna 2,Antenna 3,Antenna Z1,Antenna Z4,Antenna-3",
 				CSVHandler.turkeyToCsvLine(info, null, null));
 	}
 
@@ -171,11 +174,17 @@ public class TurkeyCSVTest {
 		TurkeyInfo info = TurkeyGenerator.generateTurkey("0", 5, args, null, zones.get(0),
 				TimeUtils.parseTime(day, 10510));
 		info.changeZone(zones.get(1), TimeUtils.parseTime(day, 20410));
+		info.registerAntenna("Antenna 2");
 		info.changeZone(zones.get(1), TimeUtils.parseTime(day, 100060));
+		info.registerAntenna("Antenna 3");
 		info.changeZone(zones.get(0), TimeUtils.parseTime(day, 599610));
+		info.registerAntenna("Antenna Z1");
 		info.changeZone(zones.get(2), TimeUtils.parseTime(day, 1004720));
+		info.registerAntenna("Antenna-3");
 		info.changeZone(zones.get(1), TimeUtils.parseTime(day, 43000000));
+		info.registerAntenna("Antenna 2");
 		info.changeZone(zones.get(0), TimeUtils.parseTime(day, 81512330));
+		info.registerAntenna("Antenna Z1");
 		info.endDay(day);
 
 		return info;
@@ -204,10 +213,15 @@ public class TurkeyCSVTest {
 		zones.add(new ZoneInfo("Z4", true, "Antenna Z4"));
 		String secondDate = TimeUtils.encodeDate(cal);
 		ti.changeZone(zones.get(3), TimeUtils.parseTime(secondDate, 87234));
+		ti.registerAntenna("Antenna Z4");
 		ti.changeZone(zones.get(1), TimeUtils.parseTime(secondDate, 2345054));
+		ti.registerAntenna("Antenna 3");
 		ti.changeZone(zones.get(2), TimeUtils.parseTime(secondDate, 3485034));
+		ti.registerAntenna("Antenna-3");
 		ti.changeZone(zones.get(3), TimeUtils.parseTime(secondDate, 34534555));
+		ti.registerAntenna("Antenna Z4");
 		ti.changeZone(zones.get(0), TimeUtils.parseTime(secondDate, 76234657));
+		ti.registerAntenna("Antenna Z1");
 		ti.endDay(secondDate);
 
 		return ti;

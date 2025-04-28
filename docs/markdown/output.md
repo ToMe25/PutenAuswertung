@@ -36,12 +36,16 @@ Sie hat die folgenden Spalten in dieser Reihenfolge:
  3. `Bereichswechsel`: Wie oft die Pute an diesem Tag den Bereich in der sie sich aufhält gewechselt hat.
  4. `Zeit in Zone X`: Eine Spalte pro Zone für die Zeit die diese Pute an diesem Tag in dem Bereich verbracht hat.
  5. `Unzuverlaessig`: Diese Spalte enthält ein `X` wenn die Daten dieser Pute für diesen Tag als unzuverlässig angesehen werden.
+ 6. `Empfangen von`: Diese Spalte enthält die Ids aller Antennen die an diesem Tag einen Transponder dieser Pute empfangen haben. Die Ids sind mit Kommas getrennt.
 
 Die Datei `PutenAuswertungZeiten.csv` enthält eine Zeile pro Pute aus den [Input-Dateien](input.md) pro Tag an dem sie als Existent gewertet wurde.  
 Je nach [Konfiguration](arguments.md) können Puten auch an Tagen an denen sie nicht Registriert wurden als existent gewertet werden.
 
 Die Datei enthält außerdem eine Zeile pro Pute für die Summe der Zeiten für alle Tage.  
 Diese Zeilen haben `total` als Datum.
+
+Die Antennen-Ids von den Antennen die eine Pute empfangen haben sind die einzigen Ergebnisse von diesem Programm die nicht von der Mindest-Aufenthaltsdauer betroffen sind.  
+Auch diese werden allerdings während [Ausfällen](input.md#ausfaelle-csv) nicht registriert.
 
 Ein Zeitraum wird als unzuverlässig angesehen wenn eine Pute sich in einem Bereich ohne Essen befindet und 12 Stunden oder mehr keine Aufzeichnung in ihrem aktuellen Bereich hat.  
 Ein Tag wird für eine Pute als unzuverlässig gewertet wenn ein unzuverlässiger Zeitraum ganz oder Teilweise an diesem Tag ist.  

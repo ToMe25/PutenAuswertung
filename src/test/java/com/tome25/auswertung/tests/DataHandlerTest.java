@@ -147,7 +147,7 @@ public class DataHandlerTest {
 		DataHandler.handleStreams(dataCSV.getKey(), mappings.turkeysIn, mappings.zonesIn, downtimesCSV.getKey(),
 				totalsCSV.getValue(), staysCSV.getValue(), args);
 
-		final Pair<Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>>, Map<String, Set<String>>> outputTotals = CSVHandler
+		final Pair<Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>>, Pair<Map<String, Set<String>>, Map<String, Map<String, Set<String>>>>> outputTotals = CSVHandler
 				.readTotalsCSV(totalsCSV.getKey());
 		final Map<String, List<ZoneStay>> outputStays = CSVHandler.readStaysCSV(staysCSV.getKey(), mappings.zones);
 		final TestData parsed = new TestData(outputTotals, outputStays, generated.downtimes, mappings.turkeys,
@@ -184,7 +184,7 @@ public class DataHandlerTest {
 		DataHandler.handleStreams(dataCSV.getKey(), mappings.turkeysIn, mappings.zonesIn, null, totalsCSV.getValue(),
 				staysCSV.getValue(), args);
 
-		final Pair<Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>>, Map<String, Set<String>>> outputTotals = CSVHandler
+		final Pair<Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>>, Pair<Map<String, Set<String>>, Map<String, Map<String, Set<String>>>>> outputTotals = CSVHandler
 				.readTotalsCSV(totalsCSV.getKey());
 		final Map<String, List<ZoneStay>> outputStays = CSVHandler.readStaysCSV(staysCSV.getKey(), mappings.zones);
 		final TestData parsed = new TestData(outputTotals, outputStays, generated.downtimes, mappings.turkeys,
@@ -221,7 +221,7 @@ public class DataHandlerTest {
 		DataHandler.handleStreams(dataCSV.getKey(), mappings.turkeysIn, mappings.zonesIn, null, totalsCSV.getValue(),
 				staysCSV.getValue(), args);
 
-		final Pair<Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>>, Map<String, Set<String>>> outputTotals = CSVHandler
+		final Pair<Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>>, Pair<Map<String, Set<String>>, Map<String, Map<String, Set<String>>>>> outputTotals = CSVHandler
 				.readTotalsCSV(totalsCSV.getKey());
 		final Map<String, List<ZoneStay>> outputStays = CSVHandler.readStaysCSV(staysCSV.getKey(), mappings.zones);
 		final TestData parsed = new TestData(outputTotals, outputStays, generated.downtimes, mappings.turkeys,

@@ -134,6 +134,12 @@ public class TurkeyInfo implements Comparable<TurkeyInfo> {
 	private Map<String, Integer> dayZoneChanges = new HashMap<>();
 
 	/**
+	 * A map containing the ids of all antennas this turkey came close to during
+	 * each day.
+	 */
+	private Map<String, Set<String>> dayAntennasSeen = new HashMap<>();
+
+	/**
 	 * Creates a new TurkeyInfo object representing the state of a turkey.<br/>
 	 * Set {@code date} to {@code null} to mark this turkey as not yet
 	 * recorded.<br/>
@@ -248,7 +254,9 @@ public class TurkeyInfo implements Comparable<TurkeyInfo> {
 	 * Adds time since the last zone change to zone time counters.<br/>
 	 * Increments zone changes counters if the new zone doesn't match the old
 	 * zone.<br/>
-	 * Updates the current time and the current zone.
+	 * Updates the current time and the current zone.<br/>
+	 * <br/>
+	 * To store the antenna used for the zone change use {@link #registerAntenna registerAntenna}.
 	 * 
 	 * @param newZone The zone by which this turkey was detected.
 	 * @param time    The time at which the antenna record was created.
@@ -828,7 +836,7 @@ public class TurkeyInfo implements Comparable<TurkeyInfo> {
 
 	/**
 	 * Returns the time the turkey spent in each zone on the given day.<br/>
-	 * Returns {@code null} if there are no records for the given date.<br/>
+	 * Returns an empty map if there are no records for the given date.<br/>
 	 * Might not return the full day in one of these two cases:<br/>
 	 * 1. {@link Arguments#fillDays args.fillDays} is set to true but this object is
 	 * not yet set to the next day.<br/>
@@ -1020,6 +1028,58 @@ public class TurkeyInfo implements Comparable<TurkeyInfo> {
 		this.stayOut = stayOut;
 	}
 
+	/**
+	 * Registers the antenna the turkey was closest to at the time of the last
+	 * {@link #changeZone changeZone} call.<br/>
+	 * <br/>
+	 * Does nothing before the first {@link #changeZone changeZone} call.
+	 * 
+	 * @param antenna The antenna the turkey was close to.
+	 */
+	public void registerAntenna(String antenna) throws NullPointerException, IllegalArgumentException {
+		Objects.requireNonNull(antenna, "The antenna id to register can't be null.");
+		if (antenna.isEmpty()) {
+			throw new IllegalArgumentException("The antenna id to register can't be empty.");
+		}
+
+		if (currentTime == null) {
+			return;
+		}
+		String date = TimeUtils.encodeDate(currentTime);
+		if (!dayAntennasSeen.containsKey(date)) {
+			dayAntennasSeen.put(date, new HashSet<String>());
+		}
+		dayAntennasSeen.get(date).add(antenna);
+	}
+
+	/**
+	 * Returns the antennas the turkey was close to at the given date.<br/>
+	 * Returns {@code null} if there isn't any data for the given date.
+	 * 
+	 * @param date The date to check for.
+	 * @return A new set containing the ids of the antennas this turkey was close to
+	 *         at the given date.
+	 */
+	public Set<String> getDayAntennas(String date) {
+		if (!dayAntennasSeen.containsKey(date)) {
+			return null;
+		}
+		return new HashSet<>(dayAntennasSeen.get(date));
+	}
+
+	/**
+	 * Returns all the antenna ids this turkey was ever close to.
+	 * 
+	 * @return The ids of the antennas that registered this turkey.
+	 */
+	public Set<String> getTotalAntennas() {
+		Set<String> antennas = new HashSet<>();
+		for (Set<String> dayAntennas : dayAntennasSeen.values()) {
+			antennas.addAll(dayAntennas);
+		}
+		return antennas;
+	}
+
 	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
@@ -1065,14 +1125,17 @@ public class TurkeyInfo implements Comparable<TurkeyInfo> {
 		builder.append(dayZoneChanges);
 		builder.append(", unreliableDays=");
 		builder.append(unreliableDays);
+		builder.append(", dayAntennasSeen=");
+		builder.append(dayAntennasSeen);
 		builder.append("]");
 		return builder.toString();
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(args, currentTime, currentZone, dayZoneChanges, dayZoneTimes, endTime, id, lastStay,
-				lastZoneChange, startTime, stayOut, todayZoneChanges, totalZoneChanges, totalZoneTimes, transponders);
+		return Objects.hash(args, currentTime, currentZone, dayAntennasSeen, dayZoneChanges, dayZoneTimes, endTime, id,
+				lastStay, lastZoneChange, startTime, stayOut, todayZoneChanges, totalZoneChanges, totalZoneTimes,
+				transponders, unreliableDays);
 	}
 
 	@Override
@@ -1098,10 +1161,12 @@ public class TurkeyInfo implements Comparable<TurkeyInfo> {
 
 		return Objects.equals(args, other.args) && Objects.equals(currentTime, other.currentTime)
 				&& Objects.equals(currentZone, other.currentZone)
+				&& Objects.equals(dayAntennasSeen, other.dayAntennasSeen)
 				&& Objects.equals(dayZoneChanges, other.dayZoneChanges)
 				&& Objects.equals(dayZoneTimes, other.dayZoneTimes) && Objects.equals(endTime, other.endTime)
 				&& Objects.equals(lastStay, other.lastStay) && Objects.equals(startTime, other.startTime)
-				&& Objects.equals(stayOut, other.stayOut) && Objects.equals(totalZoneTimes, other.totalZoneTimes);
+				&& Objects.equals(stayOut, other.stayOut) && Objects.equals(totalZoneTimes, other.totalZoneTimes)
+				&& Objects.equals(unreliableDays, other.unreliableDays);
 	}
 
 	/**

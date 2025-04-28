@@ -5,6 +5,7 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
@@ -13,6 +14,7 @@ import static com.tome25.auswertung.utils.TimeUtils.DAY_MS;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -128,13 +130,14 @@ public class OutputDataTest {
 		totalsOut.close();
 		staysOut.close();
 
-		Pair<Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>>, Map<String, Set<String>>> totalsData = CSVHandler
+		Pair<Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>>, Pair<Map<String, Set<String>>, Map<String, Map<String, Set<String>>>>> totalsData = CSVHandler
 				.readTotalsCSV(totalsIn);
 		totalsIn.close();
 
 		Map<String, Map<String, Map<String, Long>>> outputTimes = totalsData.getKey().getKey();
 		Map<String, Map<String, Integer>> outputChanges = totalsData.getKey().getValue();
-		Map<String, Set<String>> outputUnreliableDays = totalsData.getValue();
+		Map<String, Set<String>> outputUnreliableDays = totalsData.getValue().getKey();
+		Map<String, Map<String, Set<String>>> seenAntennas = totalsData.getValue().getValue();
 
 		assertEquals("First day turkey \"0\" changes count didn't match.", 4,
 				(int) outputChanges.get("0").get("06.03.2022"));
@@ -190,10 +193,34 @@ public class OutputDataTest {
 		assertEquals("Total turkey \"1\" Zone 3 time didn't match.", TimeUtils.parseTime("00:11:02.23"),
 				(long) outputTimes.get("1").get("total").get("Zone 3"));
 
+		assertEquals("Output times for turkey \"0\" contained too many days.", 3, outputTimes.get("0").size());
+		assertEquals("Output times for turkey \"1\" contained too many days.", 3, outputTimes.get("1").size());
+		assertEquals("Output times contained too many turkeys.", 2, outputTimes.size());
+
 		assertTrue("Unreliable days didn't contain turkey \"0\".", outputUnreliableDays.containsKey("0"));
 		assertTrue("Unreliable days didn't contain turkey \"1\".", outputUnreliableDays.containsKey("1"));
 		assertTrue("Turkey \"0\" unreliable days wasn't empty.", outputUnreliableDays.get("0").isEmpty());
 		assertTrue("Turkey \"1\" unreliable days wasn't empty.", outputUnreliableDays.get("1").isEmpty());
+
+		assertEquals("Turkey \"0\" first day seen antennas didn't match.",
+				new HashSet<String>(Arrays.asList(new String[] { a1, a2, a3 })),
+				seenAntennas.get("0").get("06.03.2022"));
+		assertEquals("Turkey \"1\" first day seen antennas didn't match.",
+				new HashSet<String>(Arrays.asList(new String[] { a1, a2 })), seenAntennas.get("1").get("06.03.2022"));
+		assertEquals("Turkey \"0\" second day seen antennas didn't match.",
+				new HashSet<String>(Arrays.asList(new String[] { a1, a2, a3 })),
+				seenAntennas.get("0").get("07.03.2022"));
+		assertEquals("Turkey \"1\" second day seen antennas didn't match.",
+				new HashSet<String>(Arrays.asList(new String[] { a1, a2, a3 })),
+				seenAntennas.get("1").get("07.03.2022"));
+		assertEquals("Turkey \"0\" total seen antennas didn't match.",
+				new HashSet<String>(Arrays.asList(new String[] { a1, a2, a3 })), seenAntennas.get("0").get("total"));
+		assertEquals("Turkey \"1\" total seen antennas didn't match.",
+				new HashSet<String>(Arrays.asList(new String[] { a1, a2, a3 })), seenAntennas.get("1").get("total"));
+
+		assertEquals("Turkey \"0\" seen antennas contained too many days.", 3, seenAntennas.get("0").size());
+		assertEquals("Turkey \"1\" seen antennas contained too many days.", 3, seenAntennas.get("1").size());
+		assertEquals("Seen antennas contained too many turkeys.", 2, seenAntennas.size());
 
 		Map<String, List<ZoneStay>> staysData = CSVHandler.readStaysCSV(staysIn, mappings.zones);
 		staysIn.close();
@@ -320,13 +347,14 @@ public class OutputDataTest {
 		totalsOut.close();
 		staysOut.close();
 
-		Pair<Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>>, Map<String, Set<String>>> totalsData = CSVHandler
+		Pair<Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>>, Pair<Map<String, Set<String>>, Map<String, Map<String, Set<String>>>>> totalsData = CSVHandler
 				.readTotalsCSV(totalsIn);
 		totalsIn.close();
 
 		Map<String, Map<String, Map<String, Long>>> outputTimes = totalsData.getKey().getKey();
 		Map<String, Map<String, Integer>> outputChanges = totalsData.getKey().getValue();
-		Map<String, Set<String>> outputUnreliableDays = totalsData.getValue();
+		Map<String, Set<String>> outputUnreliableDays = totalsData.getValue().getKey();
+		Map<String, Map<String, Set<String>>> seenAntennas = totalsData.getValue().getValue();
 
 		assertEquals("Zone changes for turkey \"0\" on date 06.05.2023 didn't match.", 2,
 				(int) outputChanges.get("0").get("06.05.2023"));
@@ -334,6 +362,8 @@ public class OutputDataTest {
 				TimeUtils.parseTime("02:43:48.83"), (long) outputTimes.get("0").get("06.05.2023").get("Zone 1"));
 		assertEquals("Zone 2 time for turkey \"0\" on date 06.05.2023 didn't match.",
 				TimeUtils.parseTime("19:10:28.58"), (long) outputTimes.get("0").get("06.05.2023").get("Zone 2"));
+		assertEquals("Turkey \"0\" date 06.05.2023 seen antennas didn't match.",
+				new HashSet<String>(Arrays.asList(new String[] { a1, a2 })), seenAntennas.get("0").get("06.05.2023"));
 
 		assertEquals("Zone changes for turkey \"1\" on date 06.05.2023 didn't match.", 1,
 				(int) outputChanges.get("1").get("06.05.2023"));
@@ -341,6 +371,8 @@ public class OutputDataTest {
 				TimeUtils.parseTime("09:24:03.82"), (long) outputTimes.get("1").get("06.05.2023").get("Zone 1"));
 		assertEquals("Zone 2 time for turkey \"1\" on date 06.05.2023 didn't match.",
 				TimeUtils.parseTime("12:30:13.59"), (long) outputTimes.get("1").get("06.05.2023").get("Zone 2"));
+		assertEquals("Turkey \"1\" date 06.05.2023 seen antennas didn't match.",
+				new HashSet<String>(Arrays.asList(new String[] { a1, a2 })), seenAntennas.get("1").get("06.05.2023"));
 
 		for (int date = 7; date < 12; date++) {
 			String dateStr = String.format("%02d.05.2023", date);
@@ -350,6 +382,8 @@ public class OutputDataTest {
 					(long) outputTimes.get("0").get(dateStr).get("Zone 1"));
 			assertEquals("Zone 2 time for turkey \"0\" on date " + dateStr + " didn't match.", DAY_MS,
 					(long) outputTimes.get("0").get(dateStr).get("Zone 2"));
+			assertEquals("Turkey \"0\" date " + dateStr + " seen antennas didn't match.",
+					new HashSet<String>(Arrays.asList(new String[] { a2 })), seenAntennas.get("0").get(dateStr));
 		}
 
 		assertEquals("Zone changes for turkey \"0\" on date 12.05.2023 didn't match.", 1,
@@ -358,6 +392,8 @@ public class OutputDataTest {
 				TimeUtils.parseTime("08:15:28.01"), (long) outputTimes.get("0").get("12.05.2023").get("Zone 1"));
 		assertEquals("Zone 2 time for turkey \"0\" on date 12.05.2023 didn't match.",
 				TimeUtils.parseTime("15:44:31.99"), (long) outputTimes.get("0").get("12.05.2023").get("Zone 2"));
+		assertEquals("Turkey \"0\" date 12.05.2023 seen antennas didn't match.",
+				new HashSet<String>(Arrays.asList(new String[] { a1 })), seenAntennas.get("0").get("12.05.2023"));
 
 		for (int date = 13; date < 21; date++) {
 			String dateStr = String.format("%d.05.2023", date);
@@ -367,6 +403,8 @@ public class OutputDataTest {
 					(long) outputTimes.get("0").get(dateStr).get("Zone 1"));
 			assertEquals("Zone 2 time for turkey \"0\" on date " + dateStr + " didn't match.", 0,
 					(long) outputTimes.get("0").get(dateStr).get("Zone 2"));
+			assertEquals("Turkey \"0\" date " + dateStr + " seen antennas didn't match.",
+					new HashSet<String>(Arrays.asList(new String[] { a1 })), seenAntennas.get("0").get(dateStr));
 		}
 
 		assertEquals("Zone changes for turkey \"0\" date 21.05.2023 didn't match.", 1,
@@ -375,6 +413,8 @@ public class OutputDataTest {
 				TimeUtils.parseTime("02:35:20.83"), (long) outputTimes.get("0").get("21.05.2023").get("Zone 1"));
 		assertEquals("Zone 2 time for turkey \"0\" on date 21.05.2023 didn't match.",
 				TimeUtils.parseTime("21:24:39.17"), (long) outputTimes.get("0").get("21.05.2023").get("Zone 2"));
+		assertEquals("Turkey \"0\" date 21.05.2023 seen antennas didn't match.",
+				new HashSet<String>(Arrays.asList(new String[] { a2 })), seenAntennas.get("0").get("21.05.2023"));
 
 		for (int date = 22; date < 31; date++) {
 			String dateStr = String.format("%d.05.2023", date);
@@ -384,6 +424,8 @@ public class OutputDataTest {
 					(long) outputTimes.get("0").get(dateStr).get("Zone 1"));
 			assertEquals("Zone 2 time for turkey \"0\" on date " + dateStr + " didn't match.", DAY_MS,
 					(long) outputTimes.get("0").get(dateStr).get("Zone 2"));
+			assertEquals("Turkey \"0\" date " + dateStr + " seen antennas didn't match.",
+					new HashSet<String>(Arrays.asList(new String[] { a2 })), seenAntennas.get("0").get(dateStr));
 		}
 
 		assertEquals("Zone changes for turkey \"0\" date 31.05.2023 didn't match.", 1,
@@ -392,6 +434,8 @@ public class OutputDataTest {
 				TimeUtils.parseTime("05:59:11.79"), (long) outputTimes.get("0").get("31.05.2023").get("Zone 1"));
 		assertEquals("Zone 2 time for turkey \"0\" on date 31.05.2023 didn't match.",
 				TimeUtils.parseTime("18:00:48.21"), (long) outputTimes.get("0").get("31.05.2023").get("Zone 2"));
+		assertEquals("Turkey \"0\" date 31.05.2023 seen antennas didn't match.",
+				new HashSet<String>(Arrays.asList(new String[] { a1 })), seenAntennas.get("0").get("31.05.2023"));
 
 		for (int date = 7; date <= 31; date++) {
 			String dateStr = String.format("%02d.05.2023", date);
@@ -401,6 +445,8 @@ public class OutputDataTest {
 					(long) outputTimes.get("1").get(dateStr).get("Zone 1"));
 			assertEquals("Zone 2 time for turkey \"1\" on date " + dateStr + " didn't match.", DAY_MS,
 					(long) outputTimes.get("1").get(dateStr).get("Zone 2"));
+			assertNull("Turkey \"1\" date " + dateStr + " seen antennas didn't match.",
+					seenAntennas.get("1").get(dateStr));
 		}
 
 		for (int date = 1; date < 6; date++) {
@@ -411,6 +457,8 @@ public class OutputDataTest {
 					(long) outputTimes.get("0").get(dateStr).get("Zone 1"));
 			assertEquals("Zone 2 time for turkey \"0\" on date " + dateStr + " didn't match.", 0,
 					(long) outputTimes.get("0").get(dateStr).get("Zone 2"));
+			assertEquals("Turkey \"0\" date " + dateStr + " seen antennas didn't match.",
+					new HashSet<String>(Arrays.asList(new String[] { a1 })), seenAntennas.get("0").get(dateStr));
 		}
 
 		for (int date = 1; date < 6; date++) {
@@ -421,6 +469,8 @@ public class OutputDataTest {
 					(long) outputTimes.get("1").get(dateStr).get("Zone 1"));
 			assertEquals("Zone 2 time for turkey \"1\" on date " + dateStr + " didn't match.", DAY_MS,
 					(long) outputTimes.get("1").get(dateStr).get("Zone 2"));
+			assertNull("Turkey \"1\" date " + dateStr + " seen antennas didn't match.",
+					seenAntennas.get("1").get(dateStr));
 		}
 
 		assertEquals("Zone changes for turkey \"0\" date 06.06.2023 didn't match.", 2,
@@ -429,6 +479,8 @@ public class OutputDataTest {
 				TimeUtils.parseTime("13:12:46.44"), (long) outputTimes.get("0").get("06.06.2023").get("Zone 1"));
 		assertEquals("Zone 2 time for turkey \"0\" on date 06.06.2023 didn't match.",
 				TimeUtils.parseTime("10:47:13.56"), (long) outputTimes.get("0").get("06.06.2023").get("Zone 2"));
+		assertEquals("Turkey \"0\" date 06.06.2023 seen antennas didn't match.",
+				new HashSet<String>(Arrays.asList(new String[] { a1, a2 })), seenAntennas.get("0").get("06.06.2023"));
 
 		assertEquals("Zone changes for turkey \"1\" date 06.06.2023 didn't match.", 2,
 				(int) outputChanges.get("1").get("06.06.2023"));
@@ -436,6 +488,8 @@ public class OutputDataTest {
 				TimeUtils.parseTime("01:24:41.02"), (long) outputTimes.get("1").get("06.06.2023").get("Zone 1"));
 		assertEquals("Zone 2 time for turkey \"1\" on date 06.06.2023 didn't match.",
 				TimeUtils.parseTime("22:35:18.98"), (long) outputTimes.get("1").get("06.06.2023").get("Zone 2"));
+		assertEquals("Turkey \"1\" date 06.06.2023 seen antennas didn't match.",
+				new HashSet<String>(Arrays.asList(new String[] { a1, a2 })), seenAntennas.get("1").get("06.06.2023"));
 
 		assertEquals("Zone changes for turkey \"0\" date 07.06.2023 didn't match.", 0,
 				(int) outputChanges.get("0").get("07.06.2023"));
@@ -443,6 +497,8 @@ public class OutputDataTest {
 				TimeUtils.parseTime("05:08:38.63"), (long) outputTimes.get("0").get("07.06.2023").get("Zone 1"));
 		assertEquals("Zone 2 time for turkey \"0\" on date 07.06.2023 didn't match.", 0,
 				(long) outputTimes.get("0").get("07.06.2023").get("Zone 2"));
+		assertEquals("Turkey \"0\" date 07.06.2023 seen antennas didn't match.",
+				new HashSet<String>(Arrays.asList(new String[] { a1 })), seenAntennas.get("0").get("07.06.2023"));
 
 		assertEquals("Zone changes for turkey \"1\" date 07.06.2023 didn't match.", 1,
 				(int) outputChanges.get("1").get("07.06.2023"));
@@ -450,6 +506,16 @@ public class OutputDataTest {
 				TimeUtils.parseTime("01:55:47.63"), (long) outputTimes.get("1").get("07.06.2023").get("Zone 1"));
 		assertEquals("Zone 2 time for turkey \"1\" on date 07.06.2023 didn't match.",
 				TimeUtils.parseTime("03:12:51.00"), (long) outputTimes.get("1").get("07.06.2023").get("Zone 2"));
+		assertEquals("Turkey \"1\" date 07.06.2023 seen antennas didn't match.",
+				new HashSet<String>(Arrays.asList(new String[] { a1 })), seenAntennas.get("1").get("07.06.2023"));
+
+		assertEquals("Output times for turkey \"0\" contained too many days.", 34, outputTimes.get("0").size());
+		assertEquals("Output times for turkey \"1\" contained too many days.", 34, outputTimes.get("1").size());
+		assertEquals("Output times contained too many turkeys.", 2, outputTimes.size());
+
+		assertEquals("Seen antennas for turkey \"0\" contained too many days.", 34, seenAntennas.get("0").size());
+		assertEquals("Seen antennas for turkey \"1\" contained too many days.", 4, seenAntennas.get("1").size());
+		assertEquals("Seen antennas contained too many turkeys.", 2, seenAntennas.size());
 
 		assertTrue("The unreliable days map didn't contain turkey \"0\".", outputUnreliableDays.containsKey("0"));
 		assertTrue("The unreliable days map didn't contain turkey \"1\".", outputUnreliableDays.containsKey("1"));
@@ -572,13 +638,14 @@ public class OutputDataTest {
 		totalsOut.close();
 		staysOut.close();
 
-		Pair<Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>>, Map<String, Set<String>>> totalsData = CSVHandler
+		Pair<Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>>, Pair<Map<String, Set<String>>, Map<String, Map<String, Set<String>>>>> totalsData = CSVHandler
 				.readTotalsCSV(totalsIn);
 		totalsIn.close();
 
 		Map<String, Map<String, Map<String, Long>>> outputTimes = totalsData.getKey().getKey();
 		Map<String, Map<String, Integer>> outputChanges = totalsData.getKey().getValue();
-		Map<String, Set<String>> outputUnreliableDays = totalsData.getValue();
+		Map<String, Set<String>> outputUnreliableDays = totalsData.getValue().getKey();
+		Map<String, Map<String, Set<String>>> seenAntennas = totalsData.getValue().getValue();
 
 		assertEquals("First day turkey \"0\" changes count didn't match.", 1,
 				(int) outputChanges.get("0").get("03.07.2021"));
@@ -635,6 +702,27 @@ public class OutputDataTest {
 				(long) outputTimes.get("1").get("total").get("Zone 1"));
 		assertEquals("Total turkey \"1\" Zone 2 time didn't match.", TimeUtils.parseTime("14:26:19.42"),
 				(long) outputTimes.get("1").get("total").get("Zone 2"));
+
+		assertEquals("Turkey \"0\" first day seen antennas didn't match.",
+				new HashSet<String>(Arrays.asList(new String[] { a1, a2 })), seenAntennas.get("0").get("03.07.2021"));
+		assertEquals("Turkey \"1\" first day seen antennas didn't match.",
+				new HashSet<String>(Arrays.asList(new String[] { a1, a2 })), seenAntennas.get("1").get("03.07.2021"));
+		assertEquals("Turkey \"0\" second day seen antennas didn't match.",
+				new HashSet<String>(Arrays.asList(new String[] { a1, a2 })), seenAntennas.get("0").get("04.07.2021"));
+		assertEquals("Turkey \"1\" second day seen antennas didn't match.",
+				new HashSet<String>(Arrays.asList(new String[] { a1, a2 })), seenAntennas.get("1").get("04.07.2021"));
+		assertEquals("Turkey \"0\" third day seen antennas didn't match.",
+				new HashSet<String>(Arrays.asList(new String[] { a1, a2 })), seenAntennas.get("0").get("05.07.2021"));
+		assertEquals("Turkey \"1\" third day seen antennas didn't match.",
+				new HashSet<String>(Arrays.asList(new String[] { a1 })), seenAntennas.get("1").get("05.07.2021"));
+		assertEquals("Turkey \"0\" total seen antennas didn't match.",
+				new HashSet<String>(Arrays.asList(new String[] { a1, a2 })), seenAntennas.get("0").get("total"));
+		assertEquals("Turkey \"1\" total seen antennas didn't match.",
+				new HashSet<String>(Arrays.asList(new String[] { a1, a2 })), seenAntennas.get("1").get("total"));
+
+		assertEquals("Turkey \"0\" seen antennas contained too many days.", 4, seenAntennas.get("0").size());
+		assertEquals("Turkey \"1\" seen antennas contained too many days.", 4, seenAntennas.get("1").size());
+		assertEquals("Seen antennas contained too many turkeys.", 2, seenAntennas.size());
 
 		assertTrue("Unreliable days didn't contain turkey \"0\".", outputUnreliableDays.containsKey("0"));
 		assertTrue("Unreliable days didn't contain turkey \"1\".", outputUnreliableDays.containsKey("1"));
@@ -716,10 +804,17 @@ public class OutputDataTest {
 				hasItems(generated.zoneChanges.keySet().toArray(new String[0])));
 		assertThat("A turkey is missing from the generated zone changes.", generated.zoneChanges.keySet(),
 				hasItems(parsed.zoneChanges.keySet().toArray(new String[0])));
+
+		assertThat("A turkey is missing from the parsed seen antennas.", parsed.seenAntennas.keySet(),
+				hasItems(generated.seenAntennas.keySet().toArray(new String[0])));
+		assertThat("A turkey is missing from the generated seen antennas.", generated.seenAntennas.keySet(),
+				hasItems(parsed.seenAntennas.keySet().toArray(new String[0])));
+
 		assertThat("A turkey is missing from the parsed unreliable days.", parsed.unreliableDays.keySet(),
 				hasItems(generated.unreliableDays.keySet().toArray(new String[0])));
 		assertThat("A turkey is missing from the generated unreliable days.", generated.unreliableDays.keySet(),
 				hasItems(parsed.unreliableDays.keySet().toArray(new String[0])));
+
 		assertThat("A turkey is missing from the parsed zone stays.", parsed.zoneStays.keySet(),
 				hasItems(generated.zoneStays.keySet().toArray(new String[0])));
 		assertThat("A turkey is missing from the generates zone stays.", generated.zoneStays.keySet(),
@@ -731,6 +826,15 @@ public class OutputDataTest {
 		}
 
 		for (final String turkey : parsed.zoneTimes.keySet()) {
+			if (parsed.zoneChanges.get(turkey).get("total") > 0) {
+				assertTrue("Turkey " + turkey + " is missing from the parsed seen antennas.",
+						parsed.seenAntennas.containsKey(turkey));
+			}
+			if (generated.zoneChanges.get(turkey).get("total") > 0) {
+				assertTrue("Turkey " + turkey + " is missing from the generated seen antennas.",
+						generated.seenAntennas.containsKey(turkey));
+			}
+
 			Map<String, Map<String, Long>> turkeyOutputTimes = parsed.zoneTimes.get(turkey);
 			assertThat("The generated data for turkey \"" + turkey + "\" is missing a date.",
 					generated.zoneTimes.get(turkey).keySet(),
@@ -741,16 +845,27 @@ public class OutputDataTest {
 			// Compare output totals to calculated totals
 			Map<String, Long> timeSums = new HashMap<String, Long>();
 			for (final String date : turkeyOutputTimes.keySet()) {
-				assertThat("A date is missing from the parsed zone changes for turkey \"" + turkey + "\".",
-						parsed.zoneChanges.get(turkey).keySet(), hasItem(date));
-				assertThat("A date is missing from the generated zone changes for turkey \"" + turkey + "\".",
-						generated.zoneChanges.get(turkey).keySet(), hasItem(date));
+				assertTrue("Date " + date + " is missing from the parsed zone changes for turkey \"" + turkey + "\".",
+						parsed.zoneChanges.get(turkey).containsKey(date));
+				assertTrue(
+						"Date " + date + " is missing from the generated zone changes for turkey \"" + turkey + "\".",
+						generated.zoneChanges.get(turkey).containsKey(date));
 
 				assertTrue("Zone changes for turkey \"" + turkey + "\" on day " + date + " were less than zero.",
 						parsed.zoneChanges.get(turkey).get(date) >= 0);
 
 				assertEquals("Zone changes for turkey \"" + turkey + "\" on day " + date + " didn't match.",
 						generated.zoneChanges.get(turkey).get(date), parsed.zoneChanges.get(turkey).get(date));
+
+				if (generated.seenAntennas.get(turkey).containsKey(date)) {
+					assertTrue(
+							"Date " + date + " is missing from the parsed seen antennas for turkey \"" + turkey + "\".",
+							parsed.seenAntennas.get(turkey).containsKey(date));
+				}
+				if (parsed.seenAntennas.get(turkey).containsKey(date)) {
+					assertTrue("Date " + date + " is missing from the generated seen antennas for turkey \"" + turkey
+							+ "\".", generated.seenAntennas.get(turkey).containsKey(date));
+				}
 
 				int dayTotal = 0;
 
@@ -782,6 +897,21 @@ public class OutputDataTest {
 							generatedTime, (long) parsedZoneTimes.get(zone));
 
 					dayTotal += generatedTime;
+				}
+
+				if (parsed.seenAntennas.get(turkey).containsKey(date)
+						&& generated.seenAntennas.get(turkey).containsKey(date)) {
+					assertThat(
+							"An antenna id is missing from the parsed data for turkey " + turkey + " on date " + date
+									+ ".",
+							parsed.seenAntennas.get(turkey).get(date),
+							hasItems(generated.seenAntennas.get(turkey).get(date).toArray(new String[0])));
+
+					assertThat(
+							"An antenna id is missing from the generated data for turkey " + turkey + " on date " + date
+									+ ".",
+							generated.seenAntennas.get(turkey).get(date),
+							hasItems(parsed.seenAntennas.get(turkey).get(date).toArray(new String[0])));
 				}
 
 				if (!date.equals("total")) {

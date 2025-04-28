@@ -39,9 +39,19 @@ import com.tome25.auswertung.utils.TimeUtils;
 public class CSVHandler {
 
 	/**
-	 * The default character to use as a value separator in produced csvs.
+	 * The default character to use as a field separator in produced csvs.
+	 * 
+	 * TODO implement argument to override this.
 	 */
-	public static final char DEFAULT_SEPARATOR = ';';
+	public static final char DEFAULT_FIELD_SEPARATOR = ';';
+
+	/**
+	 * The default character to use as a separator for multiple values in the same
+	 * field.
+	 * 
+	 * TODO implement argument to override this.
+	 */
+	public static final char DEFAULT_SUB_VALUE_SEPARATOR = ',';
 
 	/**
 	 * A regex string containing all the characters to split csv files at.
@@ -358,10 +368,10 @@ public class CSVHandler {
 
 		StringBuilder headers = new StringBuilder();
 		headers.append("Bereich");
-		headers.append(DEFAULT_SEPARATOR);
+		headers.append(DEFAULT_FIELD_SEPARATOR);
 		headers.append("Kein Essen");
 		for (int i = 1; i <= numAntennas; i++) {
-			headers.append(DEFAULT_SEPARATOR);
+			headers.append(DEFAULT_FIELD_SEPARATOR);
 			headers.append("Antenne ");
 			headers.append(i);
 		}
@@ -371,18 +381,18 @@ public class CSVHandler {
 		for (ZoneInfo zone : zones) {
 			StringBuilder sb = new StringBuilder();
 			sb.append(zone.getId());
-			sb.append(DEFAULT_SEPARATOR);
+			sb.append(DEFAULT_FIELD_SEPARATOR);
 			if (!zone.hasFood()) {
 				sb.append('X');
 			}
 
 			for (String antenna : zone.getAntennas()) {
-				sb.append(DEFAULT_SEPARATOR);
+				sb.append(DEFAULT_FIELD_SEPARATOR);
 				sb.append(antenna);
 			}
 
 			for (int i = numAntennas - zone.getAntennaCount(); i > 0; i--) {
-				sb.append(DEFAULT_SEPARATOR);
+				sb.append(DEFAULT_FIELD_SEPARATOR);
 			}
 
 			output.println(sb.toString());
@@ -634,9 +644,9 @@ public class CSVHandler {
 		}
 
 		StringBuilder headers = new StringBuilder();
-		headers.append(String.format("Tier%1$cStartbereich%1$cEndzeit%1$cEnddatum", DEFAULT_SEPARATOR));
+		headers.append(String.format("Tier%1$cStartbereich%1$cEndzeit%1$cEnddatum", DEFAULT_FIELD_SEPARATOR));
 		for (int i = 1; i <= numTransponders; i++) {
-			headers.append(DEFAULT_SEPARATOR);
+			headers.append(DEFAULT_FIELD_SEPARATOR);
 			headers.append("Transponder ");
 			headers.append(i);
 		}
@@ -646,28 +656,28 @@ public class CSVHandler {
 		for (TurkeyInfo ti : turkeys) {
 			StringBuilder sb = new StringBuilder();
 			sb.append(ti.getId());
-			sb.append(DEFAULT_SEPARATOR);
+			sb.append(DEFAULT_FIELD_SEPARATOR);
 			if (ti.getCurrentZone() != null) {
 				sb.append(ti.getCurrentZone().getId());
 			}
 
-			sb.append(DEFAULT_SEPARATOR);
+			sb.append(DEFAULT_FIELD_SEPARATOR);
 			if (ti.getEndCal() != null) {
 				sb.append(TimeUtils.encodeTime(TimeUtils.getMsOfDay(ti.getEndCal())));
 			}
-			sb.append(DEFAULT_SEPARATOR);
+			sb.append(DEFAULT_FIELD_SEPARATOR);
 			if (ti.getEndCal() != null) {
 				sb.append(TimeUtils.encodeDate(ti.getEndCal()));
 			}
 
 			List<String> trans = ti.getTransponders();
 			for (int i = 0; i < trans.size(); i++) {
-				sb.append(DEFAULT_SEPARATOR);
+				sb.append(DEFAULT_FIELD_SEPARATOR);
 				sb.append(trans.get(i));
 			}
 
 			for (int i = numTransponders - trans.size(); i > 0; i--) {
-				sb.append(DEFAULT_SEPARATOR);
+				sb.append(DEFAULT_FIELD_SEPARATOR);
 			}
 
 			output.println(sb.toString());
@@ -1004,17 +1014,19 @@ public class CSVHandler {
 
 		StringBuilder header = new StringBuilder();
 		header.append("Tier");
-		header.append(DEFAULT_SEPARATOR);
+		header.append(DEFAULT_FIELD_SEPARATOR);
 		header.append("Datum");
-		header.append(DEFAULT_SEPARATOR);
+		header.append(DEFAULT_FIELD_SEPARATOR);
 		header.append("Bereichswechsel");
 		for (String zone : zones) {
-			header.append(DEFAULT_SEPARATOR);
+			header.append(DEFAULT_FIELD_SEPARATOR);
 			header.append("Zeit in Zone ");
 			header.append(zone);
 		}
-		header.append(DEFAULT_SEPARATOR);
+		header.append(DEFAULT_FIELD_SEPARATOR);
 		header.append("Unzuverlaessig");
+		header.append(DEFAULT_FIELD_SEPARATOR);
+		header.append("Empfangen von");
 
 		return header.toString();
 	}
@@ -1050,20 +1062,20 @@ public class CSVHandler {
 		StringBuilder result = new StringBuilder();
 		if (date != null) {
 			result.append(turkey.getId());
-			result.append(DEFAULT_SEPARATOR);
+			result.append(DEFAULT_FIELD_SEPARATOR);
 			result.append(date);
-			result.append(DEFAULT_SEPARATOR);
+			result.append(DEFAULT_FIELD_SEPARATOR);
 			result.append(Integer.toString(turkey.getDayZoneChanges(date)));
 		} else {
 			result.append(turkey.getId());
-			result.append(DEFAULT_SEPARATOR);
+			result.append(DEFAULT_FIELD_SEPARATOR);
 			result.append("total");
-			result.append(DEFAULT_SEPARATOR);
+			result.append(DEFAULT_FIELD_SEPARATOR);
 			result.append(Integer.toString(turkey.getTotalZoneChanges()));
 		}
 
 		for (String zone : zones) {
-			result.append(DEFAULT_SEPARATOR);
+			result.append(DEFAULT_FIELD_SEPARATOR);
 			if (zoneTimes.containsKey(zone)) {
 				Object time = zoneTimes.get(zone);
 				if (time instanceof Long) {
@@ -1076,9 +1088,30 @@ public class CSVHandler {
 			}
 		}
 
-		result.append(DEFAULT_SEPARATOR);
+		result.append(DEFAULT_FIELD_SEPARATOR);
 		if ((date != null && turkey.isDayUnreliable(date)) || (date == null && turkey.hasUnreliableDay())) {
 			result.append('X');
+		}
+
+		result.append(DEFAULT_FIELD_SEPARATOR);
+		Set<String> antennas = null;
+		if (date == null) {
+			antennas = turkey.getTotalAntennas();
+		} else {
+			antennas = turkey.getDayAntennas(date);
+		}
+		if (antennas != null) {
+			List<String> antennasList = new ArrayList<>(antennas);
+			antennasList.sort(IntOrStringComparator.INSTANCE);
+			boolean first = true;
+			for (String antenna : antennasList) {
+				if (first) {
+					first = false;
+				} else {
+					result.append(DEFAULT_SUB_VALUE_SEPARATOR);
+				}
+				result.append(antenna);
+			}
 		}
 
 		return result.toString();
@@ -1086,10 +1119,11 @@ public class CSVHandler {
 
 	/**
 	 * Reads a totals output csv generated by this program.<br/>
-	 * The result contains three maps:<br/>
+	 * The result contains four maps:<br/>
 	 * The first map is {@code turkey -> date -> zone -> time}.<br/>
 	 * The second map is {@code turkey -> date -> zoneChanges}.<br/>
-	 * The third map is {@code turkey -> [date]}
+	 * The third map is {@code turkey -> [date]}.<br/>
+	 * The fourth map is {@code turkey -> date -> [antenna]}.
 	 * 
 	 * @param input The input stream handler to read the data from.
 	 * @return The parsed totals date. Or {@code null} if the file did not contain
@@ -1097,7 +1131,7 @@ public class CSVHandler {
 	 * @throws IOException          If reading the headers line fails.
 	 * @throws NullPointerException If {@code input} is {@code null}.
 	 */
-	public static Pair<Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>>, Map<String, Set<String>>> readTotalsCSV(
+	public static Pair<Pair<Map<String, Map<String, Map<String, Long>>>, Map<String, Map<String, Integer>>>, Pair<Map<String, Set<String>>, Map<String, Map<String, Set<String>>>>> readTotalsCSV(
 			IInputStreamHandler input) throws IOException, NullPointerException {
 		try {
 			checkInput(input);
@@ -1117,16 +1151,24 @@ public class CSVHandler {
 
 		String headers[] = SEPARATOR_REGEX.split(headerLine);
 
-		if (headers.length < 5) {
-			LogHandler.err_println("Header line \"" + headerLine + "\" did not contain at least five headers.");
+		if (headers.length < 6) {
+			LogHandler.err_println("Header line \"" + headerLine + "\" did not contain at least six headers.");
 			LogHandler.print_debug_info("Separator Chars: %s, Tokens: [%s], Line: \"%s\", Input Stream Handler: %s",
 					SEPARATOR_REGEX.toString(), StringUtils.join(", ", headers), headerLine, input.toString());
 			throw new IOException("Invalid input file");
 		}
 
+		List<String> zones = new ArrayList<>();
+		for (int i = 3; i < headers.length - 5 + 3; i++) {
+			// "Zeit in Zone " = 13 chars.
+			zones.add(headers[i].substring(13));
+		}
+
 		Map<String, Map<String, Map<String, Long>>> turkeyTimes = new LinkedHashMap<String, Map<String, Map<String, Long>>>();
 		Map<String, Map<String, Integer>> turkeyChanges = new LinkedHashMap<String, Map<String, Integer>>();
 		Map<String, Set<String>> unreliableDays = new LinkedHashMap<String, Set<String>>();
+		Map<String, Map<String, Set<String>>> seenAntennas = new LinkedHashMap<String, Map<String, Set<String>>>();
+		int numZones = zones.size();
 		boolean last_failed = false;
 		while (!input.done()) {
 			String line = null;
@@ -1142,8 +1184,7 @@ public class CSVHandler {
 
 				try {
 					Set<Integer> times = new HashSet<Integer>();
-					int numTokens = SEPARATOR_REGEX.split(line).length;
-					for (int i = 2; i < numTokens; i++) {
+					for (int i = 2; i < numZones + 2; i++) {
 						times.add(i);
 					}
 					tokens = splitLine(line, 4, times);
@@ -1160,18 +1201,13 @@ public class CSVHandler {
 				String day = tokens[1];
 				int zoneChanges = Integer.parseInt(tokens[2]);
 
-				Matcher m = SEPARATOR_REGEX.matcher(line);
-				int lastSeparator = 0;
-				while (m.find()) {
-					lastSeparator = m.end();
-				}
-
-				String unreliableToken = line.substring(lastSeparator).trim();
+				String unreliableToken = tokens.length > numZones + 3 ? tokens[numZones + 3].trim() : "";
 
 				if (!turkeyTimes.containsKey(turkey)) {
 					turkeyTimes.put(turkey, new LinkedHashMap<String, Map<String, Long>>());
 					turkeyChanges.put(turkey, new LinkedHashMap<String, Integer>());
 					unreliableDays.put(turkey, new HashSet<String>());
+					seenAntennas.put(turkey, new LinkedHashMap<String, Set<String>>());
 				}
 
 				Map<String, Map<String, Long>> dateTimes = turkeyTimes.get(turkey);
@@ -1186,10 +1222,9 @@ public class CSVHandler {
 				}
 
 				Map<String, Long> zoneTimes = new LinkedHashMap<String, Long>();
-				for (int i = 3; i < (unreliableToken.isEmpty() ? tokens.length : tokens.length - 1); i++) {
+				for (int i = 3; i < numZones + 3; i++) {
 					time = tokens[i];
-					// "Zeit in Zone " = 13 chars.
-					zoneTimes.put(headers[i].substring(13), TimeUtils.parseTime(time));
+					zoneTimes.put(zones.get(i - 3), TimeUtils.parseTime(time));
 				}
 
 				dateTimes.put(day, zoneTimes);
@@ -1207,6 +1242,14 @@ public class CSVHandler {
 					LogHandler.print_debug_info(
 							"Separator Chars: %s, Tokens: [%s], Line: \"%s\", Input Stream Handler: %s",
 							SEPARATOR_REGEX.toString(), StringUtils.join(", ", tokens), line, input.toString());
+				}
+
+				Set<String> antennas = new HashSet<String>();
+				for (int i = numZones + 4; i < tokens.length; i++) {
+					antennas.add(tokens[i]);
+				}
+				if (!antennas.isEmpty()) {
+					seenAntennas.get(turkey).put(day, antennas);
 				}
 
 				last_failed = false;
@@ -1246,7 +1289,7 @@ public class CSVHandler {
 			LogHandler.print_debug_info("Input Stream Handler: %s", input.toString());
 			return null;
 		} else {
-			return new Pair<>(new Pair<>(turkeyTimes, turkeyChanges), unreliableDays);
+			return new Pair<>(new Pair<>(turkeyTimes, turkeyChanges), new Pair<>(unreliableDays, seenAntennas));
 		}
 	}
 
@@ -1256,8 +1299,8 @@ public class CSVHandler {
 	 * @return The csv headers as a single string.
 	 */
 	public static String staysCsvHeader() {
-		return StringUtils.join(DEFAULT_SEPARATOR, "Tier", "Bereich", "Startdatum", "Startzeit", "Enddatum", "Endzeit",
-				"Aufenthaltszeit", "Unzuverlaessig");
+		return StringUtils.join(DEFAULT_FIELD_SEPARATOR, "Tier", "Bereich", "Startdatum", "Startzeit", "Enddatum",
+				"Endzeit", "Aufenthaltszeit", "Unzuverlaessig");
 	}
 
 	/**
@@ -1275,7 +1318,7 @@ public class CSVHandler {
 			throw new IllegalArgumentException("The zone to convert has no exit time.");
 		}
 
-		return StringUtils.join(DEFAULT_SEPARATOR, stay.getTurkey(), stay.getZone().getId(), stay.getEntryDate(),
+		return StringUtils.join(DEFAULT_FIELD_SEPARATOR, stay.getTurkey(), stay.getZone().getId(), stay.getEntryDate(),
 				TimeUtils.encodeTime(stay.getEntryTime()), stay.getExitDate(), TimeUtils.encodeTime(stay.getExitTime()),
 				TimeUtils.encodeTime(stay.getStayTime()), stay.isUnreliable() ? "X" : "");
 	}
